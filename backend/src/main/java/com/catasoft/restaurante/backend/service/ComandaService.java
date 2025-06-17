@@ -1,6 +1,8 @@
 package com.catasoft.restaurante.backend.service;
 
+import com.catasoft.restaurante.backend.dto.ComandaItemResponseDTO;
 import com.catasoft.restaurante.backend.dto.ComandaRequestDTO;
+import com.catasoft.restaurante.backend.dto.ComandaResponseDTO;
 import com.catasoft.restaurante.backend.dto.ItemRequestDTO;
 import com.catasoft.restaurante.backend.exception.ResourceNotFoundException;
 import com.catasoft.restaurante.backend.model.*;
@@ -12,6 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ComandaService {
@@ -26,52 +31,97 @@ public class ComandaService {
         this.productoRepository = productoRepository;
     }
 
-    @Transactional // Anotación clave: si algo falla, toda la operación se revierte (rollback).
-    public Comanda crearComanda(ComandaRequestDTO request) {
-        // 1. Validar y obtener la mesa
+    @Transactional
+    public ComandaResponseDTO crearComanda(ComandaRequestDTO request) {
         Mesa mesa = mesaRepository.findById(request.getMesaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Mesa no encontrada con id: " + request.getMesaId()));
-
         if (mesa.getEstado() != EstadoMesa.LIBRE) {
             throw new IllegalStateException("La mesa " + mesa.getNumero() + " no está libre.");
         }
 
-        // 2. Crear la comanda
         Comanda comanda = new Comanda();
         comanda.setMesa(mesa);
         comanda.setFechaHoraCreacion(LocalDateTime.now());
         comanda.setEstado(EstadoComanda.EN_PROCESO);
-
         BigDecimal totalComanda = BigDecimal.ZERO;
 
-        // 3. Procesar cada item de la comanda
         for (ItemRequestDTO itemDTO : request.getItems()) {
             Producto producto = productoRepository.findById(itemDTO.getProductoId())
                     .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + itemDTO.getProductoId()));
-
             if (producto.getStock() < itemDTO.getCantidad()) {
                 throw new IllegalStateException("Stock insuficiente para el producto: " + producto.getNombre());
             }
 
-            // Crear el ComandaItem y asociarlo
             ComandaItem comandaItem = new ComandaItem();
             comandaItem.setProducto(producto);
             comandaItem.setCantidad(itemDTO.getCantidad());
             comandaItem.setPrecioUnitario(producto.getPrecio());
-            comandaItem.setComanda(comanda); // Enlazar al padre
-            comanda.getItems().add(comandaItem); // Añadir a la lista del padre
+            comandaItem.setComanda(comanda);
+            comanda.getItems().add(comandaItem);
 
-            // Actualizar el total y el stock
             totalComanda = totalComanda.add(producto.getPrecio().multiply(BigDecimal.valueOf(itemDTO.getCantidad())));
             producto.setStock(producto.getStock() - itemDTO.getCantidad());
-            productoRepository.save(producto); // Guardar el stock actualizado
+            // No es necesario llamar a save aquí, @Transactional se encargará
         }
-
-        // 4. Finalizar y guardar
         comanda.setTotal(totalComanda);
         mesa.setEstado(EstadoMesa.OCUPADA);
-        mesaRepository.save(mesa);
 
-        return comandaRepository.save(comanda);
+        Comanda comandaGuardada = comandaRepository.save(comanda);
+        return mapToComandaResponseDTO(comandaGuardada);
+    }
+
+    public List<ComandaResponseDTO> getAllComandas() {
+        return comandaRepository.findAll().stream()
+                .map(this::mapToComandaResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    public ComandaResponseDTO getComandaById(Long id) {
+        Comanda comanda = comandaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Comanda no encontrada con id: " + id));
+        return mapToComandaResponseDTO(comanda);
+    }
+
+    @Transactional
+    public ComandaResponseDTO updateEstadoComanda(Long id, Map<String, String> payload) {
+        Comanda comanda = comandaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Comanda no encontrada con id: " + id));
+
+        String nuevoEstadoStr = payload.get("estado");
+        if (nuevoEstadoStr == null) {
+            throw new IllegalArgumentException("El campo 'estado' es requerido.");
+        }
+
+        EstadoComanda nuevoEstado = EstadoComanda.valueOf(nuevoEstadoStr.toUpperCase());
+        comanda.setEstado(nuevoEstado);
+
+        // Lógica de negocio extra: si la comanda se paga, la mesa se libera.
+        if (nuevoEstado == EstadoComanda.PAGADA) {
+            Mesa mesa = comanda.getMesa();
+            mesa.setEstado(EstadoMesa.LIBRE);
+            mesaRepository.save(mesa);
+        }
+
+        Comanda comandaActualizada = comandaRepository.save(comanda);
+        return mapToComandaResponseDTO(comandaActualizada);
+    }
+
+    // Helper para convertir Entity a DTO
+    private ComandaResponseDTO mapToComandaResponseDTO(Comanda comanda) {
+        ComandaResponseDTO dto = new ComandaResponseDTO();
+        dto.setId(comanda.getId());
+        dto.setNumeroMesa(comanda.getMesa().getNumero());
+        dto.setEstado(comanda.getEstado());
+        dto.setFechaHoraCreacion(comanda.getFechaHoraCreacion());
+        dto.setTotal(comanda.getTotal());
+        dto.setItems(comanda.getItems().stream().map(item -> {
+            ComandaItemResponseDTO itemDTO = new ComandaItemResponseDTO();
+            itemDTO.setProductoId(item.getProducto().getId());
+            itemDTO.setProductoNombre(item.getProducto().getNombre());
+            itemDTO.setCantidad(item.getCantidad());
+            itemDTO.setPrecioUnitario(item.getPrecioUnitario());
+            return itemDTO;
+        }).collect(Collectors.toList()));
+        return dto;
     }
 }
