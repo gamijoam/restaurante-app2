@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/api/v1/comandas")
 public class ComandaController {
@@ -29,27 +31,25 @@ public class ComandaController {
     }
 
     @GetMapping
-    public List<ComandaResponseDTO> getAllComandas(@RequestParam Optional<String> estado) {
-        // --- LOGS DE DEPURACIÓN ---
-        System.out.println("\n--- [BACKEND LOG] Se ha recibido una petición a /api/v1/comandas ---");
-
-        if (estado.isPresent()) {
-            System.out.println("--- [BACKEND LOG] El parámetro 'estado' está presente. Valor: " + estado.get());
+    public List<ComandaResponseDTO> getAllComandas(@RequestParam Optional<List<String>> estados) {
+        // Esta es la lógica final y correcta para manejar el filtrado por estado(s)
+        if (estados.isPresent() && !estados.get().isEmpty()) {
             try {
-                EstadoComanda estadoEnum = EstadoComanda.valueOf(estado.get().toUpperCase());
-                System.out.println("--- [BACKEND LOG] El estado se ha convertido a Enum correctamente: " + estadoEnum);
-                System.out.println("--- [BACKEND LOG] Llamando al servicio para buscar por estado...");
-                return comandaService.getComandasByEstado(estadoEnum);
+                List<EstadoComanda> estadosEnum = estados.get().stream()
+                        .map(String::toUpperCase)
+                        .map(EstadoComanda::valueOf)
+                        .collect(Collectors.toList());
+
+                return comandaService.getComandasByEstados(estadosEnum);
+
             } catch (IllegalArgumentException e) {
-                System.err.println("--- [BACKEND ERROR] El estado '" + estado.get() + "' no es un valor válido del Enum EstadoComanda.");
+                // Si se provee un estado inválido, se devuelve una lista vacía.
                 return List.of();
             }
         }
-
-        System.out.println("--- [BACKEND LOG] El parámetro 'estado' no está presente. Se devolverán todas las comandas.");
+        // Si no se provee el parámetro "estados", se devuelven todas las comandas.
         return comandaService.getAllComandas();
     }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<ComandaResponseDTO> getComandaById(@PathVariable Long id) {
@@ -57,7 +57,7 @@ public class ComandaController {
     }
 
     @PutMapping("/{id}/estado")
-    public ResponseEntity<ComandaResponseDTO> updateComandaEstado(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+    public ResponseEntity<ComandaResponseDTO> updateEstadoComanda(@PathVariable Long id, @RequestBody Map<String, String> payload) {
         return ResponseEntity.ok(comandaService.updateEstadoComanda(id, payload));
     }
 }

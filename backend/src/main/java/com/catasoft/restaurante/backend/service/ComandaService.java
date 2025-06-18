@@ -79,7 +79,11 @@ public class ComandaService {
                 .map(this::mapToComandaResponseDTO)
                 .collect(Collectors.toList());
     }
-
+    public List<ComandaResponseDTO> getComandasByEstados(List<EstadoComanda> estados) {
+        return comandaRepository.findByEstadoIn(estados).stream()
+                .map(this::mapToComandaResponseDTO)
+                .collect(Collectors.toList());
+    }
     public ComandaResponseDTO getComandaById(Long id) {
         Comanda comanda = comandaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comanda no encontrada con id: " + id));

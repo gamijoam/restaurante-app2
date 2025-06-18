@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getMesas } from '../services/mesaService';
 import type { Mesa } from '../types';
+import { getProductos } from '../services/productoService';
 import { Link as RouterLink } from 'react-router-dom';
 import { Container, Grid, Typography, CircularProgress, Alert, Card, CardActionArea, CardContent, Box } from '@mui/material';
 

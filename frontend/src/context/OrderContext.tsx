@@ -1,6 +1,6 @@
 import { createContext, useState, type ReactNode } from 'react';
 import type { Producto } from '../types';
-import { crearComandaAPI } from '../services/comandaService';
+import { crearComandaAPI } from '../services/comandaService_OLD';
 
 // ... (El resto de las interfaces no cambia) ...
 interface OrderItem extends Producto {

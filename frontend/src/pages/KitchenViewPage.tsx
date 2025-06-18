@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { ComandaResponseDTO } from '../types';
-import { getComandasPorEstado, updateComandaEstado } from '../services/comandaService';
+// ¡LA CORRECCIÓN ESTÁ AQUÍ! Importamos las funciones correctas del archivo de servicio correcto.
+import { getComandasPorMultiplesEstados, updateComandaEstado } from '../services/comandaService';
 import { Container, Grid, Typography, Card, CardContent, CardActions, Button, CircularProgress, Alert } from '@mui/material';
 
 const KitchenViewPage = () => {
@@ -9,20 +10,22 @@ const KitchenViewPage = () => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchComandasEnProceso = async () => {
-        // No ponemos setLoading(true) aquí para que el refresco sea más suave
+        if (!loading) setLoading(true); // Mostrar loading en refrescos manuales o de intervalo
         try {
-            const data = await getComandasPorEstado('EN_PROCESO');
+            // Usamos la función correcta que puede manejar una lista de estados (incluso si es solo uno)
+            const data = await getComandasPorMultiplesEstados(['EN_PROCESO']);
             if (Array.isArray(data)) {
                 setComandas(data);
+                setError(null); // Limpiar errores anteriores si la petición es exitosa
             } else {
                 setComandas([]);
                 setError('La respuesta de la API no tuvo el formato esperado.');
             }
         } catch (err) {
             setError('Error al cargar las comandas.');
+            console.error(err);
         } finally {
-            // Solo ponemos el loading a false la primera vez
-            if (loading) setLoading(false);
+            setLoading(false);
         }
     };
 
@@ -30,11 +33,12 @@ const KitchenViewPage = () => {
         fetchComandasEnProceso(); // Carga inicial
         const interval = setInterval(fetchComandasEnProceso, 30000); // Refresca cada 30 segundos
         return () => clearInterval(interval); // Limpia el intervalo al salir
-    }, []); // El array vacío asegura que esto solo se configure una vez
+    }, []);
 
     const handleMarcarComoLista = async (comandaId: number) => {
         try {
             await updateComandaEstado(comandaId, 'LISTA');
+            // Filtramos la comanda de la lista para una actualización visual instantánea
             setComandas(prevComandas => prevComandas.filter(c => c.id !== comandaId));
         } catch (err) {
             alert('Error al actualizar la comanda.');

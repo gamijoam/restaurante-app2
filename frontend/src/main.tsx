@@ -6,7 +6,7 @@ import TableSelectionPage from './pages/TableSelectionPage.tsx';
 import OrderPage from './pages/OrderPage.tsx';
 import './index.css';
 import KitchenViewPage from './pages/KitchenViewPage.tsx';
-
+import CashierViewPage from './pages/CashierViewPage.tsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -20,9 +20,13 @@ const router = createBrowserRouter([
         path: "/comanda/mesa/:mesaId", // Ruta para una comanda específica
         element: <OrderPage />,
       },
-       {
+      {
         path: "/cocina",
         element: <KitchenViewPage />,
+      },
+      {
+        path: "/caja", // <-- Añadir esta ruta
+        element: <CashierViewPage />,
       }
     ],
   },
