@@ -5,3 +5,10 @@ export interface Producto {
     precio: number;
     stock: number;
 }
+// ... (debajo de la interfaz Producto)
+export interface Mesa {
+    id: number;
+    numero: number;
+    capacidad: number;
+    estado: 'LIBRE' | 'OCUPADA' | 'RESERVADA' | 'MANTENIMIENTO';
+}
