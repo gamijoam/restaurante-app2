@@ -5,10 +5,28 @@ export interface Producto {
     precio: number;
     stock: number;
 }
-// ... (debajo de la interfaz Producto)
+
 export interface Mesa {
     id: number;
     numero: number;
     capacidad: number;
     estado: 'LIBRE' | 'OCUPADA' | 'RESERVADA' | 'MANTENIMIENTO';
+}
+
+// --- AÑADIR ESTAS DOS NUEVAS INTERFACES ---
+
+export interface ComandaItemResponseDTO {
+    productoId: number;
+    productoNombre: string;
+    cantidad: number;
+    precioUnitario: number;
+}
+
+export interface ComandaResponseDTO {
+    id: number;
+    numeroMesa: number;
+    items: ComandaItemResponseDTO[];
+    estado: 'EN_PROCESO' | 'LISTA' | 'ENTREGADA' | 'PAGADA' | 'CANCELADA';
+    fechaHoraCreacion: string; // Las fechas se suelen recibir como strings en formato ISO
+    total: number;
 }

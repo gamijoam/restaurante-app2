@@ -69,7 +69,11 @@ public class ComandaService {
         Comanda comandaGuardada = comandaRepository.save(comanda);
         return mapToComandaResponseDTO(comandaGuardada);
     }
-
+    public List<ComandaResponseDTO> getComandasByEstado(EstadoComanda estado) {
+        return comandaRepository.findByEstado(estado).stream()
+                .map(this::mapToComandaResponseDTO)
+                .collect(Collectors.toList());
+    }
     public List<ComandaResponseDTO> getAllComandas() {
         return comandaRepository.findAll().stream()
                 .map(this::mapToComandaResponseDTO)

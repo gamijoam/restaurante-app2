@@ -5,6 +5,7 @@ import App from './App.tsx';
 import TableSelectionPage from './pages/TableSelectionPage.tsx';
 import OrderPage from './pages/OrderPage.tsx';
 import './index.css';
+import KitchenViewPage from './pages/KitchenViewPage.tsx';
 
 const router = createBrowserRouter([
   {
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
         path: "/comanda/mesa/:mesaId", // Ruta para una comanda específica
         element: <OrderPage />,
       },
+       {
+        path: "/cocina",
+        element: <KitchenViewPage />,
+      }
     ],
   },
 ]);

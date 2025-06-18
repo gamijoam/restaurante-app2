@@ -13,4 +13,5 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
     // Este método buscará todas las comandas por un estado específico (PAGADA)
     // y cuya fecha de creación esté entre dos momentos dados.
     List<Comanda> findByEstadoAndFechaHoraCreacionBetween(EstadoComanda estado, LocalDateTime start, LocalDateTime end);
+    List<Comanda> findByEstado(EstadoComanda estado);
 }
