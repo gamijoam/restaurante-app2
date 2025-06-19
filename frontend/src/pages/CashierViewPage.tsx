@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ComandaResponseDTO } from '../types';
-import { getComandasPorMultiplesEstados, updateComandaEstado } from '../services/comandaService_OLD';
+import { getComandasPorMultiplesEstados, updateComandaEstado } from '../services/comandaService';
 import { Container, Grid, Typography, Card, CardContent, CardActions, Button, CircularProgress, Alert } from '@mui/material';
 
 const CashierViewPage = () => {
@@ -9,8 +9,9 @@ const CashierViewPage = () => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchComandasACobrar = async () => {
+        // Log para ver el polling en acción
+        console.log("Polling: Buscando comandas para cobrar...");
         try {
-            // Pedimos las comandas que están LISTAS o ENTREGADAS
             const data = await getComandasPorMultiplesEstados(['LISTA', 'ENTREGADA']);
             if (Array.isArray(data)) {
                 setComandas(data);
@@ -24,23 +25,34 @@ const CashierViewPage = () => {
 
     useEffect(() => {
         fetchComandasACobrar();
-        const interval = setInterval(fetchComandasACobrar, 15000); // Refresca cada 15 segundos
+        const interval = setInterval(fetchComandasACobrar, 15000);
         return () => clearInterval(interval);
     }, []);
 
     const handleMarcarComoPagada = async (comandaId: number) => {
+        // --- LOGS DE DEPURACIÓN ---
+        console.log(`1. Iniciando pago para comanda ID: ${comandaId}`);
         try {
-            // Marcamos la comanda como PAGADA, el backend se encargará de liberar la mesa.
             await updateComandaEstado(comandaId, 'PAGADA');
-            setComandas(prevComandas => prevComandas.filter(c => c.id !== comandaId));
+            console.log('2. Petición a la API completada con éxito.');
+
+            setComandas(prevComandas => {
+                console.log('3. Estado ANTES de filtrar:', prevComandas);
+                const nuevasComandas = prevComandas.filter(c => c.id !== comandaId);
+                console.log('4. Estado DESPUÉS de filtrar:', nuevasComandas);
+                return nuevasComandas;
+            });
+
         } catch (err) {
             alert('Error al actualizar la comanda.');
+            console.error(err);
         }
     };
 
     if (loading) return <Container sx={{ py: 8, textAlign: 'center' }}><CircularProgress /></Container>;
     if (error) return <Container sx={{ py: 8 }}><Alert severity="error">{error}</Alert></Container>;
 
+    // El resto del JSX no cambia
     return (
         <Container sx={{ py: 4 }} maxWidth="xl">
             <Typography variant="h4" align="center" gutterBottom>Comandas por Cobrar</Typography>
@@ -51,12 +63,9 @@ const CashierViewPage = () => {
                             <Card>
                                 <CardContent>
                                     <Typography variant="h6">Mesa #{comanda.numeroMesa}</Typography>
-
-                                    {/* --- LÍNEA CLAVE QUE MUESTRA EL TOTAL --- */}
                                     <Typography variant="h5" color="text.secondary" sx={{ my: 1 }}>
                                         Total: ${comanda.total.toFixed(2)}
                                     </Typography>
-
                                     <Typography variant="caption">Estado: {comanda.estado}</Typography>
                                 </CardContent>
                                 <CardActions>

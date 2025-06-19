@@ -11,11 +11,11 @@ export const crearComandaAPI = async (comandaData: ComandaRequestDTO): Promise<C
 
 export const getComandasPorMultiplesEstados = async (estados: string[]): Promise<ComandaResponseDTO[]> => {
     const estadosQuery = estados.join(',');
-    const response = await axios.get(`<span class="math-inline">\{API\_URL\}?estados\=</span>{estadosQuery}`);
+    const response = await axios.get(`${API_URL}?estados=${estadosQuery}`);
     return response.data;
 };
 
 export const updateComandaEstado = async (id: number, estado: string): Promise<ComandaResponseDTO> => {
-    const response = await axios.put(`<span class="math-inline">\{API\_URL\}/</span>{id}/estado`, { estado });
+    const response = await axios.put(`${API_URL}/${id}/estado`, { estado });
     return response.data;
 };
