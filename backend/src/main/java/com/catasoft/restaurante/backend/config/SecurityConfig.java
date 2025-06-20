@@ -1,18 +1,22 @@
 package com.catasoft.restaurante.backend.config;
 
+import com.catasoft.restaurante.backend.model.enums.Rol;
 import com.catasoft.restaurante.backend.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity 
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -29,15 +33,15 @@ public class SecurityConfig {
             .cors(withDefaults())
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .anyRequest().authenticated()
+                // REGLAS DE AUTORIZACIÓN (en orden de prioridad):
+                .requestMatchers("/api/auth/**").permitAll() // 1. Auth es público para todos.
+                .requestMatchers("/api/v1/reportes/**").authenticated() // 2. Reportes solo para Gerente.
+                .anyRequest().authenticated() // 3. Cualquier otra petición requiere estar autenticado (cualquier rol).
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            // Le decimos a Spring que use nuestro proveedor de autenticación
             .authenticationProvider(authenticationProvider)
-            // Y que añada nuestro filtro JWT antes del filtro de usuario y contraseña
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

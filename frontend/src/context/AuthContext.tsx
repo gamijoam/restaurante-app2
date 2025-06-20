@@ -2,8 +2,20 @@ import { createContext, useState, useContext, type ReactNode, useEffect } from '
 import { loginAPI } from '../services/authService';
 import type { LoginRequestDTO } from '../dto/authDTOs';
 
+// Función para decodificar el token (la moveremos aquí para centralizarla)
+const getRolesFromToken = (token: string | null): string[] => {
+    if (!token) return [];
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.roles || [];
+    } catch (e) {
+        return [];
+    }
+};
+
 interface IAuthContext {
     token: string | null;
+    roles: string[]; // <-- AÑADIMOS ROLES AL CONTEXTO
     login: (credentials: LoginRequestDTO) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
@@ -13,20 +25,22 @@ const AuthContext = createContext<IAuthContext | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [token, setToken] = useState<string | null>(localStorage.getItem('authToken'));
+    const [roles, setRoles] = useState<string[]>(getRolesFromToken(token)); // <-- INICIALIZAMOS ROLES
 
     useEffect(() => {
-        // Sincroniza el token con localStorage
         if (token) {
             localStorage.setItem('authToken', token);
+            setRoles(getRolesFromToken(token)); // <-- ACTUALIZAMOS ROLES
         } else {
             localStorage.removeItem('authToken');
+            setRoles([]); // <-- LIMPIAMOS ROLES
         }
     }, [token]);
 
     const login = async (credentials: LoginRequestDTO) => {
         try {
             const response = await loginAPI(credentials);
-            setToken(response.token);
+            setToken(response.token); // Esto disparará el useEffect de arriba
         } catch (error) {
             console.error("Fallo el login:", error);
             throw new Error("Credenciales inválidas");
@@ -40,7 +54,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const isAuthenticated = !!token;
 
     return (
-        <AuthContext.Provider value={{ token, login, logout, isAuthenticated }}>
+        <AuthContext.Provider value={{ token, roles, login, logout, isAuthenticated }}>
             {children}
         </AuthContext.Provider>
     );

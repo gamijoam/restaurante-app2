@@ -3,8 +3,10 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar = () => {
-    const { isAuthenticated, logout } = useAuth();
+    const { isAuthenticated, logout, roles } = useAuth(); // <-- Obtenemos los roles directamente
     const navigate = useNavigate();
+
+    const esGerente = roles.includes('ROLE_GERENTE'); // La lógica ahora es mucho más limpia
 
     const handleLogout = () => {
         logout();
@@ -17,20 +19,19 @@ const Navbar = () => {
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                     Sistema Restaurante
                 </Typography>
-                {isAuthenticated && ( // Solo muestra los botones si el usuario está autenticado
+                {isAuthenticated && (
                     <Box>
-                        <Button color="inherit" component={RouterLink} to="/">
-                            Tomar Pedido
-                        </Button>
-                        <Button color="inherit" component={RouterLink} to="/cocina">
-                            Cocina
-                        </Button>
-                        <Button color="inherit" component={RouterLink} to="/caja">
-                            Caja
-                        </Button>
-                        <Button color="inherit" onClick={handleLogout}>
-                            Logout
-                        </Button>
+                        <Button color="inherit" component={RouterLink} to="/">Tomar Pedido</Button>
+                        <Button color="inherit" component={RouterLink} to="/cocina">Cocina</Button>
+                        <Button color="inherit" component={RouterLink} to="/caja">Caja</Button>
+
+                        {esGerente && (
+                            <Button color="inherit" component={RouterLink} to="/reportes">
+                                Reportes
+                            </Button>
+                        )}
+
+                        <Button color="inherit" onClick={handleLogout}>Logout</Button>
                     </Box>
                 )}
             </Toolbar>

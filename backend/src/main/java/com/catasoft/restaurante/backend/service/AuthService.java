@@ -11,7 +11,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import java.util.stream.Collectors;
 import java.util.Set;
 
 @Service
@@ -45,11 +45,20 @@ public class AuthService {
         usuario.setNombre(request.getNombre());
         usuario.setEmail(request.getEmail());
         usuario.setPassword(passwordEncoder.encode(request.getPassword()));
-        usuario.setRoles(Set.of(Rol.ROLE_CAMARERO));
-
+    
+        // Convertimos los roles de String a nuestro Enum Rol
+        if (request.getRoles() == null || request.getRoles().isEmpty()) {
+            // Si no se especifican roles, se asigna CAMARERO por defecto
+            usuario.setRoles(Set.of(Rol.ROLE_CAMARERO));
+        } else {
+            Set<Rol> roles = request.getRoles().stream()
+                    .map(rol -> Rol.valueOf("ROLE_" + rol.toUpperCase()))
+                    .collect(Collectors.toSet());
+            usuario.setRoles(roles);
+        }
+    
         usuarioRepository.save(usuario);
-
-        // Ahora pasamos el objeto Usuario directamente
+    
         String token = jwtService.generateToken(usuario);
         return new AuthResponseDTO(token);
     }

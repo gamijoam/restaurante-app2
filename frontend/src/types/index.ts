@@ -30,3 +30,20 @@ export interface ComandaResponseDTO {
     fechaHoraCreacion: string; // Las fechas se suelen recibir como strings en formato ISO
     total: number;
 }
+// ... (debajo de las otras interfaces)
+
+// --- Tipos para Reportes ---
+
+export interface ProductoVendidoDTO {
+    productoId: number;
+    nombreProducto: string;
+    cantidadTotal: number;
+}
+
+export interface ReporteVentasDTO {
+    fechaInicio: string;
+    fechaFin: string;
+    numeroDeVentas: number;
+    totalRecaudado: number;
+    productosMasVendidos: ProductoVendidoDTO[];
+}

@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-
+import ReportesPage from './pages/ReportesPage.tsx'; // <-- Importar
 import App from './App.tsx';
 import LoginPage from './pages/LoginPage.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
@@ -25,6 +25,10 @@ const router = createBrowserRouter([
           { path: "/comanda/mesa/:mesaId", element: <OrderPage /> },
           { path: "/cocina", element: <KitchenViewPage /> },
           { path: "/caja", element: <CashierViewPage /> },
+          {
+            path: "/reportes", // <-- Añadir esta ruta
+            element: <ReportesPage />,
+          },
         ]
       }
     ]
