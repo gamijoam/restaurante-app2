@@ -7,7 +7,8 @@ import com.catasoft.restaurante.backend.service.ComandaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.security.access.prepost.PreAuthorize; // <-- Añadir importación
+import com.catasoft.restaurante.backend.dto.ItemRequestDTO;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,6 +25,13 @@ public class ComandaController {
         this.comandaService = comandaService;
     }
 
+    @PostMapping("/{id}/items")
+@PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
+public ResponseEntity<ComandaResponseDTO> agregarItemsAComanda(
+        @PathVariable Long id,
+        @RequestBody List<ItemRequestDTO> items) {
+    return ResponseEntity.ok(comandaService.agregarItemsAComanda(id, items));
+}
     @PostMapping
     public ResponseEntity<ComandaResponseDTO> createComanda(@RequestBody ComandaRequestDTO request) {
         ComandaResponseDTO nuevaComanda = comandaService.crearComanda(request);

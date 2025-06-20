@@ -4,6 +4,8 @@ export interface LoginRequestDTO {
 }
 
 export interface RegisterRequestDTO {
+    email: unknown;
+    roles: "" | string[] | undefined;
     username: string;
     password: string;
     nombre: string;

@@ -54,7 +54,7 @@ const TableSelectionPage = () => {
                 {mesas.map(mesa => (
                     <Grid item key={mesa.id} xs={12} sm={6} md={3}>
                         <Card sx={{ borderTop: 5, borderColor: getStatusColor(mesa.estado) }}>
-                            <CardActionArea component={mesa.estado === 'LIBRE' ? RouterLink : 'div'} to={`/comanda/mesa/${mesa.id}`} disabled={mesa.estado !== 'LIBRE'}>
+                            <CardActionArea component={RouterLink} to={`/comanda/mesa/${mesa.id}`}>
                                 <CardContent>
                                     <Typography variant="h5" component="div">Mesa {mesa.numero}</Typography>
                                     <Typography variant="body2" color="text.secondary">Capacidad: {mesa.capacidad}</Typography>

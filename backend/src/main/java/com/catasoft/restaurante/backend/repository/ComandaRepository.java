@@ -4,7 +4,7 @@ import com.catasoft.restaurante.backend.model.Comanda;
 import com.catasoft.restaurante.backend.model.enums.EstadoComanda;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
+import java.util.Optional;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -16,4 +16,5 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
     List<Comanda> findByEstadoAndFechaHoraCreacionBetween(EstadoComanda estado, LocalDateTime start, LocalDateTime end);
     List<Comanda> findByEstado(EstadoComanda estado);
     List<Comanda> findByEstadoIn(Collection<EstadoComanda> estados);
+    Optional<Comanda> findFirstByMesaIdAndEstadoOrderByFechaHoraCreacionDesc(Long mesaId, EstadoComanda estado);
 }

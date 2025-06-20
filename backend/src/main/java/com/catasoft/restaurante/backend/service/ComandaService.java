@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -132,4 +133,46 @@ public class ComandaService {
         }).collect(Collectors.toList()));
         return dto;
     }
+    @Transactional
+public ComandaResponseDTO agregarItemsAComanda(Long comandaId, List<ItemRequestDTO> itemsRequest) {
+    // 1. Buscamos la comanda existente
+    Comanda comanda = comandaRepository.findById(comandaId)
+            .orElseThrow(() -> new ResourceNotFoundException("Comanda no encontrada con id: " + comandaId));
+
+    // 2. Verificamos que la comanda esté en un estado modificable
+    if (comanda.getEstado() != EstadoComanda.EN_PROCESO) {
+        throw new IllegalStateException("Solo se pueden añadir items a una comanda que está EN PROCESO.");
+    }
+
+    // 3. Recorremos los nuevos items para añadirlos
+    for (ItemRequestDTO itemDTO : itemsRequest) {
+        Producto producto = productoRepository.findById(itemDTO.getProductoId())
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + itemDTO.getProductoId()));
+
+        if (producto.getStock() < itemDTO.getCantidad()) {
+            throw new IllegalStateException("Stock insuficiente para el producto: " + producto.getNombre());
+        }
+
+        // Creamos y configuramos el nuevo item
+        ComandaItem comandaItem = new ComandaItem();
+        comandaItem.setProducto(producto);
+        comandaItem.setCantidad(itemDTO.getCantidad());
+        comandaItem.setPrecioUnitario(producto.getPrecio());
+        comandaItem.setComanda(comanda);
+        comanda.getItems().add(comandaItem);
+
+        // Actualizamos el total de la comanda y el stock del producto
+        comanda.setTotal(comanda.getTotal().add(producto.getPrecio().multiply(BigDecimal.valueOf(itemDTO.getCantidad()))));
+        producto.setStock(producto.getStock() - itemDTO.getCantidad());
+    }
+
+    // 4. Guardamos la comanda actualizada (los items y el producto se guardan en cascada gracias a @Transactional)
+    Comanda comandaActualizada = comandaRepository.save(comanda);
+    return mapToComandaResponseDTO(comandaActualizada);
+}
+public Optional<ComandaResponseDTO> getComandaActivaPorMesa(Long mesaId) {
+    return comandaRepository
+            .findFirstByMesaIdAndEstadoOrderByFechaHoraCreacionDesc(mesaId, EstadoComanda.EN_PROCESO)
+            .map(this::mapToComandaResponseDTO);
+}
 }
