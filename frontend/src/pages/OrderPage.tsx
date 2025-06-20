@@ -3,7 +3,7 @@ import ProductList from './ProductList';
 import OrderSummary from '../components/OrderSummary';
 import { Container, Grid, Typography, Alert, CircularProgress } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import { useOrder } from '../context/OrderContext';
+import { useOrder } from '../hooks/useOrder';
 import { getComandaActivaPorMesa } from '../services/mesaService';
 
 const OrderPage = () => {

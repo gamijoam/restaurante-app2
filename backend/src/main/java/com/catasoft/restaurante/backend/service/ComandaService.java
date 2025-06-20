@@ -92,28 +92,47 @@ public class ComandaService {
     }
 
     @Transactional
-    public ComandaResponseDTO updateEstadoComanda(Long id, Map<String, String> payload) {
-        Comanda comanda = comandaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Comanda no encontrada con id: " + id));
+public ComandaResponseDTO updateEstadoComanda(Long id, Map<String, String> payload) {
+    Comanda comanda = comandaRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Comanda no encontrada con id: " + id));
 
-        String nuevoEstadoStr = payload.get("estado");
-        if (nuevoEstadoStr == null) {
-            throw new IllegalArgumentException("El campo 'estado' es requerido.");
-        }
-
-        EstadoComanda nuevoEstado = EstadoComanda.valueOf(nuevoEstadoStr.toUpperCase());
-        comanda.setEstado(nuevoEstado);
-
-        // Lógica de negocio extra: si la comanda se paga, la mesa se libera.
-        if (nuevoEstado == EstadoComanda.PAGADA) {
-            Mesa mesa = comanda.getMesa();
-            mesa.setEstado(EstadoMesa.LIBRE);
-            mesaRepository.save(mesa);
-        }
-
-        Comanda comandaActualizada = comandaRepository.save(comanda);
-        return mapToComandaResponseDTO(comandaActualizada);
+    String nuevoEstadoStr = payload.get("estado");
+    if (nuevoEstadoStr == null) {
+        throw new IllegalArgumentException("El campo 'estado' es requerido.");
     }
+
+    EstadoComanda nuevoEstado = EstadoComanda.valueOf(nuevoEstadoStr.toUpperCase());
+
+    // --- LÓGICA NUEVA PARA CANCELAR ---
+    if (nuevoEstado == EstadoComanda.CANCELADA) {
+        // Solo se pueden cancelar comandas en proceso
+        if (comanda.getEstado() != EstadoComanda.EN_PROCESO) {
+            throw new IllegalStateException("Solo se pueden cancelar comandas que están EN PROCESO.");
+        }
+
+        // Devolvemos el stock de los productos al inventario
+        for (ComandaItem item : comanda.getItems()) {
+            Producto producto = item.getProducto();
+            producto.setStock(producto.getStock() + item.getCantidad());
+            // No es necesario llamar a productoRepository.save() gracias a @Transactional
+        }
+
+        // Liberamos la mesa
+        Mesa mesa = comanda.getMesa();
+        mesa.setEstado(EstadoMesa.LIBRE);
+    }
+    // --- FIN DE LA LÓGICA NUEVA ---
+
+    // Lógica existente para cuando una comanda se paga
+    if (nuevoEstado == EstadoComanda.PAGADA) {
+        Mesa mesa = comanda.getMesa();
+        mesa.setEstado(EstadoMesa.LIBRE);
+    }
+
+    comanda.setEstado(nuevoEstado);
+    Comanda comandaActualizada = comandaRepository.save(comanda);
+    return mapToComandaResponseDTO(comandaActualizada);
+}
 
     // Helper para convertir Entity a DTO
     private ComandaResponseDTO mapToComandaResponseDTO(Comanda comanda) {

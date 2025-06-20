@@ -1,7 +1,18 @@
 import React, { createContext, useState, useContext, type ReactNode, useCallback } from 'react';
 import type { Producto, ComandaResponseDTO } from '../types';
-import { crearComandaAPI, agregarItemsAComandaAPI } from '../services/comandaService';
+import { crearComandaAPI, agregarItemsAComandaAPI, updateComandaEstado } from '../services/comandaService';
 import type { ItemRequestDTO } from '../dto/comandaDTOs';
+
+// --- INTERFAZ UNIFICADA ---
+interface IOrderContext {
+    orderItems: OrderItem[];
+    activeComandaId: number | null;
+    addProductToOrder: (product: Producto) => Promise<void>;
+    submitNewOrder: (mesaId: number) => Promise<void>;
+    loadExistingOrder: (comanda: ComandaResponseDTO) => void;
+    clearOrder: () => void;
+    cancelOrder: (comandaId: number) => Promise<void>; // Función para cancelar
+}
 
 interface OrderItem {
     productoId: number;
@@ -10,15 +21,7 @@ interface OrderItem {
     precioUnitario: number;
 }
 
-interface IOrderContext {
-    orderItems: OrderItem[];
-    activeComandaId: number | null;
-    addProductToOrder: (product: Producto) => Promise<void>;
-    submitNewOrder: (mesaId: number) => Promise<void>;
-    loadExistingOrder: (comanda: ComandaResponseDTO) => void;
-    clearOrder: () => void;
-}
-
+// --- EXPORTAMOS EL CONTEXTO ---
 export const OrderContext = createContext<IOrderContext | undefined>(undefined);
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
@@ -51,18 +54,15 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
                 alert("Error al añadir el producto a la comanda.");
             }
         } else {
-            // ESTA LÓGICA PREVIENE LOS DUPLICADOS
             setOrderItems(currentItems => {
                 const existingItem = currentItems.find(item => item.productoId === productToAdd.id);
                 if (existingItem) {
-                    // Si el item existe, solo incrementa la cantidad
                     return currentItems.map(item =>
                         item.productoId === productToAdd.id
                             ? { ...item, cantidad: item.cantidad + 1 }
                             : item
                     );
                 }
-                // Si no existe, lo añade a la lista
                 return [...currentItems, { 
                     productoId: productToAdd.id,
                     productoNombre: productToAdd.nombre,
@@ -92,17 +92,25 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [orderItems, activeComandaId, clearOrder]);
 
+    // --- NUEVA FUNCIÓN PARA CANCELAR ---
+    const cancelOrder = useCallback(async (comandaId: number) => {
+        try {
+            await updateComandaEstado(comandaId, 'CANCELADA');
+            clearOrder(); // Limpiamos el estado local
+            alert('Comanda cancelada con éxito.');
+        } catch (error) {
+            console.error("Error al cancelar la comanda:", error);
+            alert('Hubo un error al cancelar la comanda.');
+        }
+    }, [clearOrder]);
+
+
     return (
-        <OrderContext.Provider value={{ orderItems, activeComandaId, addProductToOrder, submitNewOrder, loadExistingOrder, clearOrder }}>
+        // --- AÑADIMOS cancelOrder AL VALOR DEL PROVIDER ---
+        <OrderContext.Provider value={{ orderItems, activeComandaId, addProductToOrder, submitNewOrder, loadExistingOrder, clearOrder, cancelOrder }}>
             {children}
         </OrderContext.Provider>
     );
 };
 
-export const useOrder = () => {
-    const context = useContext(OrderContext);
-    if (context === undefined) {
-        throw new Error('useOrder must be used within an OrderProvider');
-    }
-    return context;
-};
+// La función useOrder ya NO debe estar aquí. Vive en /src/hooks/useOrder.ts
