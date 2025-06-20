@@ -10,6 +10,7 @@ import TableSelectionPage from './pages/TableSelectionPage.tsx';
 import OrderPage from './pages/OrderPage.tsx';
 import KitchenViewPage from './pages/KitchenViewPage.tsx';
 import CashierViewPage from './pages/CashierViewPage.tsx';
+import UserManagementPage from './pages/UserManagementPage.tsx';
 
 import './index.css';
 
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
           {
             path: "/reportes", // <-- Añadir esta ruta
             element: <ReportesPage />,
+          },
+          {
+            path: "/usuarios", // <-- Añadir esta ruta
+            element: <UserManagementPage />,
           },
         ]
       }

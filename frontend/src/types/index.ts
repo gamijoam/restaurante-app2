@@ -47,3 +47,17 @@ export interface ReporteVentasDTO {
     totalRecaudado: number;
     productosMasVendidos: ProductoVendidoDTO[];
 }
+// ... (debajo de las otras interfaces)
+
+// --- Tipo para la Respuesta de la API de Usuarios ---
+
+export interface UsuarioResponseDTO {
+    id: number;
+    username: string;
+    nombre: string;
+    apellido: string;
+    email: string;
+    activo: boolean;
+    roles: string[]; // Recibimos los roles como un array de strings
+    fechaCreacion: string;
+}

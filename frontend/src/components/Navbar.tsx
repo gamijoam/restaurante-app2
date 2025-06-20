@@ -26,12 +26,18 @@ const Navbar = () => {
                         <Button color="inherit" component={RouterLink} to="/caja">Caja</Button>
 
                         {esGerente && (
-                            <Button color="inherit" component={RouterLink} to="/reportes">
-                                Reportes
-                            </Button>
-                        )}
+    <> {/* Usamos un fragmento para agrupar los botones de gerente */}
+        <Button color="inherit" component={RouterLink} to="/reportes">
+            Reportes
+        </Button>
+        <Button color="inherit" component={RouterLink} to="/usuarios">
+            Gestionar Usuarios
+        </Button>
+    </>
+)}
 
                         <Button color="inherit" onClick={handleLogout}>Logout</Button>
+                        
                     </Box>
                 )}
             </Toolbar>
