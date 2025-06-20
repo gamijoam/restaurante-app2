@@ -1,9 +1,7 @@
-import axios from 'axios';
+import api from './api'; // <-- Importa 'api', NO 'axios'
 import type { Producto } from '../types';
 
-const API_URL = 'http://localhost:8080/api/v1/productos';
-
 export const getProductos = async (): Promise<Producto[]> => {
-    const response = await axios.get(API_URL);
+    const response = await api.get('/productos'); // <-- Usa 'api'
     return response.data;
 };

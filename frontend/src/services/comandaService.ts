@@ -1,21 +1,21 @@
-import axios from 'axios';
+import api from './api'; // <-- Importa 'api', NO 'axios'
 import type { ComandaResponseDTO } from '../types';
 import type { ComandaRequestDTO } from '../dto/ComandaRequestDTO';
 
-const API_URL = 'http://localhost:8080/api/v1/comandas';
-
+// El AuthController es público, por lo que todavía usa axios directamente.
+// Para los endpoints de comandas, usamos nuestra instancia 'api'.
 export const crearComandaAPI = async (comandaData: ComandaRequestDTO): Promise<ComandaResponseDTO> => {
-    const response = await axios.post(API_URL, comandaData);
+    const response = await api.post('/comandas', comandaData);
     return response.data;
 };
 
 export const getComandasPorMultiplesEstados = async (estados: string[]): Promise<ComandaResponseDTO[]> => {
     const estadosQuery = estados.join(',');
-    const response = await axios.get(`${API_URL}?estados=${estadosQuery}`);
+    const response = await api.get(`/comandas?estados=${estadosQuery}`);
     return response.data;
 };
 
 export const updateComandaEstado = async (id: number, estado: string): Promise<ComandaResponseDTO> => {
-    const response = await axios.put(`${API_URL}/${id}/estado`, { estado });
+    const response = await api.put(`/comandas/${id}/estado`, { estado });
     return response.data;
 };

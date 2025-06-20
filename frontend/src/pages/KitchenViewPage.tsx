@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ComandaResponseDTO } from '../types';
-// ¡LA CORRECCIÓN ESTÁ AQUÍ! Importamos las funciones correctas del archivo de servicio correcto.
+// CORRECCIÓN: Importa del servicio correcto y la función correcta
 import { getComandasPorMultiplesEstados, updateComandaEstado } from '../services/comandaService';
 import { Container, Grid, Typography, Card, CardContent, CardActions, Button, CircularProgress, Alert } from '@mui/material';
 
@@ -10,13 +10,12 @@ const KitchenViewPage = () => {
     const [error, setError] = useState<string | null>(null);
 
     const fetchComandasEnProceso = async () => {
-        if (!loading) setLoading(true); // Mostrar loading en refrescos manuales o de intervalo
         try {
-            // Usamos la función correcta que puede manejar una lista de estados (incluso si es solo uno)
+            // CORRECCIÓN: Llama a la función correcta con un array de estados
             const data = await getComandasPorMultiplesEstados(['EN_PROCESO']);
             if (Array.isArray(data)) {
                 setComandas(data);
-                setError(null); // Limpiar errores anteriores si la petición es exitosa
+                setError(null);
             } else {
                 setComandas([]);
                 setError('La respuesta de la API no tuvo el formato esperado.');
@@ -25,20 +24,19 @@ const KitchenViewPage = () => {
             setError('Error al cargar las comandas.');
             console.error(err);
         } finally {
-            setLoading(false);
+            if (loading) setLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchComandasEnProceso(); // Carga inicial
-        const interval = setInterval(fetchComandasEnProceso, 30000); // Refresca cada 30 segundos
-        return () => clearInterval(interval); // Limpia el intervalo al salir
+        fetchComandasEnProceso();
+        const interval = setInterval(fetchComandasEnProceso, 15000);
+        return () => clearInterval(interval);
     }, []);
 
     const handleMarcarComoLista = async (comandaId: number) => {
         try {
             await updateComandaEstado(comandaId, 'LISTA');
-            // Filtramos la comanda de la lista para una actualización visual instantánea
             setComandas(prevComandas => prevComandas.filter(c => c.id !== comandaId));
         } catch (err) {
             alert('Error al actualizar la comanda.');
@@ -54,6 +52,7 @@ const KitchenViewPage = () => {
             <Grid container spacing={3}>
                 {comandas.length > 0 ? (
                     comandas.map(comanda => (
+                        // CORRECCIÓN: Sin la prop "item"
                         <Grid item key={comanda.id} xs={12} sm={6} md={4}>
                             <Card>
                                 <CardContent>

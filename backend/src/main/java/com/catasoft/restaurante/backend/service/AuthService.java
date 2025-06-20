@@ -9,7 +9,6 @@ import com.catasoft.restaurante.backend.repository.UsuarioRepository;
 import com.catasoft.restaurante.backend.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,8 +30,11 @@ public class AuthService {
     }
 
     public AuthResponseDTO login(LoginRequestDTO request) {
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        UserDetails user = (UserDetails) usuarioRepository.findByUsername(request.getUsername()).orElseThrow();
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
+        Usuario user = usuarioRepository.findByUsername(request.getUsername()).orElseThrow();
+        // Ahora pasamos el objeto Usuario directamente
         String token = jwtService.generateToken(user);
         return new AuthResponseDTO(token);
     }
@@ -40,14 +42,15 @@ public class AuthService {
     public AuthResponseDTO register(RegisterRequestDTO request) {
         Usuario usuario = new Usuario();
         usuario.setUsername(request.getUsername());
+        usuario.setNombre(request.getNombre());
+        usuario.setEmail(request.getEmail());
         usuario.setPassword(passwordEncoder.encode(request.getPassword()));
-        // Por defecto, asignamos el rol de CAMARERO a los nuevos usuarios.
         usuario.setRoles(Set.of(Rol.ROLE_CAMARERO));
 
         usuarioRepository.save(usuario);
 
-        UserDetails user = (UserDetails) usuarioRepository.findByUsername(request.getUsername()).orElseThrow();
-        String token = jwtService.generateToken(user);
+        // Ahora pasamos el objeto Usuario directamente
+        String token = jwtService.generateToken(usuario);
         return new AuthResponseDTO(token);
     }
 }
