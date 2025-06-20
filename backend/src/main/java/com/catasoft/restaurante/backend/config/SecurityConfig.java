@@ -1,6 +1,5 @@
 package com.catasoft.restaurante.backend.config;
 
-import com.catasoft.restaurante.backend.model.enums.Rol;
 import com.catasoft.restaurante.backend.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +15,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity 
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -33,10 +32,11 @@ public class SecurityConfig {
             .cors(withDefaults())
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // REGLAS DE AUTORIZACIÓN (en orden de prioridad):
-                .requestMatchers("/api/auth/**").permitAll() // 1. Auth es público para todos.
-                .requestMatchers("/api/v1/reportes/**").authenticated() // 2. Reportes solo para Gerente.
-                .anyRequest().authenticated() // 3. Cualquier otra petición requiere estar autenticado (cualquier rol).
+                // --- CORRECCIÓN FINAL ---
+                // Permitimos el acceso público a la autenticación Y a los websockets
+                .requestMatchers("/api/auth/**", "/ws/**").permitAll()
+                .requestMatchers("/api/v1/reportes/**").hasRole("GERENTE")
+                .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

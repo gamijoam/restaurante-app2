@@ -11,7 +11,7 @@ import OrderPage from './pages/OrderPage.tsx';
 import KitchenViewPage from './pages/KitchenViewPage.tsx';
 import CashierViewPage from './pages/CashierViewPage.tsx';
 import UserManagementPage from './pages/UserManagementPage.tsx';
-
+import { WebSocketProvider } from './context/WebSocketContext';
 import './index.css';
 
 const router = createBrowserRouter([
@@ -47,7 +47,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      <RouterProvider router={router} />
+      <WebSocketProvider> {/* <-- Envolver con el nuevo proveedor */}
+        <RouterProvider router={router} />
+      </WebSocketProvider>
     </AuthProvider>
   </StrictMode>,
 );

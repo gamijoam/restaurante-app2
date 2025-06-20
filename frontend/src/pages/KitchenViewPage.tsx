@@ -1,42 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react'; // <-- Añade useCallback
 import type { ComandaResponseDTO } from '../types';
-// CORRECCIÓN: Importa del servicio correcto y la función correcta
 import { getComandasPorMultiplesEstados, updateComandaEstado } from '../services/comandaService';
+import { useWebSocket } from '../context/WebSocketContext';
 import { Container, Grid, Typography, Card, CardContent, CardActions, Button, CircularProgress, Alert } from '@mui/material';
 
 const KitchenViewPage = () => {
     const [comandas, setComandas] = useState<ComandaResponseDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const { stompClient, isConnected } = useWebSocket();
 
-    const fetchComandasEnProceso = async () => {
+    // 1. DEFINIMOS LA FUNCIÓN DE FORMA ESTABLE CON useCallback
+    const fetchInitialComandas = useCallback(async () => {
+        setLoading(true); // Siempre ponemos loading al buscar
         try {
-            // CORRECCIÓN: Llama a la función correcta con un array de estados
             const data = await getComandasPorMultiplesEstados(['EN_PROCESO']);
             if (Array.isArray(data)) {
                 setComandas(data);
-                setError(null);
-            } else {
-                setComandas([]);
-                setError('La respuesta de la API no tuvo el formato esperado.');
             }
         } catch (err) {
-            setError('Error al cargar las comandas.');
-            console.error(err);
+            console.error("Error al cargar comandas:", err);
+            setError('Error al cargar las comandas iniciales.');
         } finally {
-            if (loading) setLoading(false);
+            setLoading(false);
         }
-    };
+    }, []); // El array vacío significa que esta función nunca cambiará
 
+    // 2. EL useEffect AHORA ES MÁS SIMPLE Y ROBUSTO
     useEffect(() => {
-        fetchComandasEnProceso();
-        const interval = setInterval(fetchComandasEnProceso, 15000);
-        return () => clearInterval(interval);
-    }, []);
+        if (isConnected && stompClient) {
+            // Carga inicial
+            fetchInitialComandas();
+
+            // Suscripción a nuevas comandas
+            const subscription = stompClient.subscribe('/topic/cocina', (message) => {
+                const comandaRecibida: ComandaResponseDTO = JSON.parse(message.body);
+                // Añade la nueva comanda a la lista existente
+                setComandas(prevComandas => {
+                    // Evitar duplicados si ya existe
+                    if (prevComandas.find(c => c.id === comandaRecibida.id)) {
+                        return prevComandas;
+                    }
+                    return [comandaRecibida, ...prevComandas];
+                });
+            });
+
+            return () => {
+                subscription.unsubscribe();
+            };
+        }
+    }, [isConnected, stompClient, fetchInitialComandas]); // Añadimos la función a las dependencias
 
     const handleMarcarComoLista = async (comandaId: number) => {
         try {
             await updateComandaEstado(comandaId, 'LISTA');
+            // La actualización optimista funciona bien aquí
             setComandas(prevComandas => prevComandas.filter(c => c.id !== comandaId));
         } catch (err) {
             alert('Error al actualizar la comanda.');
@@ -48,11 +66,10 @@ const KitchenViewPage = () => {
 
     return (
         <Container sx={{ py: 4 }} maxWidth="xl">
-            <Typography variant="h4" align="center" gutterBottom>Comandas en Cocina</Typography>
+            <Typography variant="h4" align="center" gutterBottom>Comandas en Cocina (En Tiempo Real)</Typography>
             <Grid container spacing={3}>
                 {comandas.length > 0 ? (
                     comandas.map(comanda => (
-                        // CORRECCIÓN: Sin la prop "item"
                         <Grid item key={comanda.id} xs={12} sm={6} md={4}>
                             <Card>
                                 <CardContent>
