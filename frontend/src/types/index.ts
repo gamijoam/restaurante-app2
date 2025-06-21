@@ -61,3 +61,11 @@ export interface UsuarioResponseDTO {
     roles: string[]; // Recibimos los roles como un array de strings
     fechaCreacion: string;
 }
+export interface FacturaResponseDTO {
+    id: number;
+    comandaId: number;
+    numeroMesa: number;
+    total: number;
+    impuesto: number;
+    fechaEmision: string; // Las fechas se reciben como strings
+}

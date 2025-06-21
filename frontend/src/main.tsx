@@ -13,7 +13,7 @@ import CashierViewPage from './pages/CashierViewPage.tsx';
 import UserManagementPage from './pages/UserManagementPage.tsx';
 import { WebSocketProvider } from './context/WebSocketContext';
 import './index.css';
-
+import FacturacionPage from './pages/FacturacionPage.tsx';
 const router = createBrowserRouter([
   {
     path: "/",
@@ -33,6 +33,10 @@ const router = createBrowserRouter([
           {
             path: "/usuarios", // <-- Añadir esta ruta
             element: <UserManagementPage />,
+          },
+          {
+            path: "/facturacion", // <-- Añadir esta ruta
+            element: <FacturacionPage />,
           },
         ]
       }

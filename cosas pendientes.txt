@@ -1,0 +1,1 @@
+al momento de generar una comanda , si la actualizas con otro item no se actualiza automáticamente en cocina

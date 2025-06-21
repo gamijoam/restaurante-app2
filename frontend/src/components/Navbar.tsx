@@ -33,6 +33,9 @@ const Navbar = () => {
         <Button color="inherit" component={RouterLink} to="/usuarios">
             Gestionar Usuarios
         </Button>
+        <Button color="inherit" component={RouterLink} to="/facturacion">
+    Facturación
+</Button>
     </>
 )}
 

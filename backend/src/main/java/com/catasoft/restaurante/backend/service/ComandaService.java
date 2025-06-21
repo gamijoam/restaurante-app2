@@ -12,7 +12,7 @@ import com.catasoft.restaurante.backend.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; // <-- IMPORTACIÓN CORREGIDA
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-
+import com.catasoft.restaurante.backend.model.Factura;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,13 +27,14 @@ public class ComandaService {
     private final MesaRepository mesaRepository;
     private final ProductoRepository productoRepository;
     private final SimpMessagingTemplate messagingTemplate; // <-- 1. AÑADIMOS EL TEMPLATE DE MENSAJERÍA
-
-    // 2. ACTUALIZAMOS EL CONSTRUCTOR PARA INYECTAR EL TEMPLATE
-    public ComandaService(ComandaRepository comandaRepository, MesaRepository mesaRepository, ProductoRepository productoRepository, SimpMessagingTemplate messagingTemplate) {
+    private final FacturaRepository facturaRepository;
+    // 2. ACTUALIZAMOS EL CONSTRUCTOR
+    public ComandaService(ComandaRepository comandaRepository, MesaRepository mesaRepository, ProductoRepository productoRepository, SimpMessagingTemplate messagingTemplate, FacturaRepository facturaRepository) {
         this.comandaRepository = comandaRepository;
         this.mesaRepository = mesaRepository;
         this.productoRepository = productoRepository;
         this.messagingTemplate = messagingTemplate;
+        this.facturaRepository = facturaRepository;
     }
 
     @Transactional
@@ -107,6 +108,18 @@ public class ComandaService {
         if (nuevoEstado == EstadoComanda.PAGADA) {
             Mesa mesa = comanda.getMesa();
             mesa.setEstado(EstadoMesa.LIBRE);
+
+            // --- 3. LÓGICA AÑADIDA PARA CREAR LA FACTURA ---
+            Factura factura = new Factura();
+            factura.setComanda(comanda);
+            factura.setTotal(comanda.getTotal());
+            // Como ejemplo, calculamos un impuesto del 16%
+            BigDecimal impuesto = comanda.getTotal().multiply(new BigDecimal("0.16"));
+            factura.setImpuesto(impuesto);
+
+            facturaRepository.save(factura);
+            System.out.println("Factura creada con ID: " + factura.getId() + " para la comanda ID: " + comanda.getId());
+            // ---------------------------------------------
         }
 
         comanda.setEstado(nuevoEstado);
