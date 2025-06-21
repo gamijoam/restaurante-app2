@@ -3,7 +3,7 @@ import type { Producto, ComandaResponseDTO } from '../types';
 import { crearComandaAPI, agregarItemsAComandaAPI, updateComandaEstado } from '../services/comandaService';
 import type { ItemRequestDTO } from '../dto/comandaDTOs';
 
-// --- INTERFAZ UNIFICADA ---
+// --- INTERFAZ UNIFICADA Y FINAL ---
 interface IOrderContext {
     orderItems: OrderItem[];
     activeComandaId: number | null;
@@ -92,11 +92,10 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [orderItems, activeComandaId, clearOrder]);
 
-    // --- NUEVA FUNCIÓN PARA CANCELAR ---
     const cancelOrder = useCallback(async (comandaId: number) => {
         try {
             await updateComandaEstado(comandaId, 'CANCELADA');
-            clearOrder(); // Limpiamos el estado local
+            clearOrder();
             alert('Comanda cancelada con éxito.');
         } catch (error) {
             console.error("Error al cancelar la comanda:", error);
@@ -106,11 +105,10 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
 
     return (
-        // --- AÑADIMOS cancelOrder AL VALOR DEL PROVIDER ---
         <OrderContext.Provider value={{ orderItems, activeComandaId, addProductToOrder, submitNewOrder, loadExistingOrder, clearOrder, cancelOrder }}>
             {children}
         </OrderContext.Provider>
     );
 };
 
-// La función useOrder ya NO debe estar aquí. Vive en /src/hooks/useOrder.ts
+// La función useOrder vive en su propio archivo /src/hooks/useOrder.ts

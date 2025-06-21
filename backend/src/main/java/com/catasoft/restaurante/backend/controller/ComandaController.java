@@ -39,25 +39,24 @@ public ResponseEntity<ComandaResponseDTO> agregarItemsAComanda(
     }
 
     @GetMapping
-    public List<ComandaResponseDTO> getAllComandas(@RequestParam Optional<List<String>> estados) {
-        // Esta es la lógica final y correcta para manejar el filtrado por estado(s)
-        if (estados.isPresent() && !estados.get().isEmpty()) {
-            try {
-                List<EstadoComanda> estadosEnum = estados.get().stream()
-                        .map(String::toUpperCase)
-                        .map(EstadoComanda::valueOf)
-                        .collect(Collectors.toList());
-
-                return comandaService.getComandasByEstados(estadosEnum);
-
-            } catch (IllegalArgumentException e) {
-                // Si se provee un estado inválido, se devuelve una lista vacía.
-                return List.of();
-            }
-        }
-        // Si no se provee el parámetro "estados", se devuelven todas las comandas.
-        return comandaService.getAllComandas();
+public ResponseEntity<List<ComandaResponseDTO>> getAllComandas(@RequestParam(required = false) List<String> estados) {
+    // Si no se provee el parámetro "estados" o está vacío, devolvemos todas las comandas.
+    if (estados == null || estados.isEmpty()) {
+        return ResponseEntity.ok(comandaService.getAllComandas());
     }
+
+    // Si se provee, filtramos por esos estados.
+    try {
+        List<EstadoComanda> estadosEnum = estados.stream()
+                .map(String::toUpperCase)
+                .map(EstadoComanda::valueOf)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(comandaService.getComandasByEstados(estadosEnum));
+    } catch (IllegalArgumentException e) {
+        // Si se provee un estado inválido, devolvemos un error de "Bad Request".
+        return ResponseEntity.badRequest().build();
+    }
+}
 
     @GetMapping("/{id}")
     public ResponseEntity<ComandaResponseDTO> getComandaById(@PathVariable Long id) {

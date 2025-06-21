@@ -29,6 +29,7 @@ public class MesaController {
 
     // --- TUS MÉTODOS EXISTENTES (NO CAMBIAN) ---
     @GetMapping
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
     public List<Mesa> getAllMesas() {
         return mesaRepository.findAll();
     }

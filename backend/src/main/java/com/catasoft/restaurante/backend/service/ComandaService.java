@@ -85,14 +85,14 @@ public class ComandaService {
     public ComandaResponseDTO updateEstadoComanda(Long id, Map<String, String> payload) {
         Comanda comanda = comandaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comanda no encontrada con id: " + id));
-
+    
         String nuevoEstadoStr = payload.get("estado");
         if (nuevoEstadoStr == null) {
             throw new IllegalArgumentException("El campo 'estado' es requerido.");
         }
-
+    
         EstadoComanda nuevoEstado = EstadoComanda.valueOf(nuevoEstadoStr.toUpperCase());
-        
+    
         if (nuevoEstado == EstadoComanda.CANCELADA) {
             if (comanda.getEstado() != EstadoComanda.EN_PROCESO) {
                 throw new IllegalStateException("Solo se pueden cancelar comandas que están EN PROCESO.");
@@ -104,39 +104,38 @@ public class ComandaService {
             Mesa mesa = comanda.getMesa();
             mesa.setEstado(EstadoMesa.LIBRE);
         }
-        
+    
+        // --- LÓGICA DE FACTURACIÓN RESTAURADA ---
         if (nuevoEstado == EstadoComanda.PAGADA) {
             Mesa mesa = comanda.getMesa();
             mesa.setEstado(EstadoMesa.LIBRE);
-
-            // --- 3. LÓGICA AÑADIDA PARA CREAR LA FACTURA ---
+    
+            // Este bloque estaba faltando:
             Factura factura = new Factura();
             factura.setComanda(comanda);
             factura.setTotal(comanda.getTotal());
-            // Como ejemplo, calculamos un impuesto del 16%
-            BigDecimal impuesto = comanda.getTotal().multiply(new BigDecimal("0.16"));
+            BigDecimal impuesto = comanda.getTotal().multiply(new BigDecimal("0.16")); // Ejemplo de impuesto
             factura.setImpuesto(impuesto);
-
+    
             facturaRepository.save(factura);
             System.out.println("Factura creada con ID: " + factura.getId() + " para la comanda ID: " + comanda.getId());
-            // ---------------------------------------------
         }
-
+        // --- FIN DE LA LÓGICA RESTAURADA ---
+    
         comanda.setEstado(nuevoEstado);
         Comanda comandaActualizada = comandaRepository.save(comanda);
         ComandaResponseDTO dto = mapToComandaResponseDTO(comandaActualizada);
-
-        // 4. ENVIAMOS NOTIFICACIONES WEBSOCKET A LOS CANALES RELEVANTES
+    
+        // Notificaciones WebSocket (sin cambios)
         System.out.println("Enviando notificación a /topic/general sobre comanda ID: " + dto.getId());
         messagingTemplate.convertAndSend("/topic/general", dto);
-
         if (nuevoEstado == EstadoComanda.LISTA || nuevoEstado == EstadoComanda.ENTREGADA) {
             messagingTemplate.convertAndSend("/topic/caja", dto);
         }
         if (nuevoEstado == EstadoComanda.PAGADA || nuevoEstado == EstadoComanda.CANCELADA) {
             messagingTemplate.convertAndSend("/topic/mesas", "Mesa " + comanda.getMesa().getNumero() + " actualizada");
         }
-
+    
         return dto;
     }
     
