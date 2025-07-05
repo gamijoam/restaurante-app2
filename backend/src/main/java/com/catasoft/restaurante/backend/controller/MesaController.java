@@ -1,17 +1,19 @@
 package com.catasoft.restaurante.backend.controller;
 
-import com.catasoft.restaurante.backend.dto.ComandaResponseDTO; // <-- NUEVA IMPORTACIÓN
+import com.catasoft.restaurante.backend.dto.ComandaResponseDTO;
+import com.catasoft.restaurante.backend.dto.MesaMapaDTO;
 import com.catasoft.restaurante.backend.exception.ResourceNotFoundException;
 import com.catasoft.restaurante.backend.model.Mesa;
 import com.catasoft.restaurante.backend.model.enums.EstadoMesa;
 import com.catasoft.restaurante.backend.repository.MesaRepository;
-import com.catasoft.restaurante.backend.service.ComandaService; // <-- NUEVA IMPORTACIÓN
+import com.catasoft.restaurante.backend.service.ComandaService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize; // <-- NUEVA IMPORTACIÓN
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -19,15 +21,14 @@ import java.util.Map;
 public class MesaController {
 
     private final MesaRepository mesaRepository;
-    private final ComandaService comandaService; // <-- 1. AÑADIMOS EL SERVICIO DE COMANDAS
+    private final ComandaService comandaService;
 
-    // 2. ACTUALIZAMOS EL CONSTRUCTOR PARA INYECTAR AMBOS SERVICIOS
     public MesaController(MesaRepository mesaRepository, ComandaService comandaService) {
         this.mesaRepository = mesaRepository;
         this.comandaService = comandaService;
     }
 
-    // --- TUS MÉTODOS EXISTENTES (NO CAMBIAN) ---
+    // --- MÉTODOS EXISTENTES ---
     @GetMapping
     @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
     public List<Mesa> getAllMesas() {
@@ -67,12 +68,86 @@ public class MesaController {
         }
     }
 
-    // --- 3. AÑADIMOS EL NUEVO ENDPOINT ---
     @GetMapping("/{id}/comanda-activa")
     @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
     public ResponseEntity<ComandaResponseDTO> getComandaActivaPorMesa(@PathVariable Long id) {
         return comandaService.getComandaActivaPorMesa(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // --- NUEVOS ENDPOINTS PARA EL MAPA ---
+    
+    /**
+     * Obtiene todas las mesas con información para el mapa visual
+     */
+    @GetMapping("/mapa")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
+    public List<MesaMapaDTO> getMesasMapa() {
+        List<Mesa> mesas = mesaRepository.findAll();
+        return mesas.stream()
+                .map(this::convertToMapaDTO)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Actualiza la posición de una mesa en el mapa
+     */
+    @PutMapping("/{id}/posicion")
+    @PreAuthorize("hasRole('GERENTE')")
+    public ResponseEntity<Mesa> updateMesaPosicion(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+        Mesa mesa = mesaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Mesa no encontrada con id: " + id));
+
+        Integer posicionX = (Integer) payload.get("posicionX");
+        Integer posicionY = (Integer) payload.get("posicionY");
+        String nombre = (String) payload.get("nombre");
+
+        if (posicionX != null) mesa.setPosicionX(posicionX);
+        if (posicionY != null) mesa.setPosicionY(posicionY);
+        if (nombre != null) mesa.setNombre(nombre);
+
+        Mesa mesaActualizada = mesaRepository.save(mesa);
+        return ResponseEntity.ok(mesaActualizada);
+    }
+
+    /**
+     * Actualiza múltiples mesas a la vez (para drag & drop)
+     */
+    @PutMapping("/posiciones")
+    @PreAuthorize("hasRole('GERENTE')")
+    public ResponseEntity<List<Mesa>> updateMesasPosiciones(@RequestBody List<Map<String, Object>> mesasData) {
+        List<Mesa> mesasActualizadas = mesasData.stream()
+                .map(data -> {
+                    Long id = Long.valueOf(data.get("id").toString());
+                    Mesa mesa = mesaRepository.findById(id)
+                            .orElseThrow(() -> new ResourceNotFoundException("Mesa no encontrada con id: " + id));
+                    
+                    Integer posicionX = (Integer) data.get("posicionX");
+                    Integer posicionY = (Integer) data.get("posicionY");
+                    String nombre = (String) data.get("nombre");
+                    
+                    if (posicionX != null) mesa.setPosicionX(posicionX);
+                    if (posicionY != null) mesa.setPosicionY(posicionY);
+                    if (nombre != null) mesa.setNombre(nombre);
+                    
+                    return mesaRepository.save(mesa);
+                })
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(mesasActualizadas);
+    }
+
+    // Método auxiliar para convertir Mesa a MesaMapaDTO
+    private MesaMapaDTO convertToMapaDTO(Mesa mesa) {
+        return new MesaMapaDTO(
+            mesa.getId(),
+            mesa.getNumero(),
+            mesa.getCapacidad(),
+            mesa.getEstado(),
+            mesa.getPosicionX(),
+            mesa.getPosicionY(),
+            mesa.getNombre()
+        );
     }
 }

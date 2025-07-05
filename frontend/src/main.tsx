@@ -11,6 +11,10 @@ import OrderPage from './pages/OrderPage.tsx';
 import KitchenViewPage from './pages/KitchenViewPage.tsx';
 import CashierViewPage from './pages/CashierViewPage.tsx';
 import UserManagementPage from './pages/UserManagementPage.tsx';
+import IngredientesPage from './pages/IngredientesPage.tsx';
+import RecetasPage from './pages/RecetasPage.tsx';
+import InventarioHelpPage from './pages/InventarioHelpPage.tsx';
+import MesaMapaPage from './pages/MesaMapaPage.tsx';
 import { WebSocketProvider } from './context/WebSocketContext';
 import './index.css';
 import FacturacionPage from './pages/FacturacionPage.tsx';
@@ -37,6 +41,22 @@ const router = createBrowserRouter([
           {
             path: "/facturacion", // <-- Añadir esta ruta
             element: <FacturacionPage />,
+          },
+          {
+            path: "/ingredientes", // <-- Añadir esta ruta
+            element: <IngredientesPage />,
+          },
+          {
+            path: "/recetas", // <-- Añadir esta ruta
+            element: <RecetasPage />,
+          },
+          {
+            path: "/inventario-help", // <-- Añadir esta ruta
+            element: <InventarioHelpPage />,
+          },
+          {
+            path: "/mapa-mesas",
+            element: <MesaMapaPage />,
           },
         ]
       }

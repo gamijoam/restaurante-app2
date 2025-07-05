@@ -10,5 +10,7 @@ import java.util.List;
 @Repository
 public interface RecetaIngredienteRepository extends JpaRepository<RecetaIngrediente, Long> {
     List<RecetaIngrediente> findByProducto(Producto producto);
+    List<RecetaIngrediente> findByProductoId(Long productoId);
     void deleteByProducto(Producto producto);
+    void deleteByProductoId(Long productoId);
 }

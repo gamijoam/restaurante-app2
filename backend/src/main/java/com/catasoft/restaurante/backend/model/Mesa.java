@@ -28,6 +28,16 @@ public class Mesa {
     @Column(nullable = false, length = 20)
     private EstadoMesa estado;
 
+    // --- Nuevos campos para el mapa visual ---
+    @Column(nullable = true)
+    private Integer posicionX;
+
+    @Column(nullable = true)
+    private Integer posicionY;
+
+    @Column(nullable = true)
+    private String nombre; // Nombre descriptivo (ej: "Mesa del Rincón", "Mesa VIP")
+
     // --- Constructores ---
 
     public Mesa() {
@@ -37,6 +47,15 @@ public class Mesa {
         this.numero = numero;
         this.capacidad = capacidad;
         this.estado = estado;
+    }
+
+    public Mesa(Integer numero, Integer capacidad, EstadoMesa estado, Integer posicionX, Integer posicionY, String nombre) {
+        this.numero = numero;
+        this.capacidad = capacidad;
+        this.estado = estado;
+        this.posicionX = posicionX;
+        this.posicionY = posicionY;
+        this.nombre = nombre;
     }
 
     // --- Getters y Setters ---
@@ -71,5 +90,29 @@ public class Mesa {
 
     public void setEstado(EstadoMesa estado) {
         this.estado = estado;
+    }
+
+    public Integer getPosicionX() {
+        return posicionX;
+    }
+
+    public void setPosicionX(Integer posicionX) {
+        this.posicionX = posicionX;
+    }
+
+    public Integer getPosicionY() {
+        return posicionY;
+    }
+
+    public void setPosicionY(Integer posicionY) {
+        this.posicionY = posicionY;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
     }
 }

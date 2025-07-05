@@ -27,6 +27,9 @@ const Navbar = () => {
 
                         {esGerente && (
     <> {/* Usamos un fragmento para agrupar los botones de gerente */}
+        <Button color="inherit" component={RouterLink} to="/mapa-mesas">
+            Mapa de Mesas
+        </Button>
         <Button color="inherit" component={RouterLink} to="/reportes">
             Reportes
         </Button>
@@ -36,6 +39,15 @@ const Navbar = () => {
         <Button color="inherit" component={RouterLink} to="/facturacion">
     Facturación
 </Button>
+        <Button color="inherit" component={RouterLink} to="/ingredientes">
+            Ingredientes
+        </Button>
+        <Button color="inherit" component={RouterLink} to="/recetas">
+            Recetas
+        </Button>
+        <Button color="inherit" component={RouterLink} to="/inventario-help">
+            Ayuda Inventario
+        </Button>
     </>
 )}
 
