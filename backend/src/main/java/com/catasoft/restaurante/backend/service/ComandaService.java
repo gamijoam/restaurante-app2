@@ -157,9 +157,11 @@ public class ComandaService {
             Producto producto = productoRepository.findById(itemDTO.getProductoId())
                     .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + itemDTO.getProductoId()));
 
-            if (producto.getStock() < itemDTO.getCantidad()) {
-                throw new IllegalStateException("Stock insuficiente para el producto: " + producto.getNombre());
-            }
+            // Validar stock de ingredientes
+            inventarioService.validarStockIngredientes(producto, itemDTO.getCantidad());
+
+            // Descontar stock de ingredientes
+            inventarioService.descontarStockIngredientes(producto, itemDTO.getCantidad());
 
             ComandaItem comandaItem = new ComandaItem();
             comandaItem.setProducto(producto);
@@ -169,7 +171,6 @@ public class ComandaService {
             comanda.getItems().add(comandaItem);
 
             comanda.setTotal(comanda.getTotal().add(producto.getPrecio().multiply(BigDecimal.valueOf(itemDTO.getCantidad()))));
-            producto.setStock(producto.getStock() - itemDTO.getCantidad());
         }
 
         Comanda comandaActualizada = comandaRepository.save(comanda);
