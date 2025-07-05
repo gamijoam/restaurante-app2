@@ -10,9 +10,10 @@ import com.catasoft.restaurante.backend.model.enums.EstadoComanda;
 import com.catasoft.restaurante.backend.model.enums.EstadoMesa;
 import com.catasoft.restaurante.backend.repository.*;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // <-- IMPORTACIÓN CORREGIDA
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.catasoft.restaurante.backend.model.Factura;
+import com.catasoft.restaurante.backend.service.InventarioService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -26,15 +27,17 @@ public class ComandaService {
     private final ComandaRepository comandaRepository;
     private final MesaRepository mesaRepository;
     private final ProductoRepository productoRepository;
-    private final SimpMessagingTemplate messagingTemplate; // <-- 1. AÑADIMOS EL TEMPLATE DE MENSAJERÍA
+    private final SimpMessagingTemplate messagingTemplate;
     private final FacturaRepository facturaRepository;
-    // 2. ACTUALIZAMOS EL CONSTRUCTOR
-    public ComandaService(ComandaRepository comandaRepository, MesaRepository mesaRepository, ProductoRepository productoRepository, SimpMessagingTemplate messagingTemplate, FacturaRepository facturaRepository) {
+    private final InventarioService inventarioService;
+
+    public ComandaService(ComandaRepository comandaRepository, MesaRepository mesaRepository, ProductoRepository productoRepository, SimpMessagingTemplate messagingTemplate, FacturaRepository facturaRepository, InventarioService inventarioService) {
         this.comandaRepository = comandaRepository;
         this.mesaRepository = mesaRepository;
         this.productoRepository = productoRepository;
         this.messagingTemplate = messagingTemplate;
         this.facturaRepository = facturaRepository;
+        this.inventarioService = inventarioService;
     }
 
     @Transactional
@@ -54,9 +57,12 @@ public class ComandaService {
         for (ItemRequestDTO itemDTO : request.getItems()) {
             Producto producto = productoRepository.findById(itemDTO.getProductoId())
                     .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + itemDTO.getProductoId()));
-            if (producto.getStock() < itemDTO.getCantidad()) {
-                throw new IllegalStateException("Stock insuficiente para el producto: " + producto.getNombre());
-            }
+
+            // Validar stock de ingredientes
+            inventarioService.validarStockIngredientes(producto, itemDTO.getCantidad());
+
+            // Descontar stock de ingredientes
+            inventarioService.descontarStockIngredientes(producto, itemDTO.getCantidad());
 
             ComandaItem comandaItem = new ComandaItem();
             comandaItem.setProducto(producto);
@@ -66,7 +72,6 @@ public class ComandaService {
             comanda.getItems().add(comandaItem);
 
             totalComanda = totalComanda.add(producto.getPrecio().multiply(BigDecimal.valueOf(itemDTO.getCantidad())));
-            producto.setStock(producto.getStock() - itemDTO.getCantidad());
         }
         comanda.setTotal(totalComanda);
         mesa.setEstado(EstadoMesa.OCUPADA);
