@@ -13,6 +13,9 @@ interface OrderSummaryProps {
 const OrderSummary = ({ mesaId }: OrderSummaryProps) => {
     const { orderItems, submitNewOrder, cancelOrder, activeComandaId } = useOrder();
     const navigate = useNavigate();
+    // Importamos el contexto de autenticación para posibles redirecciones futuras por rol
+    // import { useAuth } from '../context/AuthContext';
+    // const { roles } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const total = useMemo(() => {
@@ -22,10 +25,11 @@ const OrderSummary = ({ mesaId }: OrderSummaryProps) => {
     const handleSubmit = async () => {
         setIsSubmitting(true);
         if (!activeComandaId) {
-            // 3. AQUÍ USAMOS LA 'mesaId' RECIBIDA PARA CREAR LA COMANDA.
             await submitNewOrder(mesaId);
-            // Después de crear, podríamos navegar al inicio o a la vista de cocina
-            navigate('/cocina'); 
+            // Redirigimos al inicio después de crear la comanda
+            navigate('/');
+            // Si en el futuro quieres redirigir según rol:
+            // if (roles.includes('COCINERO')) navigate('/cocina'); else navigate('/');
         }
         setIsSubmitting(false);
     };
