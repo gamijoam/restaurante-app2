@@ -109,6 +109,17 @@ public class ComandaService {
         System.out.println("Enviando notificación a /topic/cocina para nueva comanda ID: " + dto.getId());
         messagingTemplate.convertAndSend("/topic/cocina", dto);
 
+        // 4. ENVIAMOS NOTIFICACIÓN PARA ACTUALIZAR EL ESTADO DE LA MESA
+        System.out.println("Enviando notificación a /topic/mesas para actualizar estado de mesa: " + mesa.getNumero());
+        messagingTemplate.convertAndSend("/topic/mesas", "Mesa " + mesa.getNumero() + " actualizada a OCUPADA");
+        
+        // 5. Pequeño delay para asegurar que la notificación se procese
+        try {
+            Thread.sleep(50);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         return dto;
     }
     
@@ -149,6 +160,7 @@ public class ComandaService {
             
             Mesa mesa = comanda.getMesa();
             mesa.setEstado(EstadoMesa.LIBRE);
+            mesaRepository.save(mesa);
     
             // Este bloque estaba faltando:
             Factura factura = new Factura();
@@ -159,6 +171,24 @@ public class ComandaService {
     
             facturaRepository.save(factura);
             System.out.println("Factura creada con ID: " + factura.getId() + " para la comanda ID: " + comanda.getId());
+        }
+        
+        // --- NUEVA LÓGICA PARA ESTADO LISTA ---
+        if (nuevoEstado == EstadoComanda.LISTA) {
+            // Cuando la comanda está lista, la mesa debe cambiar a LISTA_PARA_PAGAR
+            Mesa mesa = comanda.getMesa();
+            mesa.setEstado(EstadoMesa.LISTA_PARA_PAGAR);
+            mesaRepository.save(mesa);
+            System.out.println("Mesa " + mesa.getNumero() + " actualizada a LISTA_PARA_PAGAR");
+        }
+        
+        // --- LÓGICA PARA ESTADO ENTREGADA ---
+        if (nuevoEstado == EstadoComanda.ENTREGADA) {
+            // Cuando la comanda está entregada, la mesa debe cambiar a LISTA_PARA_PAGAR
+            Mesa mesa = comanda.getMesa();
+            mesa.setEstado(EstadoMesa.LISTA_PARA_PAGAR);
+            mesaRepository.save(mesa);
+            System.out.println("Mesa " + mesa.getNumero() + " actualizada a LISTA_PARA_PAGAR");
         }
         // --- FIN DE LA LÓGICA RESTAURADA ---
     
@@ -172,8 +202,12 @@ public class ComandaService {
         if (nuevoEstado == EstadoComanda.LISTA || nuevoEstado == EstadoComanda.ENTREGADA) {
             messagingTemplate.convertAndSend("/topic/caja", dto);
         }
-        if (nuevoEstado == EstadoComanda.PAGADA || nuevoEstado == EstadoComanda.CANCELADA) {
-            messagingTemplate.convertAndSend("/topic/mesas", "Mesa " + comanda.getMesa().getNumero() + " actualizada");
+        // Notificación para actualizar el estado de la mesa en todos los casos relevantes
+        if (nuevoEstado == EstadoComanda.PAGADA || nuevoEstado == EstadoComanda.CANCELADA || 
+            nuevoEstado == EstadoComanda.LISTA || nuevoEstado == EstadoComanda.ENTREGADA) {
+            String mensaje = "Mesa " + comanda.getMesa().getNumero() + " actualizada a " + comanda.getMesa().getEstado();
+            System.out.println("Enviando notificación a /topic/mesas: " + mensaje);
+            messagingTemplate.convertAndSend("/topic/mesas", mensaje);
         }
     
         return dto;

@@ -40,6 +40,8 @@ public class MesaMapaDTO {
                 return "#2196F3"; // Azul
             case MANTENIMIENTO:
                 return "#F44336"; // Rojo
+            case LISTA_PARA_PAGAR:
+                return "#E91E63"; // Rosa/Rojo fuerte
             default:
                 return "#9E9E9E"; // Gris
         }
@@ -55,6 +57,8 @@ public class MesaMapaDTO {
                 return "Reservada";
             case MANTENIMIENTO:
                 return "Mantenimiento";
+            case LISTA_PARA_PAGAR:
+                return "Lista para pagar";
             default:
                 return "Desconocido";
         }

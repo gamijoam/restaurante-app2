@@ -15,6 +15,7 @@ import IngredientesPage from './pages/IngredientesPage.tsx';
 import RecetasPage from './pages/RecetasPage.tsx';
 import InventarioHelpPage from './pages/InventarioHelpPage.tsx';
 import MesaMapaPage from './pages/MesaMapaPage.tsx';
+import GestionMesasPage from './pages/GestionMesasPage.tsx';
 import { WebSocketProvider } from './context/WebSocketContext';
 import './index.css';
 import FacturacionPage from './pages/FacturacionPage.tsx';
@@ -57,6 +58,10 @@ const router = createBrowserRouter([
           {
             path: "/mapa-mesas",
             element: <MesaMapaPage />,
+          },
+          {
+            path: "/gestion-mesas",
+            element: <GestionMesasPage />,
           },
         ]
       }

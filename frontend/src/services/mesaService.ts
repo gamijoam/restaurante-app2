@@ -4,7 +4,7 @@ export interface Mesa {
     id?: number;
     numero: number;
     capacidad: number;
-    estado: 'LIBRE' | 'OCUPADA' | 'RESERVADA' | 'MANTENIMIENTO';
+    estado: 'LIBRE' | 'OCUPADA' | 'RESERVADA' | 'MANTENIMIENTO' | 'LISTA_PARA_PAGAR';
     posicionX?: number;
     posicionY?: number;
     nombre?: string;
@@ -14,7 +14,7 @@ export interface MesaMapa {
     id: number;
     numero: number;
     capacidad: number;
-    estado: 'LIBRE' | 'OCUPADA' | 'RESERVADA' | 'MANTENIMIENTO';
+    estado: 'LIBRE' | 'OCUPADA' | 'RESERVADA' | 'MANTENIMIENTO' | 'LISTA_PARA_PAGAR';
     posicionX?: number;
     posicionY?: number;
     nombre?: string;
@@ -55,10 +55,16 @@ export const getMesasMapa = async (): Promise<MesaMapa[]> => {
 };
 
 export const updateMesaPosicion = async (id: number, posicionX: number, posicionY: number, nombre?: string): Promise<Mesa> => {
-    const payload: any = { posicionX, posicionY };
+    const payload: any = { 
+        posicionX: posicionX, 
+        posicionY: posicionY 
+    };
     if (nombre) payload.nombre = nombre;
     
+    console.log('Enviando payload al backend:', payload);
+    
     const response = await api.put(`/mesas/${id}/posicion`, payload);
+    console.log('Respuesta del backend:', response.data);
     return response.data;
 };
 
@@ -70,4 +76,8 @@ export const updateMesasPosiciones = async (mesasData: Array<{
 }>): Promise<Mesa[]> => {
     const response = await api.put('/mesas/posiciones', mesasData);
     return response.data;
+};
+
+export const deleteMesa = async (id: number): Promise<void> => {
+    await api.delete(`/mesas/${id}`);
 };

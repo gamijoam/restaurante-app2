@@ -9,7 +9,7 @@ export interface Mesa {
     id: number;
     numero: number;
     capacidad: number;
-    estado: 'LIBRE' | 'OCUPADA' | 'RESERVADA' | 'MANTENIMIENTO';
+    estado: 'LIBRE' | 'OCUPADA' | 'RESERVADA' | 'MANTENIMIENTO' | 'LISTA_PARA_PAGAR';
 }
 
 // --- AÑADIR ESTAS DOS NUEVAS INTERFACES ---

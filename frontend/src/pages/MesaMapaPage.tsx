@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Container,
     Typography,
@@ -25,8 +25,9 @@ import {
     Cancel as CancelIcon,
     Add as AddIcon
 } from '@mui/icons-material';
-import { getMesasMapa, updateMesaPosicion, updateMesasPosiciones, type MesaMapa } from '../services/mesaService';
+import { getMesasMapa, updateMesaPosicion, updateMesasPosiciones, createMesa, updateMesaEstado, type MesaMapa } from '../services/mesaService';
 import { useAuth } from '../context/AuthContext';
+import { useWebSocket } from '../context/WebSocketContext';
 
 interface MesaVisual extends MesaMapa {
     isDragging?: boolean;
@@ -35,25 +36,32 @@ interface MesaVisual extends MesaMapa {
 
 const MesaMapaPage = () => {
     const { roles } = useAuth();
-    const isGerente = roles.includes('GERENTE');
+    const isGerente = roles.includes('ROLE_GERENTE');
+    const { stompClient, isConnected } = useWebSocket();
     
     const [mesas, setMesas] = useState<MesaVisual[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [editDialog, setEditDialog] = useState(false);
+    const [createDialog, setCreateDialog] = useState(false);
+    const [estadoDialog, setEstadoDialog] = useState(false);
     const [editingMesa, setEditingMesa] = useState<MesaVisual | null>(null);
     const [editForm, setEditForm] = useState({ nombre: '', posicionX: 0, posicionY: 0 });
+    const [estadoForm, setEstadoForm] = useState({ estado: 'LIBRE' });
+    const [createForm, setCreateForm] = useState({ 
+        numero: 0, 
+        capacidad: 4, 
+        nombre: '', 
+        posicionX: 100, 
+        posicionY: 100 
+    });
     
     const mapRef = useRef<HTMLDivElement>(null);
     const [draggedMesa, setDraggedMesa] = useState<MesaVisual | null>(null);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-    useEffect(() => {
-        loadMesas();
-    }, []);
-
-    const loadMesas = async () => {
+    const loadMesas = useCallback(async () => {
         try {
             setLoading(true);
             const data = await getMesasMapa();
@@ -62,6 +70,53 @@ const MesaMapaPage = () => {
             setError('Error al cargar las mesas');
         } finally {
             setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        // Carga inicial al montar el componente
+        loadMesas();
+
+        // Lógica de WebSocket para actualizaciones en tiempo real
+        if (isConnected && stompClient) {
+            console.log("MesaMapaPage: Suscribiendo a /topic/mesas");
+            const subscription = stompClient.subscribe('/topic/mesas', (message) => {
+                console.log("MesaMapaPage: Notificación recibida:", message.body);
+                // Agregar un pequeño delay para evitar race conditions
+                setTimeout(() => {
+                    loadMesas();
+                }, 100);
+            });
+            return () => {
+                console.log("MesaMapaPage: Desuscribiendo de /topic/mesas");
+                subscription.unsubscribe();
+            };
+        }
+    }, [isConnected, stompClient, loadMesas]);
+
+    const handleCreateMesa = async () => {
+        try {
+            const nuevaMesa = await createMesa({
+                numero: createForm.numero,
+                capacidad: createForm.capacidad,
+                estado: 'LIBRE',
+                nombre: createForm.nombre,
+                posicionX: createForm.posicionX,
+                posicionY: createForm.posicionY
+            });
+            
+            setCreateDialog(false);
+            setCreateForm({ 
+                numero: 0, 
+                capacidad: 4, 
+                nombre: '', 
+                posicionX: 100, 
+                posicionY: 100 
+            });
+            setSuccess('Mesa creada correctamente');
+            loadMesas(); // Recargar para obtener la nueva mesa
+        } catch (err) {
+            setError('Error al crear la mesa');
         }
     };
 
@@ -104,6 +159,13 @@ const MesaMapaPage = () => {
         try {
             const mesaActualizada = mesas.find(m => m.id === draggedMesa.id);
             if (mesaActualizada) {
+                console.log('Guardando nueva posición:', {
+                    id: mesaActualizada.id,
+                    posicionX: mesaActualizada.posicionX,
+                    posicionY: mesaActualizada.posicionY,
+                    nombre: mesaActualizada.nombre
+                });
+                
                 await updateMesaPosicion(
                     mesaActualizada.id,
                     mesaActualizada.posicionX || 0,
@@ -111,8 +173,14 @@ const MesaMapaPage = () => {
                     mesaActualizada.nombre
                 );
                 setSuccess('Posición de mesa actualizada');
+                
+                // Recargar las mesas para asegurar sincronización
+                setTimeout(() => {
+                    loadMesas();
+                }, 100);
             }
         } catch (err) {
+            console.error('Error al actualizar posición:', err);
             setError('Error al actualizar la posición de la mesa');
             loadMesas(); // Recargar para restaurar posición original
         }
@@ -153,12 +221,39 @@ const MesaMapaPage = () => {
         }
     };
 
+    const handleChangeEstado = (mesa: MesaVisual) => {
+        setEditingMesa(mesa);
+        setEstadoForm({ estado: mesa.estado });
+        setEstadoDialog(true);
+    };
+
+    const handleSaveEstado = async () => {
+        if (!editingMesa) return;
+        
+        try {
+            await updateMesaEstado(editingMesa.id, estadoForm.estado);
+            
+            setMesas(prev => prev.map(m => 
+                m.id === editingMesa.id 
+                    ? { ...m, estado: estadoForm.estado as any }
+                    : m
+            ));
+            
+            setEstadoDialog(false);
+            setEditingMesa(null);
+            setSuccess('Estado de mesa actualizado correctamente');
+        } catch (err) {
+            setError('Error al actualizar el estado de la mesa');
+        }
+    };
+
     const getEstadoColor = (estado: string) => {
         switch (estado) {
             case 'LIBRE': return '#4CAF50';
             case 'OCUPADA': return '#FF9800';
             case 'RESERVADA': return '#2196F3';
             case 'MANTENIMIENTO': return '#F44336';
+            case 'LISTA_PARA_PAGAR': return '#E91E63';
             default: return '#9E9E9E';
         }
     };
@@ -169,6 +264,7 @@ const MesaMapaPage = () => {
             case 'OCUPADA': return 'Ocupada';
             case 'RESERVADA': return 'Reservada';
             case 'MANTENIMIENTO': return 'Mantenimiento';
+            case 'LISTA_PARA_PAGAR': return 'Lista para pagar';
             default: return 'Desconocido';
         }
     };
@@ -187,15 +283,25 @@ const MesaMapaPage = () => {
                 <Typography variant="h4" component="h1">
                     Mapa de Mesas
                 </Typography>
-                {isGerente && (
+                <Box>
+                    {isGerente && (
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => setCreateDialog(true)}
+                            sx={{ mr: 2 }}
+                        >
+                            Nueva Mesa
+                        </Button>
+                    )}
                     <Button
-                        variant="contained"
+                        variant="outlined"
                         startIcon={<SaveIcon />}
                         onClick={loadMesas}
                     >
                         Recargar
                     </Button>
-                )}
+                </Box>
             </Box>
 
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -207,7 +313,9 @@ const MesaMapaPage = () => {
                 <Box display="flex" gap={2} flexWrap="wrap">
                     <Chip label="Libre" sx={{ backgroundColor: '#4CAF50', color: 'white' }} />
                     <Chip label="Ocupada" sx={{ backgroundColor: '#FF9800', color: 'white' }} />
-                    <Chip label="Lista para pagar" sx={{ backgroundColor: '#F44336', color: 'white' }} />
+                    <Chip label="Reservada" sx={{ backgroundColor: '#2196F3', color: 'white' }} />
+                    <Chip label="Mantenimiento" sx={{ backgroundColor: '#F44336', color: 'white' }} />
+                    <Chip label="Lista para pagar" sx={{ backgroundColor: '#E91E63', color: 'white' }} />
                 </Box>
             </Paper>
 
@@ -308,6 +416,30 @@ const MesaMapaPage = () => {
                                 </IconButton>
                             </Tooltip>
                         )}
+                        
+                        {isGerente && (
+                            <Tooltip title="Cambiar estado">
+                                <IconButton
+                                    size="small"
+                                    sx={{ 
+                                        position: 'absolute',
+                                        top: 2,
+                                        left: 2,
+                                        backgroundColor: 'rgba(255,255,255,0.2)',
+                                        color: 'white',
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(255,255,255,0.3)'
+                                        }
+                                    }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleChangeEstado(mesa);
+                                    }}
+                                >
+                                    <SaveIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        )}
                     </Box>
                 ))}
             </Paper>
@@ -347,6 +479,92 @@ const MesaMapaPage = () => {
                     </Button>
                     <Button onClick={handleSaveEdit} variant="contained">
                         Guardar
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo de creación */}
+            <Dialog open={createDialog} onClose={() => setCreateDialog(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Crear Nueva Mesa</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        fullWidth
+                        label="Número de mesa"
+                        type="number"
+                        value={createForm.numero}
+                        onChange={(e) => setCreateForm({ ...createForm, numero: parseInt(e.target.value) || 0 })}
+                        margin="normal"
+                        required
+                    />
+                    <TextField
+                        fullWidth
+                        label="Capacidad"
+                        type="number"
+                        value={createForm.capacidad}
+                        onChange={(e) => setCreateForm({ ...createForm, capacidad: parseInt(e.target.value) || 4 })}
+                        margin="normal"
+                        required
+                    />
+                    <TextField
+                        fullWidth
+                        label="Nombre de la mesa"
+                        value={createForm.nombre}
+                        onChange={(e) => setCreateForm({ ...createForm, nombre: e.target.value })}
+                        margin="normal"
+                        placeholder="Ej: Mesa del Rincón, Mesa VIP"
+                    />
+                    <TextField
+                        fullWidth
+                        label="Posición X"
+                        type="number"
+                        value={createForm.posicionX}
+                        onChange={(e) => setCreateForm({ ...createForm, posicionX: parseInt(e.target.value) || 100 })}
+                        margin="normal"
+                    />
+                    <TextField
+                        fullWidth
+                        label="Posición Y"
+                        type="number"
+                        value={createForm.posicionY}
+                        onChange={(e) => setCreateForm({ ...createForm, posicionY: parseInt(e.target.value) || 100 })}
+                        margin="normal"
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setCreateDialog(false)}>
+                        Cancelar
+                    </Button>
+                    <Button onClick={handleCreateMesa} variant="contained">
+                        Crear Mesa
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Diálogo de cambio de estado */}
+            <Dialog open={estadoDialog} onClose={() => setEstadoDialog(false)} maxWidth="sm" fullWidth>
+                <DialogTitle>Cambiar Estado de Mesa {editingMesa?.numero}</DialogTitle>
+                <DialogContent>
+                    <FormControl fullWidth margin="normal">
+                        <InputLabel>Estado</InputLabel>
+                        <Select
+                            value={estadoForm.estado}
+                            onChange={(e) => setEstadoForm({ estado: e.target.value })}
+                            label="Estado"
+                        >
+                            <MenuItem value="LIBRE">Libre</MenuItem>
+                            <MenuItem value="OCUPADA">Ocupada</MenuItem>
+                            <MenuItem value="RESERVADA">Reservada</MenuItem>
+                            <MenuItem value="MANTENIMIENTO">Mantenimiento</MenuItem>
+                            <MenuItem value="LISTA_PARA_PAGAR">Lista para pagar</MenuItem>
+                        </Select>
+                    </FormControl>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEstadoDialog(false)}>
+                        Cancelar
+                    </Button>
+                    <Button onClick={handleSaveEstado} variant="contained">
+                        Cambiar Estado
                     </Button>
                 </DialogActions>
             </Dialog>

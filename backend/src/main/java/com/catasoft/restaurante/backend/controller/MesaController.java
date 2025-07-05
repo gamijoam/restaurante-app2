@@ -36,8 +36,18 @@ public class MesaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('GERENTE')")
     public Mesa createMesa(@RequestBody Mesa mesa) {
-        mesa.setEstado(EstadoMesa.LIBRE);
+        // Si no se especifica estado, establecer como LIBRE
+        if (mesa.getEstado() == null) {
+            mesa.setEstado(EstadoMesa.LIBRE);
+        }
+        
+        // Validar que el número de mesa sea único
+        if (mesaRepository.findByNumero(mesa.getNumero()).isPresent()) {
+            throw new IllegalStateException("Ya existe una mesa con el número: " + mesa.getNumero());
+        }
+        
         return mesaRepository.save(mesa);
     }
 
@@ -76,6 +86,16 @@ public class MesaController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('GERENTE')")
+    public ResponseEntity<Void> deleteMesa(@PathVariable Long id) {
+        Mesa mesa = mesaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Mesa no encontrada con id: " + id));
+        
+        mesaRepository.delete(mesa);
+        return ResponseEntity.noContent().build();
+    }
+
     // --- NUEVOS ENDPOINTS PARA EL MAPA ---
     
     /**
@@ -99,15 +119,51 @@ public class MesaController {
         Mesa mesa = mesaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mesa no encontrada con id: " + id));
 
-        Integer posicionX = (Integer) payload.get("posicionX");
-        Integer posicionY = (Integer) payload.get("posicionY");
-        String nombre = (String) payload.get("nombre");
+        System.out.println("Actualizando posición de mesa " + id + " con payload: " + payload);
 
-        if (posicionX != null) mesa.setPosicionX(posicionX);
-        if (posicionY != null) mesa.setPosicionY(posicionY);
-        if (nombre != null) mesa.setNombre(nombre);
+        // Manejar posicionX
+        Object posicionXObj = payload.get("posicionX");
+        if (posicionXObj != null) {
+            Integer posicionX;
+            if (posicionXObj instanceof Number) {
+                posicionX = ((Number) posicionXObj).intValue();
+            } else if (posicionXObj instanceof String) {
+                posicionX = Integer.parseInt((String) posicionXObj);
+            } else {
+                posicionX = null;
+            }
+            if (posicionX != null) {
+                mesa.setPosicionX(posicionX);
+                System.out.println("Posición X actualizada a: " + posicionX);
+            }
+        }
+
+        // Manejar posicionY
+        Object posicionYObj = payload.get("posicionY");
+        if (posicionYObj != null) {
+            Integer posicionY;
+            if (posicionYObj instanceof Number) {
+                posicionY = ((Number) posicionYObj).intValue();
+            } else if (posicionYObj instanceof String) {
+                posicionY = Integer.parseInt((String) posicionYObj);
+            } else {
+                posicionY = null;
+            }
+            if (posicionY != null) {
+                mesa.setPosicionY(posicionY);
+                System.out.println("Posición Y actualizada a: " + posicionY);
+            }
+        }
+
+        // Manejar nombre
+        Object nombreObj = payload.get("nombre");
+        if (nombreObj != null && nombreObj instanceof String) {
+            mesa.setNombre((String) nombreObj);
+        }
 
         Mesa mesaActualizada = mesaRepository.save(mesa);
+        System.out.println("Mesa actualizada: " + mesaActualizada);
+        
         return ResponseEntity.ok(mesaActualizada);
     }
 
