@@ -33,6 +33,15 @@ public class IngredienteController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    // Endpoint para consultar el stock actual de un ingrediente
+    @GetMapping("/{id}/stock")
+    @PreAuthorize("hasRole('GERENTE')")
+    public ResponseEntity<Double> getStock(@PathVariable Long id) {
+        return ingredienteService.findById(id)
+                .map(ingrediente -> ResponseEntity.ok(ingrediente.getStock()))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<Ingrediente> create(@Valid @RequestBody Ingrediente ingrediente) {
