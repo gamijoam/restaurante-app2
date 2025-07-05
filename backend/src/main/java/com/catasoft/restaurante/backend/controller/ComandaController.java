@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.HashMap;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -74,7 +75,23 @@ public ResponseEntity<List<ComandaResponseDTO>> getAllComandas(@RequestParam(req
     }
 
     @PutMapping("/{id}/estado")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
     public ResponseEntity<ComandaResponseDTO> updateEstadoComanda(@PathVariable Long id, @RequestBody Map<String, String> payload) {
         return ResponseEntity.ok(comandaService.updateEstadoComanda(id, payload));
+    }
+
+    // Endpoint de prueba para verificar el estado actual de una comanda
+    @GetMapping("/{id}/estado-actual")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
+    public ResponseEntity<Map<String, Object>> getEstadoActualComanda(@PathVariable Long id) {
+        ComandaResponseDTO comanda = comandaService.getComandaById(id);
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", comanda.getId());
+        response.put("estado", comanda.getEstado());
+        response.put("numeroMesa", comanda.getNumeroMesa());
+        response.put("total", comanda.getTotal());
+        response.put("puedeCancelar", comanda.getEstado() != EstadoComanda.CANCELADA && comanda.getEstado() != EstadoComanda.PAGADA);
+        response.put("puedePagar", comanda.getEstado() != EstadoComanda.PAGADA && comanda.getEstado() != EstadoComanda.CANCELADA);
+        return ResponseEntity.ok(response);
     }
 }

@@ -125,12 +125,16 @@ public class ComandaService {
         EstadoComanda nuevoEstado = EstadoComanda.valueOf(nuevoEstadoStr.toUpperCase());
     
         if (nuevoEstado == EstadoComanda.CANCELADA) {
-            if (comanda.getEstado() != EstadoComanda.EN_PROCESO) {
-                throw new IllegalStateException("Solo se pueden cancelar comandas que están EN PROCESO.");
+            // Permitir cancelar cualquier comanda que NO esté ya cancelada ni pagada
+            if (comanda.getEstado() == EstadoComanda.CANCELADA || comanda.getEstado() == EstadoComanda.PAGADA) {
+                throw new IllegalStateException("No se puede cancelar una comanda que ya está cancelada o pagada.");
             }
+            // Restaurar stock de ingredientes por cada ítem
             for (ComandaItem item : comanda.getItems()) {
                 Producto producto = item.getProducto();
-                producto.setStock(producto.getStock() + item.getCantidad());
+                int cantidad = item.getCantidad();
+                // Por cada ingrediente de la receta, restaurar stock
+                inventarioService.restaurarStockIngredientes(producto, cantidad);
             }
             Mesa mesa = comanda.getMesa();
             mesa.setEstado(EstadoMesa.LIBRE);
@@ -138,6 +142,11 @@ public class ComandaService {
     
         // --- LÓGICA DE FACTURACIÓN RESTAURADA ---
         if (nuevoEstado == EstadoComanda.PAGADA) {
+            // Permitir pagar cualquier comanda que NO esté ya pagada ni cancelada
+            if (comanda.getEstado() == EstadoComanda.PAGADA || comanda.getEstado() == EstadoComanda.CANCELADA) {
+                throw new IllegalStateException("No se puede pagar una comanda que ya está pagada o cancelada.");
+            }
+            
             Mesa mesa = comanda.getMesa();
             mesa.setEstado(EstadoMesa.LIBRE);
     

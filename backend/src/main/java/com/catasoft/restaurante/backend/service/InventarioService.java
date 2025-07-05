@@ -52,4 +52,19 @@ public class InventarioService {
             ingredienteRepository.save(ing);
         }
     }
+
+    /**
+     * Restaura el stock de ingredientes cuando se cancela una comanda.
+     * Añade de vuelta al stock los ingredientes que se habían descontado.
+     */
+    @Transactional
+    public void restaurarStockIngredientes(Producto producto, int cantidad) {
+        List<RecetaIngrediente> receta = recetaIngredienteRepository.findByProducto(producto);
+        for (RecetaIngrediente ri : receta) {
+            Ingrediente ing = ri.getIngrediente();
+            double devolver = ri.getCantidad() * cantidad;
+            ing.setStock(ing.getStock() + devolver);
+            ingredienteRepository.save(ing);
+        }
+    }
 }

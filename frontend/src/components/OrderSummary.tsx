@@ -11,7 +11,7 @@ interface OrderSummaryProps {
 
 // 2. AQUÍ LE DECIMOS AL COMPONENTE QUE USE ESA DEFINICIÓN DE PROPS.
 const OrderSummary = ({ mesaId }: OrderSummaryProps) => {
-    const { orderItems, submitNewOrder, cancelOrder, activeComandaId, limpiarComanda } = useOrder();
+    const { orderItems, submitNewOrder, cancelOrder, activeComandaId, limpiarComanda, clearOrder } = useOrder();
     const navigate = useNavigate();
     // Importamos el contexto de autenticación para posibles redirecciones futuras por rol
     // import { useAuth } from '../context/AuthContext';
@@ -83,16 +83,29 @@ const OrderSummary = ({ mesaId }: OrderSummaryProps) => {
                         )}
                     </>
                 ) : (
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        fullWidth
-                        sx={{ mt: 2 }}
-                        disabled={orderItems.length === 0 || isSubmitting}
-                        onClick={handleSubmit}
-                    >
-                        {isSubmitting ? <CircularProgress size={24} /> : 'Crear Comanda'}
-                    </Button>
+                    <>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            sx={{ mt: 2 }}
+                            disabled={orderItems.length === 0 || isSubmitting}
+                            onClick={handleSubmit}
+                        >
+                            {isSubmitting ? <CircularProgress size={24} /> : 'Crear Comanda'}
+                        </Button>
+                        {orderItems.length > 0 && (
+                            <Button
+                                variant="outlined"
+                                color="warning"
+                                fullWidth
+                                sx={{ mt: 1 }}
+                                onClick={clearOrder}
+                            >
+                                Limpiar selección
+                            </Button>
+                        )}
+                    </>
                 )}
             </Box>
         </Paper>
