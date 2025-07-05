@@ -3,6 +3,7 @@ package com.catasoft.restaurante.backend.controller;
 import com.catasoft.restaurante.backend.exception.ResourceNotFoundException;
 import com.catasoft.restaurante.backend.model.Producto;
 import com.catasoft.restaurante.backend.repository.ProductoRepository;
+import com.catasoft.restaurante.backend.service.ProductoStockService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,10 +15,23 @@ import java.util.List;
 public class ProductoController {
 
     private final ProductoRepository productoRepository;
+    private final ProductoStockService productoStockService;
 
     // Inyección de dependencias vía constructor (mejor práctica)
-    public ProductoController(ProductoRepository productoRepository) {
+    public ProductoController(ProductoRepository productoRepository, ProductoStockService productoStockService) {
         this.productoRepository = productoRepository;
+        this.productoStockService = productoStockService;
+    }
+    /**
+     * Endpoint para obtener el stock real disponible de un producto según los ingredientes.
+     * HTTP GET http://localhost:8080/api/v1/productos/{id}/stock-disponible
+     */
+    @GetMapping("/{id}/stock-disponible")
+    public ResponseEntity<Integer> getStockDisponible(@PathVariable Long id) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
+        int stockDisponible = productoStockService.calcularStockDisponible(producto);
+        return ResponseEntity.ok(stockDisponible);
     }
 
     /**
