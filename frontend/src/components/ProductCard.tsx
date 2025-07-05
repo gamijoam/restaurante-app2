@@ -5,6 +5,8 @@ import Typography from '@mui/material/Typography';
 import CardActions from '@mui/material/CardActions';
 import Button from '@mui/material/Button';
 import { useOrder } from '../hooks/useOrder'; // 1. Importamos nuestro hook
+import { useEffect, useState } from 'react';
+import { getStockDisponibleProducto } from '../services/productoService';
 
 interface ProductCardProps {
     producto: Producto;
@@ -13,6 +15,15 @@ interface ProductCardProps {
 const ProductCard = ({ producto }: ProductCardProps) => {
     // 2. Obtenemos la función para añadir productos desde el contexto
     const { addProductToOrder } = useOrder();
+    const [stockReal, setStockReal] = useState<number | null>(null);
+
+    useEffect(() => {
+        let mounted = true;
+        getStockDisponibleProducto(producto.id)
+            .then(stock => { if (mounted) setStockReal(stock); })
+            .catch(() => { if (mounted) setStockReal(null); });
+        return () => { mounted = false; };
+    }, [producto.id]);
 
     return (
         <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -28,12 +39,12 @@ const ProductCard = ({ producto }: ProductCardProps) => {
                     Precio: ${producto.precio.toFixed(2)}
                 </Typography>
                 <Typography color="text.secondary">
-                    Stock: {producto.stock}
+                    Stock: {stockReal !== null ? stockReal : '...'}
                 </Typography>
             </CardContent>
             <CardActions>
                 {/* 3. Le damos la funcionalidad al botón */}
-                <Button size="small" onClick={() => addProductToOrder(producto)}>
+                <Button size="small" onClick={() => addProductToOrder(producto)} disabled={stockReal === 0}>
                     Añadir a Comanda
                 </Button>
             </CardActions>

@@ -11,7 +11,7 @@ interface OrderSummaryProps {
 
 // 2. AQUÍ LE DECIMOS AL COMPONENTE QUE USE ESA DEFINICIÓN DE PROPS.
 const OrderSummary = ({ mesaId }: OrderSummaryProps) => {
-    const { orderItems, submitNewOrder, cancelOrder, activeComandaId } = useOrder();
+    const { orderItems, submitNewOrder, cancelOrder, activeComandaId, limpiarComanda } = useOrder();
     const navigate = useNavigate();
     // Importamos el contexto de autenticación para posibles redirecciones futuras por rol
     // import { useAuth } from '../context/AuthContext';
@@ -66,9 +66,22 @@ const OrderSummary = ({ mesaId }: OrderSummaryProps) => {
                 <Typography variant="h6" align="right">Total: ${total.toFixed(2)}</Typography>
                 
                 {activeComandaId ? (
-                    <Button variant="outlined" color="error" fullWidth sx={{ mt: 2 }} onClick={handleCancel}>
-                        Cancelar Comanda
-                    </Button>
+                    <>
+                        <Button variant="outlined" color="error" fullWidth sx={{ mt: 2 }} onClick={handleCancel}>
+                            Cancelar Comanda
+                        </Button>
+                        {orderItems.length > 0 && (
+                            <Button
+                                variant="outlined"
+                                color="warning"
+                                fullWidth
+                                sx={{ mt: 1 }}
+                                onClick={limpiarComanda}
+                            >
+                                Limpiar Comanda
+                            </Button>
+                        )}
+                    </>
                 ) : (
                     <Button
                         variant="contained"

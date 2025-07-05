@@ -1,28 +1,4 @@
-    /**
-     * Elimina todos los ítems de una comanda y restaura el stock de ingredientes.
-     */
-    @Transactional
-    public void limpiarItemsComanda(Long comandaId) {
-        Comanda comanda = comandaRepository.findById(comandaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Comanda no encontrada con id: " + comandaId));
-        if (comanda.getItems().isEmpty()) return;
-        // Restaurar stock de ingredientes por cada ítem
-        for (ComandaItem item : comanda.getItems()) {
-            Producto producto = item.getProducto();
-            int cantidad = item.getCantidad();
-            // Por cada ingrediente de la receta, restaurar stock
-            List<RecetaIngrediente> receta = inventarioService.recetaIngredienteRepository.findByProducto(producto);
-            for (RecetaIngrediente ri : receta) {
-                Ingrediente ing = ri.getIngrediente();
-                double devolver = ri.getCantidad() * cantidad;
-                ing.setStock(ing.getStock() + devolver);
-                inventarioService.ingredienteRepository.save(ing);
-            }
-        }
-        comanda.getItems().clear();
-        comanda.setTotal(BigDecimal.ZERO);
-        comandaRepository.save(comanda);
-    }
+
 
 package com.catasoft.restaurante.backend.service;
 
@@ -90,7 +66,6 @@ public class ComandaService {
         this.facturaRepository = facturaRepository;
         this.inventarioService = inventarioService;
     }
-
     @Transactional
     public ComandaResponseDTO crearComanda(ComandaRequestDTO request) {
         Mesa mesa = mesaRepository.findById(request.getMesaId())

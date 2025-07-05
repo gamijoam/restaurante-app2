@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, type ReactNode, useCallback } from 'react';
 import type { Producto, ComandaResponseDTO } from '../types';
-import { crearComandaAPI, agregarItemsAComandaAPI, updateComandaEstado } from '../services/comandaService';
+import { crearComandaAPI, agregarItemsAComandaAPI, updateComandaEstado, limpiarItemsComandaAPI } from '../services/comandaService';
 import type { ItemRequestDTO } from '../dto/comandaDTOs';
 
 // --- INTERFAZ UNIFICADA Y FINAL ---
@@ -12,6 +12,7 @@ interface IOrderContext {
     loadExistingOrder: (comanda: ComandaResponseDTO) => void;
     clearOrder: () => void;
     cancelOrder: (comandaId: number) => Promise<void>; // Función para cancelar
+    limpiarComanda: () => Promise<void>; // Nueva función
 }
 
 interface OrderItem {
@@ -103,9 +104,21 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [clearOrder]);
 
+    const limpiarComanda = useCallback(async () => {
+        if (!activeComandaId) return;
+        try {
+            await limpiarItemsComandaAPI(activeComandaId);
+            setOrderItems([]);
+            alert('Comanda vaciada correctamente.');
+        } catch (error) {
+            console.error('Error al limpiar la comanda:', error);
+            alert('Hubo un error al limpiar la comanda.');
+        }
+    }, [activeComandaId]);
+
 
     return (
-        <OrderContext.Provider value={{ orderItems, activeComandaId, addProductToOrder, submitNewOrder, loadExistingOrder, clearOrder, cancelOrder }}>
+        <OrderContext.Provider value={{ orderItems, activeComandaId, addProductToOrder, submitNewOrder, loadExistingOrder, clearOrder, cancelOrder, limpiarComanda }}>
             {children}
         </OrderContext.Provider>
     );

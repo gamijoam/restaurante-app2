@@ -1,13 +1,4 @@
-    /**
-     * Endpoint para limpiar todos los ítems de una comanda y restaurar stock de ingredientes.
-     * DELETE /api/v1/comandas/{id}/items
-     */
-    @DeleteMapping("/{id}/items")
-    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
-    public ResponseEntity<Void> limpiarItemsComanda(@PathVariable Long id) {
-        comandaService.limpiarItemsComanda(id);
-        return ResponseEntity.noContent().build();
-    }
+    
 package com.catasoft.restaurante.backend.controller;
 
 import com.catasoft.restaurante.backend.dto.ComandaRequestDTO;
@@ -34,7 +25,16 @@ public class ComandaController {
     public ComandaController(ComandaService comandaService) {
         this.comandaService = comandaService;
     }
-
+    /**
+     * Endpoint para limpiar todos los ítems de una comanda y restaurar stock de ingredientes.
+     * DELETE /api/v1/comandas/{id}/items
+     */
+    @DeleteMapping("/{id}/items")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
+    public ResponseEntity<Void> limpiarItemsComanda(@PathVariable Long id) {
+        comandaService.limpiarItemsComanda(id);
+        return ResponseEntity.noContent().build();
+    }
     @PostMapping("/{id}/items")
 @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
 public ResponseEntity<ComandaResponseDTO> agregarItemsAComanda(

@@ -25,3 +25,7 @@ export const agregarItemsAComandaAPI = async (comandaId: number, items: ItemRequ
     const response = await api.post(`${API_URL_COMANDAS}/${comandaId}/items`, items);
     return response.data;
 };
+
+export const limpiarItemsComandaAPI = async (comandaId: number): Promise<void> => {
+    await api.delete(`${API_URL_COMANDAS}/${comandaId}/items`);
+};
