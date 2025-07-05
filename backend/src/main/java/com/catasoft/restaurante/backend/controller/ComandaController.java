@@ -3,6 +3,7 @@ package com.catasoft.restaurante.backend.controller;
 
 import com.catasoft.restaurante.backend.dto.ComandaRequestDTO;
 import com.catasoft.restaurante.backend.dto.ComandaResponseDTO;
+import com.catasoft.restaurante.backend.model.dto.TicketDTO;
 import com.catasoft.restaurante.backend.model.enums.EstadoComanda;
 import com.catasoft.restaurante.backend.service.ComandaService;
 import org.springframework.http.HttpStatus;
@@ -68,6 +69,11 @@ public ResponseEntity<List<ComandaResponseDTO>> getAllComandas(@RequestParam(req
         return ResponseEntity.badRequest().build();
     }
 }
+    @GetMapping("/{id}/ticket")
+    public ResponseEntity<TicketDTO> getComandaAsTicket(@PathVariable Long id) {
+        TicketDTO ticketData = comandaService.getTicketData(id);
+        return ResponseEntity.ok(ticketData);
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ComandaResponseDTO> getComandaById(@PathVariable Long id) {

@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 export interface Producto {
     id: number;
     nombre: string;
@@ -19,14 +21,16 @@ export interface ComandaItemResponseDTO {
     productoNombre: string;
     cantidad: number;
     precioUnitario: number;
+    // El precio total se calcula y no viene en este DTO
 }
 
 export interface ComandaResponseDTO {
     id: number;
-    numeroMesa: number;
+    // Basado en tu archivo CashierViewPage, parece que recibes 'nombreMesa' y no 'numeroMesa'
+    nombreMesa: string; 
     items: ComandaItemResponseDTO[];
     estado: 'EN_PROCESO' | 'LISTA' | 'ENTREGADA' | 'PAGADA' | 'CANCELADA';
-    fechaHoraCreacion: string; // Las fechas se suelen recibir como strings en formato ISO
+    fechaHoraCreacion: string;
     total: number;
 }
 // ... (debajo de las otras interfaces)

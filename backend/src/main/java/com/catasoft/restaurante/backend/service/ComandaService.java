@@ -8,9 +8,12 @@ import com.catasoft.restaurante.backend.dto.ComandaResponseDTO;
 import com.catasoft.restaurante.backend.dto.ItemRequestDTO;
 import com.catasoft.restaurante.backend.exception.ResourceNotFoundException;
 import com.catasoft.restaurante.backend.model.*;
+import com.catasoft.restaurante.backend.model.dto.TicketDTO;
+import com.catasoft.restaurante.backend.model.dto.TicketItemDTO;
 import com.catasoft.restaurante.backend.model.enums.EstadoComanda;
 import com.catasoft.restaurante.backend.model.enums.EstadoMesa;
 import com.catasoft.restaurante.backend.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -122,7 +125,35 @@ public class ComandaService {
 
         return dto;
     }
-    
+    public TicketDTO getTicketData(Long comandaId) {
+        Comanda comanda = comandaRepository.findById(comandaId)
+                .orElseThrow(() -> new EntityNotFoundException("Comanda no encontrada con id: " + comandaId));
+
+        List<TicketItemDTO> itemsDTO = comanda.getItems().stream()
+                .map(comandaItem -> {
+                    // *** INICIO DE LA CORRECCIÓN ***
+                    // Calculamos el precio total del ítem al momento, ya que no se guarda en la BD.
+                    BigDecimal precioTotalItem = comandaItem.getPrecioUnitario()
+                            .multiply(new BigDecimal(comandaItem.getCantidad()));
+                    // *** FIN DE LA CORRECCIÓN ***
+
+                    return new TicketItemDTO(
+                            comandaItem.getCantidad(),
+                            comandaItem.getProducto().getNombre(),
+                            comandaItem.getPrecioUnitario(), // Usamos el precio unitario del item
+                            precioTotalItem // Usamos el total que acabamos de calcular
+                    );
+                }).toList();
+
+        return new TicketDTO(
+                comanda.getId(),
+                comanda.getMesa().getNombre(),
+                comanda.getFechaHoraCreacion(),
+                itemsDTO,
+                comanda.getTotal()
+        );
+    }
+
     @Transactional
     public ComandaResponseDTO updateEstadoComanda(Long id, Map<String, String> payload) {
         Comanda comanda = comandaRepository.findById(id)

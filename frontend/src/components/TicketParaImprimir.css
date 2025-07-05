@@ -1,0 +1,52 @@
+/* Estilos para el componente de ticket en pantalla (oculto) */
+.ticket-container {
+    display: none; /* Por defecto, el ticket no se ve */
+    font-family: 'Courier New', Courier, monospace;
+    width: 300px; /* Ancho típico de un ticket de impresora térmica */
+    padding: 10px;
+    color: #000;
+}
+
+.ticket-content h3, .ticket-content .gracias {
+    text-align: center;
+}
+
+.ticket-content table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ticket-content th, .ticket-content td {
+    text-align: left;
+    padding: 2px 0;
+}
+
+.ticket-content .total {
+    text-align: right;
+    font-size: 1.2em;
+    margin-top: 10px;
+}
+
+hr {
+    border: none;
+    border-top: 1px dashed #000;
+}
+
+
+/* --- LA MAGIA PARA LA IMPRESIÓN --- */
+
+@media print {
+    /* Oculta toda la aplicación cuando se abre el diálogo de impresión */
+    body > *:not(.ticket-print-area) {
+        display: none !important;
+    }
+
+    /* Hace que el contenedor del ticket sea el único elemento visible */
+    .ticket-print-area {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+    }
+}
