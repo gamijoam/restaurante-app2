@@ -1,0 +1,22 @@
+/* --- LÓGICA DE IMPRESIÓN BASADA EN LA CLASE DEL BODY --- */
+
+/* Por defecto, el contenedor del ticket está oculto */
+.ticket-print-container {
+    display: none;
+}
+
+/* Cuando el body tiene la clase 'imprimiendo-ticket', activamos la magia */
+body.imprimiendo-ticket {
+    /* Ocultamos toda nuestra aplicación principal */
+    #root-app-container {
+        display: none !important;
+    }
+
+    /* Hacemos visible el contenedor del ticket */
+    .ticket-print-container {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+}

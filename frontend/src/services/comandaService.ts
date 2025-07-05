@@ -1,5 +1,4 @@
-import api from './api';
-import apiClient from './api';
+import api from './api'; // 1. Usamos una sola importación
 import type { ComandaResponseDTO } from '../types';
 import type { ComandaRequestDTO, ItemRequestDTO } from '../dto/comandaDTOs';
 
@@ -30,7 +29,8 @@ export const agregarItemsAComandaAPI = async (comandaId: number, items: ItemRequ
 export const limpiarItemsComandaAPI = async (comandaId: number): Promise<void> => {
     await api.delete(`${API_URL_COMANDAS}/${comandaId}/items`);
 };
-// Definimos las interfaces para el DTO que viene del backend
+
+// --- Tipos para el Ticket (esto estaba bien) ---
 export interface TicketItem {
     cantidad: number;
     nombreProducto: string;
@@ -41,13 +41,15 @@ export interface TicketItem {
 export interface TicketData {
     comandaId: number;
     nombreMesa: string;
-    fechaHora: string; // Se recibe como string, se puede convertir a Date si es necesario
+    fechaHora: string;
     items: TicketItem[];
     total: number;
 }
 
-// Añade esta nueva función al final del archivo
+// --- Función para obtener el Ticket (CORREGIDA) ---
 export const getTicketData = async (comandaId: number): Promise<TicketData> => {
-    const response = await apiClient.get<TicketData>(`/api/v1/comandas/${comandaId}/ticket`);
+    // 2. Usamos 'api' en lugar de 'apiClient'
+    // 3. La URL ya no tiene el '/api/v1' duplicado
+    const response = await api.get<TicketData>(`${API_URL_COMANDAS}/${comandaId}/ticket`);
     return response.data;
 };

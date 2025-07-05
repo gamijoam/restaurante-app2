@@ -14,12 +14,13 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         console.log("Intentando conectar WebSocket...");
+        const wsURL = import.meta.env.VITE_API_URL.replace(/^http/, 'ws') + '/ws';
 
         const client = new Client({
             // ESTA LÍNEA ES LA MÁS IMPORTANTE
             // Se conecta directamente al endpoint que nuestro backend acaba de activar.
             // Usa 'ws' (WebSocket) en lugar de 'http'.
-            brokerURL: 'ws://localhost:8080/ws',
+            brokerURL: wsURL,
 
             onConnect: () => {
                 console.log("¡CONEXIÓN WEBSOCKET EXITOSA! CONECTADO.");

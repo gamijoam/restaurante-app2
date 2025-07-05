@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:5173") // Permitimos peticiones desde el frontend
+ // Permitimos peticiones desde el frontend
 public class AuthController {
 
     private final AuthService authService;

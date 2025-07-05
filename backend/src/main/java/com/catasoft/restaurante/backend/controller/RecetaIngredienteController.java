@@ -15,7 +15,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 import java.util.ArrayList;
 
-@CrossOrigin(origins = "http://localhost:5173")
+
 @RestController
 @RequestMapping("/api/v1/recetas")
 public class RecetaIngredienteController {
