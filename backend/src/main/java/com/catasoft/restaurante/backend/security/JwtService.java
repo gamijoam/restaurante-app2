@@ -14,6 +14,8 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.function.Function;
 
 @Service
@@ -29,7 +31,13 @@ public class JwtService {
     // --- MÉTODO generateToken MODIFICADO ---
     public String generateToken(Usuario usuario) {
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("roles", usuario.getRoles());
+        
+        // Extraer solo los nombres de los roles para evitar recursión infinita
+        Set<String> roleNames = usuario.getRoles().stream()
+                .map(rol -> rol.getNombre())
+                .collect(Collectors.toSet());
+        
+        extraClaims.put("roles", roleNames);
         // Aquí podríamos añadir más información como el nombre, id, etc.
 
         return Jwts.builder()

@@ -1,0 +1,29 @@
+git add .
+git commit -m "feat: Refinamiento completo del módulo de Gestión de Recetas
+
+- Implementa proceso guiado de 2 pasos con stepper visual
+- Añade buscador de productos en tiempo real
+- Mejora UI con tarjetas de productos y diseño responsive
+- Implementa sistema de notificaciones toast para feedback
+- Añade validación automática de unidades y cantidades
+- Permite edición inline de ingredientes existentes
+- Cambia texto de navegación a 'Gestión de Recetas' para mayor claridad
+
+Resuelve Tarea 1.1 del plan de mejoras críticas"
+
+
+-------------------------
+Agregar un buscador cuando vamos a hacer una comanda en una mesa , un buscador de productos
+-------------------------
+
+no agrega los ingredientes a la receta
+
+2025-07-06T09:53:55.933-04:00 DEBUG 2804 --- [backend] [nio-8080-exec-5] o.s.security.web.FilterChainProxy        : Secured GET /api/v1/ingredientes
+2025-07-06T09:53:55.936-04:00 DEBUG 2804 --- [backend] [nio-8080-exec-5] horizationManagerBeforeMethodInterceptor : Authorizing method invocation ReflectiveMethodInvocation: public java.util.List com.catasoft.restaurante.backend.controller.IngredienteController.getAll(); target is 
+of class [com.catasoft.restaurante.backend.controller.IngredienteController]
+2025-07-06T09:53:55.942-04:00 DEBUG 2804 --- [backend] [nio-8080-exec-5] horizationManagerBeforeMethodInterceptor : Authorized method invocation ReflectiveMethodInvocation: public java.util.List com.catasoft.restaurante.backend.controller.IngredienteController.getAll(); target is of class [com.catasoft.restaurante.backend.controller.IngredienteController]
+
+
+
+
+perfecto se ve muy bien , pero no hay un boton para agregar una receta.. por si el cliente quiere agregar algo nuevo

@@ -7,8 +7,11 @@ const getRolesFromToken = (token: string | null): string[] => {
     if (!token) return [];
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
+        console.log('Token payload:', payload);
+        console.log('Roles from token:', payload.roles);
         return payload.roles || [];
     } catch (e) {
+        console.error('Error decoding token:', e);
         return [];
     }
 };

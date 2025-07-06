@@ -29,10 +29,10 @@ public class Mesa {
     private EstadoMesa estado;
 
     // --- Nuevos campos para el mapa visual ---
-    @Column(nullable = true)
+    @Column(name = "posicion_x", nullable = true)
     private Integer posicionX;
 
-    @Column(nullable = true)
+    @Column(name = "posicion_y", nullable = true)
     private Integer posicionY;
 
     @Column(nullable = true)

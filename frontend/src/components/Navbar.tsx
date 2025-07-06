@@ -6,7 +6,9 @@ const Navbar = () => {
     const { isAuthenticated, logout, roles } = useAuth();
     const navigate = useNavigate();
 
-    const esGerente = roles.includes('ROLE_GERENTE');
+    const esAdmin = roles.includes('ADMIN');
+    const esGerente = roles.includes('GERENTE');
+    const esAdminOGerente = esAdmin || esGerente;
 
     const handleLogout = () => {
         logout();
@@ -25,7 +27,7 @@ const Navbar = () => {
                         <Button color="inherit" component={RouterLink} to="/cocina">Cocina</Button>
                         <Button color="inherit" component={RouterLink} to="/caja">Caja</Button>
 
-                        {esGerente && (
+                        {esAdminOGerente && (
                             <>
                                 <Button color="inherit" component={RouterLink} to="/mapa-mesas">Mapa de Mesas</Button>
                                 <Button color="inherit" component={RouterLink} to="/gestion-mesas">Gestión de Mesas</Button>

@@ -33,7 +33,7 @@ public class ApplicationConfig {
                     usuario.getUsername(),
                     usuario.getPassword(),
                     usuario.getRoles().stream()
-                            .map(rol -> new SimpleGrantedAuthority(rol.name()))
+                            .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol.getNombre()))
                             .collect(Collectors.toList())
             ))
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));

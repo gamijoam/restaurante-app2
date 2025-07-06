@@ -6,6 +6,7 @@ import com.catasoft.restaurante.backend.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,7 +32,13 @@ public class UsuarioService {
         dto.setApellido(usuario.getApellido());
         dto.setEmail(usuario.getEmail());
         dto.setActivo(usuario.isActivo());
-        dto.setRoles(usuario.getRoles());
+        
+        // Extraer solo los nombres de los roles para evitar recursión infinita
+        Set<String> roleNames = usuario.getRoles().stream()
+                .map(rol -> rol.getNombre())
+                .collect(Collectors.toSet());
+        dto.setRoles(roleNames);
+        
         dto.setFechaCreacion(usuario.getFechaCreacion());
         return dto;
     }

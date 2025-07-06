@@ -1,7 +1,5 @@
 package com.catasoft.restaurante.backend.dto;
 
-import com.catasoft.restaurante.backend.model.enums.Rol;
-
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -12,7 +10,7 @@ public class UsuarioResponseDTO {
     private String apellido;
     private String email;
     private boolean activo;
-    private Set<Rol> roles;
+    private Set<String> roles;
     private LocalDateTime fechaCreacion;
 
     // Getters y Setters para todos los campos
@@ -28,8 +26,8 @@ public class UsuarioResponseDTO {
     public void setEmail(String email) { this.email = email; }
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
-    public Set<Rol> getRoles() { return roles; }
-    public void setRoles(Set<Rol> roles) { this.roles = roles; }
+    public Set<String> getRoles() { return roles; }
+    public void setRoles(Set<String> roles) { this.roles = roles; }
     public LocalDateTime getFechaCreacion() { return fechaCreacion; }
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
 }

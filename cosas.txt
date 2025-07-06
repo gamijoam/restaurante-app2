@@ -1,0 +1,63 @@
+❌ FALTA POR IMPLEMENTAR
+1. Mapa de Mesas Visual e Interactivo
+Estado: NO IMPLEMENTADO
+Necesita:
+Nueva página con layout visual del restaurante
+Sistema de drag & drop para configurar mesas
+Integración con WebSocket para cambios en tiempo real
+Colores dinámicos según estado de mesas
+2. Módulo de Impresión Térmica
+Estado: NO IMPLEMENTADO
+Necesita:
+Backend: Endpoint para generar tickets ESC/POS
+Frontend: Detección de impresoras térmicas
+Configuración de impresoras por propósito
+Integración con comandas y facturas
+�� SUGERENCIAS ADICIONALES PARA TU APLICACIÓN
+Funcionalidades de Gestión Avanzada:
+Dashboard Gerencial
+Métricas en tiempo real (ventas, mesas ocupadas, productos más vendidos)
+Gráficos de rendimiento diario/semanal/mensual
+Alertas de stock bajo
+Sistema de Reservas
+Calendario de reservas
+Confirmación por SMS/email
+Gestión de capacidad por horario
+Gestión de Personal
+Control de turnos
+Asignación de mesas por camarero
+Reportes de productividad
+Módulo de Proveedores
+Catálogo de proveedores
+Órdenes de compra automáticas
+Historial de precios
+Sistema de Fidelización
+Tarjetas de puntos
+Descuentos automáticos
+Historial de clientes
+Análisis Predictivo
+Predicción de demanda por día/hora
+Sugerencias de inventario
+Optimización de menú
+Integración con Delivery
+APIs de Uber Eats, Rappi, etc.
+Gestión de pedidos externos
+Tracking de entregas
+Módulo de Mantenimiento
+Control de equipos de cocina
+Alertas de mantenimiento preventivo
+Registro de incidencias
+Sistema de Calidad
+Encuestas de satisfacción
+Control de temperatura de alimentos
+Registro de alérgenos
+Gestión de Costos
+Análisis de rentabilidad por producto
+Control de costos de ingredientes
+Margen de ganancia en tiempo real
+¿Te gustaría que implemente alguna de estas funcionalidades o prefieres que nos enfoquemos en completar las que faltan (Mapa de Mesas e Impresión Térmica)?
+-------------------------------------------------------------------------------------------------------------------------
+
+ok pero hay un problema cuando se marca la comanda como lista en cocina , se bloquea la mesa y entra en su estado por pagar
+
+pero si el cliente a ultimo momento o quiere añadir mas cosas despues de que la cocina ya marco la comanda como lista?

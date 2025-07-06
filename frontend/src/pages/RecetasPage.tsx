@@ -340,7 +340,7 @@ const RecetasPage = () => {
                                     >
                                         <CardContent>
                                             <Typography variant="h6" component="div">
-                                                {producto.nombre}
+                                {producto.nombre}
                                             </Typography>
                                             <Typography color="text.secondary" gutterBottom>
                                                 ${producto.precio}
@@ -351,7 +351,7 @@ const RecetasPage = () => {
                                         </CardContent>
                                     </Card>
                                 </Grid>
-                            ))}
+                        ))}
                         </Grid>
                     </CardContent>
                 </Card>
@@ -364,8 +364,8 @@ const RecetasPage = () => {
                         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                             <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <InventoryIcon />
-                                Receta de: {selectedProducto.nombre}
-                            </Typography>
+                            Receta de: {selectedProducto.nombre}
+                        </Typography>
                             <Button 
                                 variant="outlined" 
                                 onClick={() => {

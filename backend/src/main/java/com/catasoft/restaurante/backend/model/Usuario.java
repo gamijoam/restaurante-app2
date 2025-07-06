@@ -1,6 +1,6 @@
 package com.catasoft.restaurante.backend.model;
 
-import com.catasoft.restaurante.backend.model.enums.Rol;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
@@ -38,10 +38,13 @@ public class Usuario {
     @Column(nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
-    @ElementCollection(targetClass = Rol.class, fetch = FetchType.EAGER)
-    @CollectionTable(name = "usuario_roles", joinColumns = @JoinColumn(name = "usuario_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "rol", nullable = false)
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "usuario_roles",
+        joinColumns = @JoinColumn(name = "usuario_id"),
+        inverseJoinColumns = @JoinColumn(name = "rol_id")
+    )
+    @JsonManagedReference
     private Set<Rol> roles = new HashSet<>();
 
     // Getters y Setters (solo los de nuestros campos)
