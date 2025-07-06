@@ -26,8 +26,8 @@ export interface ComandaItemResponseDTO {
 
 export interface ComandaResponseDTO {
     id: number;
-    // Basado en tu archivo CashierViewPage, parece que recibes 'nombreMesa' y no 'numeroMesa'
-    nombreMesa: string; 
+    numeroMesa: number; // Asegúrate de que aquí diga numeroMesa
+    nombreMesa?: string; // Puedes dejar nombreMesa como opcional o eliminarlo
     items: ComandaItemResponseDTO[];
     estado: 'EN_PROCESO' | 'LISTA' | 'ENTREGADA' | 'PAGADA' | 'CANCELADA';
     fechaHoraCreacion: string;

@@ -8,7 +8,8 @@ import java.util.Optional;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
-
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 @Repository
 public interface ComandaRepository extends JpaRepository<Comanda, Long> {
     // Este método buscará todas las comandas por un estado específico (PAGADA)
@@ -17,4 +18,8 @@ public interface ComandaRepository extends JpaRepository<Comanda, Long> {
     List<Comanda> findByEstado(EstadoComanda estado);
     List<Comanda> findByEstadoIn(Collection<EstadoComanda> estados);
     Optional<Comanda> findFirstByMesaIdAndEstadoOrderByFechaHoraCreacionDesc(Long mesaId, EstadoComanda estado);
+    // --- MÉTODO AÑADIDO: LA SOLUCIÓN DEFINITIVA ---
+    @Query("SELECT c FROM Comanda c JOIN FETCH c.mesa JOIN FETCH c.items i JOIN FETCH i.producto WHERE c.id = :comandaId")
+    Optional<Comanda> findByIdWithDetails(@Param("comandaId") Long comandaId);
+    // ---------------------------------------------
 }

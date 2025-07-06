@@ -90,11 +90,15 @@ const TableSelectionPage = () => {
                         }}>
                             <CardActionArea 
                                 component={isMesaSelectable(mesa.estado) ? RouterLink : 'div'}
-                                to={isMesaSelectable(mesa.estado) ? `/comanda/mesa/${mesa.id}` : undefined}
-                                disabled={!isMesaSelectable(mesa.estado)}
-                                sx={{ 
-                                    cursor: isMesaSelectable(mesa.estado) ? 'pointer' : 'not-allowed'
-                                }}
+    // --- CORRECCIÓN AQUÍ ---
+    // ANTES: to={isMesaSelectable(mesa.estado) ? `/comanda/mesa/${mesa.id}` : undefined}
+    // DESPUÉS:
+    to={isMesaSelectable(mesa.estado) ? `/order/${mesa.id}` : undefined}
+    
+    disabled={!isMesaSelectable(mesa.estado)}
+    sx={{ 
+        cursor: isMesaSelectable(mesa.estado) ? 'pointer' : 'not-allowed'
+    }}
                             >
                                 <CardContent>
                                     <Typography variant="h5" component="div">Mesa {mesa.numero}</Typography>

@@ -1,84 +1,149 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import ReportesPage from './pages/ReportesPage.tsx'; // <-- Importar
-import App from './App.tsx';
-import LoginPage from './pages/LoginPage.tsx';
-import ProtectedRoute from './components/ProtectedRoute.tsx';
-import TableSelectionPage from './pages/TableSelectionPage.tsx';
-import OrderPage from './pages/OrderPage.tsx';
-import KitchenViewPage from './pages/KitchenViewPage.tsx';
-import CashierViewPage from './pages/CashierViewPage.tsx';
-import UserManagementPage from './pages/UserManagementPage.tsx';
-import IngredientesPage from './pages/IngredientesPage.tsx';
-import RecetasPage from './pages/RecetasPage.tsx';
-import InventarioHelpPage from './pages/InventarioHelpPage.tsx';
-import MesaMapaPage from './pages/MesaMapaPage.tsx';
-import GestionMesasPage from './pages/GestionMesasPage.tsx';
 import { WebSocketProvider } from './context/WebSocketContext';
-import './index.css';
-import FacturacionPage from './pages/FacturacionPage.tsx';
+import ProtectedRoute from './components/ProtectedRoute';
+
+import App from './App.tsx';
+import LoginPage from './pages/LoginPage';
+import TableSelectionPage from './pages/TableSelectionPage';
+import OrderPage from './pages/OrderPage';
+import KitchenViewPage from './pages/KitchenViewPage';
+import CashierViewPage from './pages/CashierViewPage';
+import MesaMapaPage from './pages/MesaMapaPage';
+import GestionMesasPage from './pages/GestionMesasPage';
+import ReportesPage from './pages/ReportesPage';
+import UserManagementPage from './pages/UserManagementPage';
+import FacturacionPage from './pages/FacturacionPage';
+import IngredientesPage from './pages/IngredientesPage';
+import RecetasPage from './pages/RecetasPage';
+import InventarioHelpPage from './pages/InventarioHelpPage';
+
+// --- 1. IMPORTAMOS LA NUEVA PÁGINA ---
+import PrinterSettingsPage from './pages/PrinterSettingsPage.tsx';
+
 const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <ProtectedRoute />, // El guardia protege a todos sus hijos
-    children: [
-      {
-        element: <App />, // El cascarón de la app con Navbar y Outlet
+    {
+        path: '/',
+        element: <App />,
         children: [
-          { index: true, element: <TableSelectionPage /> },
-          { path: "/comanda/mesa/:mesaId", element: <OrderPage /> },
-          { path: "/cocina", element: <KitchenViewPage /> },
-          { path: "/caja", element: <CashierViewPage /> },
-          {
-            path: "/reportes", // <-- Añadir esta ruta
-            element: <ReportesPage />,
-          },
-          {
-            path: "/usuarios", // <-- Añadir esta ruta
-            element: <UserManagementPage />,
-          },
-          {
-            path: "/facturacion", // <-- Añadir esta ruta
-            element: <FacturacionPage />,
-          },
-          {
-            path: "/ingredientes", // <-- Añadir esta ruta
-            element: <IngredientesPage />,
-          },
-          {
-            path: "/recetas", // <-- Añadir esta ruta
-            element: <RecetasPage />,
-          },
-          {
-            path: "/inventario-help", // <-- Añadir esta ruta
-            element: <InventarioHelpPage />,
-          },
-          {
-            path: "/mapa-mesas",
-            element: <MesaMapaPage />,
-          },
-          {
-            path: "/gestion-mesas",
-            element: <GestionMesasPage />,
-          },
+            { path: 'login', element: <LoginPage /> },
+            { 
+                path: '', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_CAMARERO', 'ROLE_GERENTE']}>
+                        <TableSelectionPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'order/:mesaId', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_CAMARERO', 'ROLE_GERENTE']}>
+                        <OrderPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'cocina', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_COCINERO', 'ROLE_GERENTE']}>
+                        <KitchenViewPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'caja', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_CAJERO', 'ROLE_GERENTE']}>
+                        <CashierViewPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'mapa-mesas', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <MesaMapaPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'gestion-mesas', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <GestionMesasPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'reportes', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <ReportesPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'usuarios', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <UserManagementPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'facturacion', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <FacturacionPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'ingredientes', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <IngredientesPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'recetas', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <RecetasPage />
+                    </ProtectedRoute>
+                )
+            },
+            { 
+                path: 'inventario-help', 
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <InventarioHelpPage />
+                    </ProtectedRoute>
+                )
+            },
+            // --- 2. AÑADIMOS LA NUEVA RUTA AQUÍ ---
+            {
+                path: 'configuracion/impresoras',
+                element: (
+                    <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <PrinterSettingsPage />
+                    </ProtectedRoute>
+                )
+            }
         ]
-      }
-    ]
-  },
-  {
-    path: "/login", // La ruta de login es pública, está fuera de la protección
-    element: <LoginPage />,
-  },
+    }
 ]);
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <AuthProvider>
-      <WebSocketProvider> {/* <-- Envolver con el nuevo proveedor */}
-        <RouterProvider router={router} />
-      </WebSocketProvider>
-    </AuthProvider>
-  </StrictMode>,
+ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+        <AuthProvider>
+            <WebSocketProvider> {/* <-- 3. Asegúrate que WebSocketProvider envuelva a RouterProvider si necesita el contexto de Auth */}
+                <RouterProvider router={router} />
+            </WebSocketProvider>
+        </AuthProvider>
+    </React.StrictMode>
 );
