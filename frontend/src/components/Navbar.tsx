@@ -33,7 +33,7 @@ const Navbar = () => {
                                 <Button color="inherit" component={RouterLink} to="/usuarios">Gestionar Usuarios</Button>
                                 <Button color="inherit" component={RouterLink} to="/facturacion">Facturación</Button>
                                 <Button color="inherit" component={RouterLink} to="/ingredientes">Ingredientes</Button>
-                                <Button color="inherit" component={RouterLink} to="/recetas">Recetas</Button>
+                                <Button color="inherit" component={RouterLink} to="/recetas">Gestión de Recetas</Button>
                                 
                                 {/* --- BOTÓN AÑADIDO --- */}
                                 <Button color="inherit" component={RouterLink} to="/configuracion/impresoras">Impresoras</Button>

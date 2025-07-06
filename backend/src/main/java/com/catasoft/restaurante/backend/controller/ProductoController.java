@@ -54,6 +54,8 @@ public class ProductoController {
      */
     @PostMapping
     public Producto createProducto(@RequestBody Producto producto) {
+        // Establecer stock inicial en 0 ya que se calcula dinámicamente
+        producto.setStock(0.0);
         return productoRepository.save(producto);
     }
     /**
@@ -84,6 +86,9 @@ public class ProductoController {
         producto.setNombre(productoDetails.getNombre());
         producto.setDescripcion(productoDetails.getDescripcion());
         producto.setPrecio(productoDetails.getPrecio());
+        
+        // No actualizar el stock ya que se calcula dinámicamente
+        // producto.setStock(productoDetails.getStock());
 
         final Producto updatedProducto = productoRepository.save(producto);
         return ResponseEntity.ok(updatedProducto);

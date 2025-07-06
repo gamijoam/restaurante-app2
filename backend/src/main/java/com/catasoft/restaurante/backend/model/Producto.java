@@ -25,6 +25,9 @@ public class Producto {
     @Column(nullable = false)
     private BigDecimal precio;
 
+    @Column
+    private Double stock;
+
     // --- Constructores ---
 
     public Producto() {
@@ -34,6 +37,13 @@ public class Producto {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.precio = precio;
+    }
+
+    public Producto(String nombre, String descripcion, BigDecimal precio, Double stock) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.stock = stock;
     }
 
     // --- Getters y Setters ---
@@ -68,5 +78,13 @@ public class Producto {
 
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
+    }
+
+    public Double getStock() {
+        return stock;
+    }
+
+    public void setStock(Double stock) {
+        this.stock = stock;
     }
 }

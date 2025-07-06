@@ -7,6 +7,7 @@ import com.catasoft.restaurante.backend.repository.ProductoRepository;
 import com.catasoft.restaurante.backend.repository.IngredienteRepository;
 import com.catasoft.restaurante.backend.service.RecetaIngredienteService;
 import com.catasoft.restaurante.backend.dto.RecetaIngredienteDTO;
+import com.catasoft.restaurante.backend.dto.RecetaIngredienteResponseDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -31,8 +32,21 @@ public class RecetaIngredienteController {
 
     @GetMapping("/producto/{productoId}")
     @PreAuthorize("hasRole('GERENTE')")
-    public List<RecetaIngrediente> getRecetasByProducto(@PathVariable Long productoId) {
-        return recetaIngredienteService.findByProductoId(productoId);
+    public List<RecetaIngredienteResponseDTO> getRecetasByProducto(@PathVariable Long productoId) {
+        List<RecetaIngrediente> recetas = recetaIngredienteService.findByProductoId(productoId);
+        List<RecetaIngredienteResponseDTO> responseDTOs = new ArrayList<>();
+        
+        for (RecetaIngrediente receta : recetas) {
+            responseDTOs.add(new RecetaIngredienteResponseDTO(
+                receta.getId(),
+                receta.getIngrediente().getId(),
+                receta.getIngrediente().getNombre(),
+                receta.getCantidad(),
+                receta.getUnidad()
+            ));
+        }
+        
+        return responseDTOs;
     }
 
     @PostMapping("/producto/{productoId}")
@@ -55,6 +69,9 @@ public class RecetaIngredienteController {
             receta.setIngrediente(ingrediente);
             receta.setCantidad(dto.getCantidad());
             receta.setUnidad(dto.getUnidad());
+            
+            // Si el DTO incluye ingredienteNombre, lo ignoramos ya que se obtiene del ingrediente
+            // dto.getIngredienteNombre() se puede usar para validación si es necesario
             
             recetas.add(receta);
         }
