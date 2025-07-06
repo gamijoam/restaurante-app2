@@ -170,22 +170,29 @@ public class ComandaService {
         logger.info("Comanda encontrada. Verificando datos de la mesa...");
 
         Mesa mesa = comanda.getMesa();
+        logger.info("Mesa encontrada - ID: {}, Número: {}, Nombre: '{}'", mesa.getId(), mesa.getNumero(), mesa.getNombre());
+        
         // --- LA SOLUCIÓN DEFINITIVA ESTÁ AQUÍ ---
         // Verificamos si el nombre de la mesa es nulo o está vacío.
         String nombreParaTicket;
         if (mesa.getNombre() != null && !mesa.getNombre().trim().isEmpty()) {
             // Si tiene un nombre, lo usamos.
             nombreParaTicket = mesa.getNombre();
+            logger.info("Usando nombre personalizado de la mesa: '{}'", nombreParaTicket);
         } else {
             // Si no tiene nombre, usamos su número como respaldo.
             nombreParaTicket = "Mesa " + mesa.getNumero();
+            logger.info("Usando número de mesa como nombre: '{}'", nombreParaTicket);
         }
-        logger.info("Nombre final para el ticket: {}", nombreParaTicket);
-        //
+        logger.info("Nombre final para el ticket: '{}'", nombreParaTicket);
+        
+        logger.info("Procesando {} items de la comanda", comanda.getItems().size());
         List<TicketItemDTO> itemsDTO = comanda.getItems().stream()
                 .map(comandaItem -> {
                     BigDecimal precioTotalItem = comandaItem.getPrecioUnitario()
                             .multiply(new BigDecimal(comandaItem.getCantidad()));
+                    logger.info("Item: {} x {} = ${}", comandaItem.getCantidad(), 
+                              comandaItem.getProducto().getNombre(), precioTotalItem);
                     return new TicketItemDTO(
                             comandaItem.getCantidad(),
                             comandaItem.getProducto().getNombre(),
@@ -194,13 +201,18 @@ public class ComandaService {
                     );
                 }).collect(Collectors.toList());
 
-        return new TicketDTO(
+        TicketDTO ticketDTO = new TicketDTO(
                 comanda.getId(),
-                mesa.getNombre(), // <-- 2. Ahora esto funcionará siempre
+                nombreParaTicket, // <-- 2. Usamos la variable calculada correctamente
                 comanda.getFechaHoraCreacion(),
                 itemsDTO,
                 comanda.getTotal()
         );
+        
+        logger.info("TicketDTO creado - ComandaID: {}, Mesa: '{}', Total: ${}, Items: {}", 
+                   ticketDTO.comandaId(), ticketDTO.nombreMesa(), ticketDTO.total(), ticketDTO.items().size());
+        
+        return ticketDTO;
     }
 
     @Transactional
