@@ -9,6 +9,8 @@ import com.catasoft.restaurante.backend.model.*;
 import com.catasoft.restaurante.backend.model.dto.PrintJobDTO;
 import com.catasoft.restaurante.backend.model.dto.TicketDTO;
 import com.catasoft.restaurante.backend.model.dto.TicketItemDTO;
+import com.catasoft.restaurante.backend.model.dto.CocinaTicketDTO;
+import com.catasoft.restaurante.backend.model.dto.CocinaItemDTO;
 import com.catasoft.restaurante.backend.model.enums.EstadoComanda;
 import com.catasoft.restaurante.backend.model.enums.EstadoMesa;
 import com.catasoft.restaurante.backend.repository.*;
@@ -124,8 +126,8 @@ public class ComandaService {
         try {
             Optional<PrinterConfiguration> configOpt = printerConfigService.getConfigurationByRole("COCINA");
             if (configOpt.isPresent()) {
-                TicketDTO ticketData = getTicketData(comandaGuardada.getId());
-                PrintJobDTO printJob = new PrintJobDTO(configOpt.get(), ticketData);
+                CocinaTicketDTO cocinaTicketData = getCocinaTicketData(comandaGuardada.getId());
+                PrintJobDTO printJob = new PrintJobDTO(configOpt.get(), cocinaTicketData);
                 webSocketService.sendPrintJob(printJob);
             } else {
                 logger.warn("No se encontró una configuración de impresora para el rol 'COCINA'. Saltando impresión automática.");
@@ -213,6 +215,54 @@ public class ComandaService {
                    ticketDTO.comandaId(), ticketDTO.nombreMesa(), ticketDTO.total(), ticketDTO.items().size());
         
         return ticketDTO;
+    }
+
+    // --- MÉTODO PARA TICKETS DE COCINA (VERSIÓN SIMPLIFICADA) ---
+    @Transactional(readOnly = true)
+    public CocinaTicketDTO getCocinaTicketData(Long comandaId) {
+        logger.info("Iniciando getCocinaTicketData para la comanda ID: {}", comandaId);
+
+        Comanda comanda = comandaRepository.findByIdWithDetails(comandaId)
+                .orElseThrow(() -> new EntityNotFoundException("Comanda no encontrada o sin detalles: " + comandaId));
+
+        logger.info("Comanda encontrada para cocina. Verificando datos de la mesa...");
+
+        Mesa mesa = comanda.getMesa();
+        logger.info("Mesa encontrada - ID: {}, Número: {}, Nombre: '{}'", mesa.getId(), mesa.getNumero(), mesa.getNombre());
+        
+        // Determinar el nombre para el ticket de cocina
+        String nombreParaTicket;
+        if (mesa.getNombre() != null && !mesa.getNombre().trim().isEmpty()) {
+            nombreParaTicket = mesa.getNombre();
+            logger.info("Usando nombre personalizado de la mesa: '{}'", nombreParaTicket);
+        } else {
+            nombreParaTicket = "Mesa " + mesa.getNumero();
+            logger.info("Usando número de mesa como nombre: '{}'", nombreParaTicket);
+        }
+        
+        logger.info("Procesando {} items para cocina", comanda.getItems().size());
+        List<CocinaItemDTO> itemsDTO = comanda.getItems().stream()
+                .map(comandaItem -> {
+                    logger.info("Item para cocina: {} x {}", comandaItem.getCantidad(), 
+                              comandaItem.getProducto().getNombre());
+                    return new CocinaItemDTO(
+                            comandaItem.getCantidad(),
+                            comandaItem.getProducto().getNombre(),
+                            "" // Por ahora sin notas, pero se puede expandir en el futuro
+                    );
+                }).collect(Collectors.toList());
+
+        CocinaTicketDTO cocinaTicketDTO = new CocinaTicketDTO(
+                comanda.getId(),
+                nombreParaTicket,
+                comanda.getFechaHoraCreacion(),
+                itemsDTO
+        );
+        
+        logger.info("CocinaTicketDTO creado - ComandaID: {}, Mesa: '{}', Items: {}", 
+                   cocinaTicketDTO.comandaId(), cocinaTicketDTO.nombreMesa(), cocinaTicketDTO.items().size());
+        
+        return cocinaTicketDTO;
     }
 
     @Transactional

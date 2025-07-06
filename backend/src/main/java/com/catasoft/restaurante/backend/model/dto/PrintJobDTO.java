@@ -6,13 +6,20 @@ import com.catasoft.restaurante.backend.model.PrinterConfiguration;
 public record PrintJobDTO(
     String printerType,
     String printerTarget,
-    TicketDTO ticketData
+    String ticketType, // "CAJA" o "COCINA"
+    Object ticketData // Puede ser TicketDTO o CocinaTicketDTO
 ) {
     /**
-     * Constructor adicional para crear fácilmente un PrintJob a partir de una entidad
-     * de configuración y los datos del ticket.
+     * Constructor para tickets de caja
      */
     public PrintJobDTO(PrinterConfiguration config, TicketDTO ticketData) {
-        this(config.getPrinterType(), config.getPrinterTarget(), ticketData);
+        this(config.getPrinterType(), config.getPrinterTarget(), "CAJA", ticketData);
+    }
+    
+    /**
+     * Constructor para tickets de cocina
+     */
+    public PrintJobDTO(PrinterConfiguration config, CocinaTicketDTO ticketData) {
+        this(config.getPrinterType(), config.getPrinterTarget(), "COCINA", ticketData);
     }
 }
