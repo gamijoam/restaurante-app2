@@ -19,6 +19,7 @@ import {
   useMediaQuery,
   Badge,
   Chip,
+  Collapse,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -37,6 +38,11 @@ import {
   Logout,
   Notifications,
   Help,
+  ExpandLess,
+  ExpandMore,
+  Business,
+  Store,
+  AdminPanelSettings,
 } from '@mui/icons-material';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -45,13 +51,20 @@ import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC = () => {
   const { userInfo, logout, hasPermission, roles } = useAuth();
-    const navigate = useNavigate();
+  const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({
+    operaciones: true,
+    gestion: true,
+    inventario: true,
+    administracion: true,
+    sistema: true,
+  });
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -61,9 +74,9 @@ const Navbar: React.FC = () => {
     setAnchorEl(null);
   };
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
     handleMenuClose();
   };
 
@@ -76,78 +89,120 @@ const Navbar: React.FC = () => {
     setDrawerOpen(false);
   };
 
-  const menuItems = [
+  const handleGroupToggle = (group: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [group]: !prev[group]
+    }));
+  };
+
+  const menuGroups = [
     {
-      text: 'Toma de Pedidos',
+      id: 'operaciones',
+      title: 'Operaciones',
       icon: <Restaurant />,
-      path: '/',
-      permission: 'TOMAR_PEDIDOS',
+      items: [
+        {
+          text: 'Toma de Pedidos',
+          icon: <Restaurant />,
+          path: '/',
+          permission: 'TOMAR_PEDIDOS',
+        },
+        {
+          text: 'Cocina',
+          icon: <Kitchen />,
+          path: '/cocina',
+          permission: 'VER_COCINA',
+        },
+        {
+          text: 'Caja',
+          icon: <PointOfSale />,
+          path: '/caja',
+          permission: 'VER_CAJA',
+        },
+      ]
     },
     {
-      text: 'Cocina',
-      icon: <Kitchen />,
-      path: '/cocina',
-      permission: 'VER_COCINA',
-    },
-    {
-      text: 'Caja',
-      icon: <PointOfSale />,
-      path: '/caja',
-      permission: 'VER_CAJA',
-    },
-    {
-      text: 'Mapa de Mesas',
+      id: 'gestion',
+      title: 'Gestión',
       icon: <Map />,
-      path: '/mapa-mesas',
-      permission: 'GESTIONAR_MESAS',
+      items: [
+        {
+          text: 'Mapa de Mesas',
+          icon: <Map />,
+          path: '/mapa-mesas',
+          permission: 'GESTIONAR_MESAS',
+        },
+        {
+          text: 'Gestión de Mesas',
+          icon: <Dashboard />,
+          path: '/gestion-mesas',
+          permission: 'GESTIONAR_MESAS',
+        },
+      ]
     },
     {
-      text: 'Gestión de Mesas',
-      icon: <Dashboard />,
-      path: '/gestion-mesas',
-      permission: 'GESTIONAR_MESAS',
-    },
-    {
-      text: 'Reportes',
-      icon: <Assessment />,
-      path: '/reportes',
-      permission: 'VER_REPORTES',
-    },
-    {
-      text: 'Usuarios',
-      icon: <People />,
-      path: '/usuarios',
-      permission: 'CREAR_USUARIOS',
-    },
-    {
-      text: 'Facturación',
-      icon: <Receipt />,
-      path: '/facturacion',
-      permission: 'VER_FACTURAS',
-    },
-    {
-      text: 'Ingredientes',
+      id: 'inventario',
+      title: 'Inventario',
       icon: <Inventory />,
-      path: '/ingredientes',
-      permission: 'GESTIONAR_INGREDIENTES',
+      items: [
+        {
+          text: 'Ingredientes',
+          icon: <Inventory />,
+          path: '/ingredientes',
+          permission: 'GESTIONAR_INGREDIENTES',
+        },
+        {
+          text: 'Recetas',
+          icon: <Book />,
+          path: '/recetas',
+          permission: 'GESTIONAR_RECETAS',
+        },
+      ]
     },
     {
-      text: 'Recetas',
-      icon: <Book />,
-      path: '/recetas',
-      permission: 'GESTIONAR_RECETAS',
+      id: 'administracion',
+      title: 'Administración',
+      icon: <Assessment />,
+      items: [
+        {
+          text: 'Reportes',
+          icon: <Assessment />,
+          path: '/reportes',
+          permission: 'VER_REPORTES',
+        },
+        {
+          text: 'Facturación',
+          icon: <Receipt />,
+          path: '/facturacion',
+          permission: 'VER_FACTURAS',
+        },
+      ]
     },
     {
-      text: 'Roles y Permisos',
-      icon: <Settings />,
-      path: '/roles-permisos',
-      permission: 'GESTIONAR_ROLES',
-    },
+      id: 'sistema',
+      title: 'Sistema',
+      icon: <AdminPanelSettings />,
+      items: [
+        {
+          text: 'Usuarios',
+          icon: <People />,
+          path: '/usuarios',
+          permission: 'CREAR_USUARIOS',
+        },
+        {
+          text: 'Roles y Permisos',
+          icon: <Settings />,
+          path: '/roles-permisos',
+          permission: 'GESTIONAR_ROLES',
+        },
+      ]
+    }
   ];
 
-  // Solo una opción de configuración para GERENTE
+  // Agregar configuración solo para GERENTE
   if (roles && roles.includes('ROLE_GERENTE')) {
-    menuItems.push({
+    menuGroups.find(g => g.id === 'sistema')?.items.push({
       text: 'Configuración',
       icon: <SettingsIcon />,
       path: '/configuracion',
@@ -155,9 +210,49 @@ const Navbar: React.FC = () => {
     });
   }
 
-  const filteredMenuItems = menuItems.filter(item => 
-    !item.permission || hasPermission(item.permission)
-  );
+  const renderMenuItem = (item: any) => {
+    if (item.permission && !hasPermission(item.permission)) {
+      return null;
+    }
+
+    return (
+      <ListItem
+        key={item.path}
+        button
+        onClick={() => handleNavigation(item.path)}
+        selected={location.pathname === item.path}
+        sx={{
+          mx: 1,
+          mb: 0.5,
+          borderRadius: 2,
+          pl: 4,
+          '&.Mui-selected': {
+            backgroundColor: 'primary.light',
+            color: 'primary.contrastText',
+            '&:hover': {
+              backgroundColor: 'primary.main',
+            },
+          },
+          '&:hover': {
+            backgroundColor: 'action.hover',
+          },
+        }}
+      >
+        <ListItemIcon sx={{ 
+          color: location.pathname === item.path ? 'inherit' : 'text.secondary',
+          minWidth: 40 
+        }}>
+          {item.icon}
+        </ListItemIcon>
+        <ListItemText 
+          primary={item.text}
+          primaryTypographyProps={{
+            fontWeight: location.pathname === item.path ? 600 : 400,
+          }}
+        />
+      </ListItem>
+    );
+  };
 
   const drawer = (
     <Box sx={{ width: 280 }}>
@@ -171,46 +266,50 @@ const Navbar: React.FC = () => {
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
           Sistema de Gestión
-                </Typography>
+        </Typography>
       </Box>
       
       <List sx={{ pt: 1 }}>
-        {filteredMenuItems.map((item) => (
-          <ListItem
-            key={item.path}
-            button
-            onClick={() => handleNavigation(item.path)}
-            selected={location.pathname === item.path}
-            sx={{
-              mx: 1,
-              mb: 0.5,
-              borderRadius: 2,
-              '&.Mui-selected': {
-                backgroundColor: 'primary.light',
-                color: 'primary.contrastText',
-                '&:hover': {
-                  backgroundColor: 'primary.main',
-                },
-              },
-              '&:hover': {
-                backgroundColor: 'action.hover',
-              },
-            }}
-          >
-            <ListItemIcon sx={{ 
-              color: location.pathname === item.path ? 'inherit' : 'text.secondary',
-              minWidth: 40 
-            }}>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText 
-              primary={item.text}
-              primaryTypographyProps={{
-                fontWeight: location.pathname === item.path ? 600 : 400,
-              }}
-            />
-          </ListItem>
-        ))}
+        {menuGroups.map((group) => {
+          const visibleItems = group.items.filter(item => 
+            !item.permission || hasPermission(item.permission)
+          );
+
+          if (visibleItems.length === 0) return null;
+
+          return (
+            <Box key={group.id}>
+              <ListItem
+                button
+                onClick={() => handleGroupToggle(group.id)}
+                sx={{
+                  mx: 1,
+                  mb: 0.5,
+                  borderRadius: 2,
+                  backgroundColor: 'action.hover',
+                }}
+              >
+                <ListItemIcon sx={{ color: 'text.secondary', minWidth: 40 }}>
+                  {group.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={group.title}
+                  primaryTypographyProps={{
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                  }}
+                />
+                {expandedGroups[group.id] ? <ExpandLess /> : <ExpandMore />}
+              </ListItem>
+              
+              <Collapse in={expandedGroups[group.id]} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {visibleItems.map(renderMenuItem)}
+                </List>
+              </Collapse>
+            </Box>
+          );
+        })}
       </List>
     </Box>
   );
@@ -258,27 +357,50 @@ const Navbar: React.FC = () => {
             </Box>
           </Box>
 
-          {/* Navegación desktop */}
+          {/* Navegación desktop - versión simplificada */}
           {!isMobile && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {filteredMenuItems.slice(0, 6).map((item) => (
-                <Button
-                  key={item.path}
-                  startIcon={item.icon}
-                  onClick={() => handleNavigation(item.path)}
-                  sx={{
-                    color: location.pathname === item.path ? 'primary.main' : 'text.secondary',
-                    fontWeight: location.pathname === item.path ? 600 : 400,
-                    '&:hover': {
-                      backgroundColor: 'action.hover',
-                    },
-                  }}
-                >
-                  {item.text}
-                </Button>
-              ))}
-                    </Box>
-                )}
+              <Button
+                startIcon={<Restaurant />}
+                onClick={() => handleNavigation('/')}
+                sx={{
+                  color: location.pathname === '/' ? 'primary.main' : 'text.secondary',
+                  fontWeight: location.pathname === '/' ? 600 : 400,
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              >
+                Pedidos
+              </Button>
+              <Button
+                startIcon={<Kitchen />}
+                onClick={() => handleNavigation('/cocina')}
+                sx={{
+                  color: location.pathname === '/cocina' ? 'primary.main' : 'text.secondary',
+                  fontWeight: location.pathname === '/cocina' ? 600 : 400,
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              >
+                Cocina
+              </Button>
+              <Button
+                startIcon={<PointOfSale />}
+                onClick={() => handleNavigation('/caja')}
+                sx={{
+                  color: location.pathname === '/caja' ? 'primary.main' : 'text.secondary',
+                  fontWeight: location.pathname === '/caja' ? 600 : 400,
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              >
+                Caja
+              </Button>
+            </Box>
+          )}
 
           {/* Acciones del usuario */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -302,21 +424,21 @@ const Navbar: React.FC = () => {
 
             {/* Perfil del usuario */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                             <Chip
-                 label={userInfo?.nombre || userInfo?.apellido || 'Usuario'}
-                 avatar={<Avatar sx={{ width: 24, height: 24 }}>{userInfo?.nombre?.charAt(0) || userInfo?.apellido?.charAt(0) || 'U'}</Avatar>}
-                 onClick={handleMenuOpen}
-                 sx={{
-                   cursor: 'pointer',
-                   '&:hover': {
-                     backgroundColor: 'action.hover',
-                   },
-                 }}
-               />
+              <Chip
+                label={userInfo?.nombre || userInfo?.apellido || 'Usuario'}
+                avatar={<Avatar sx={{ width: 24, height: 24 }}>{userInfo?.nombre?.charAt(0) || userInfo?.apellido?.charAt(0) || 'U'}</Avatar>}
+                onClick={handleMenuOpen}
+                sx={{
+                  cursor: 'pointer',
+                  '&:hover': {
+                    backgroundColor: 'action.hover',
+                  },
+                }}
+              />
             </Box>
           </Box>
-            </Toolbar>
-        </AppBar>
+        </Toolbar>
+      </AppBar>
 
       {/* Drawer móvil */}
       <Drawer
@@ -401,7 +523,7 @@ const Navbar: React.FC = () => {
         </MenuItem>
       </Menu>
     </>
-    );
+  );
 };
 
 export default Navbar;
