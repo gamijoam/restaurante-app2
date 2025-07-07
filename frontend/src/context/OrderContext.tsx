@@ -9,6 +9,8 @@ interface IOrderContext {
     orderItems: OrderItem[];
     activeComandaId: number | null;
     addProductToOrder: (product: Producto, itemPrincipalId?: number) => Promise<void>;
+    updateItemQuantity: (productoId: number, cantidad: number, itemPrincipalId?: number) => void;
+    removeItemFromOrder: (productoId: number, itemPrincipalId?: number) => void;
     submitNewOrder: (mesaId: number) => Promise<void>;
     loadExistingOrder: (comanda: ComandaResponseDTO) => void;
     clearOrder: () => void;
@@ -79,6 +81,26 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [activeComandaId, loadExistingOrder]);
 
+    const updateItemQuantity = useCallback((productoId: number, cantidad: number, itemPrincipalId?: number) => {
+        if (activeComandaId) return; // Solo permitido antes de crear la comanda
+        setOrderItems(currentItems =>
+            currentItems.map(item =>
+                item.productoId === productoId && item.itemPrincipalId === itemPrincipalId
+                    ? { ...item, cantidad: Math.max(1, cantidad) }
+                    : item
+            )
+        );
+    }, [activeComandaId]);
+
+    const removeItemFromOrder = useCallback((productoId: number, itemPrincipalId?: number) => {
+        if (activeComandaId) return; // Solo permitido antes de crear la comanda
+        setOrderItems(currentItems =>
+            currentItems.filter(item =>
+                !(item.productoId === productoId && item.itemPrincipalId === itemPrincipalId)
+            )
+        );
+    }, [activeComandaId]);
+
     const submitNewOrder = useCallback(async (mesaId: number) => {
         if (orderItems.length === 0 || activeComandaId !== null) return;
         const comandaDTO = {
@@ -123,7 +145,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
 
     return (
-        <OrderContext.Provider value={{ orderItems, activeComandaId, addProductToOrder, submitNewOrder, loadExistingOrder, clearOrder, cancelOrder, limpiarComanda }}>
+        <OrderContext.Provider value={{ orderItems, activeComandaId, addProductToOrder, updateItemQuantity, removeItemFromOrder, submitNewOrder, loadExistingOrder, clearOrder, cancelOrder, limpiarComanda }}>
             {children}
         </OrderContext.Provider>
     );

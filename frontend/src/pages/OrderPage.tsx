@@ -65,7 +65,7 @@ const OrderPage: React.FC = () => {
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
   const { showError, showSuccess } = useNotification();
-  const { orderItems, addProductToOrder, clearOrder } = useOrder();
+  const { orderItems, addProductToOrder, updateItemQuantity, removeItemFromOrder, clearOrder } = useOrder();
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -107,13 +107,13 @@ const OrderPage: React.FC = () => {
     }
   };
 
-  const handleRemoveFromCart = (productoId: number) => {
-    // Implementar lógica para remover item
+  const handleRemoveFromCart = (productoId: number, itemPrincipalId?: number) => {
+    removeItemFromOrder(productoId, itemPrincipalId);
     showSuccess('Producto removido', 'Producto removido del pedido');
   };
 
-  const handleUpdateQuantity = (productoId: number, cantidad: number) => {
-    // Implementar lógica para actualizar cantidad
+  const handleUpdateQuantity = (productoId: number, cantidad: number, itemPrincipalId?: number) => {
+    updateItemQuantity(productoId, cantidad, itemPrincipalId);
   };
 
   const getTotal = () => {
@@ -240,7 +240,7 @@ const OrderPage: React.FC = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <IconButton
             size="small"
-            onClick={() => handleUpdateQuantity(item.productoId, item.cantidad - 1)}
+            onClick={() => handleUpdateQuantity(item.productoId, item.cantidad - 1, item.itemPrincipalId)}
             disabled={item.cantidad <= 1}
           >
             <Remove />
@@ -250,14 +250,14 @@ const OrderPage: React.FC = () => {
           </Typography>
           <IconButton
             size="small"
-            onClick={() => handleUpdateQuantity(item.productoId, item.cantidad + 1)}
+            onClick={() => handleUpdateQuantity(item.productoId, item.cantidad + 1, item.itemPrincipalId)}
           >
             <Add />
           </IconButton>
           <IconButton
             size="small"
             color="error"
-            onClick={() => handleRemoveFromCart(item.productoId)}
+            onClick={() => handleRemoveFromCart(item.productoId, item.itemPrincipalId)}
           >
             <Delete />
           </IconButton>
