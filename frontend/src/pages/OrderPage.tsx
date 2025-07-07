@@ -51,6 +51,7 @@ import SkeletonLoader from '../components/SkeletonLoader';
 import { getProductos } from '../services/productoService';
 import { crearComandaAPI } from '../services/comandaService';
 import type { Producto } from '../types';
+import ProductCard from '../components/ProductCard';
 
 interface OrderItem {
   productoId: number;
@@ -147,65 +148,9 @@ const OrderPage: React.FC = () => {
     }
   };
 
+  // Reemplazar renderProductoCard por ProductCard
   const renderProductoCard = (producto: Producto) => (
-    <Fade in={true} timeout={300}>
-      <Box sx={{ height: '100%', cursor: 'pointer' }}>
-        <ModernCard
-          key={producto.id}
-          title={producto.nombre}
-          subtitle={producto.descripcion}
-          variant="elevated"
-          hover={true}
-          actions={
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
-                ${producto.precio}
-              </Typography>
-              <ModernButton
-                variant="primary"
-                size="small"
-                icon="add"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart(producto);
-                }}
-              >
-                Agregar
-              </ModernButton>
-            </Box>
-          }
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <LocalDining color="primary" />
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {producto.nombre}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Sin categoría
-              </Typography>
-            </Box>
-          </Box>
-
-          {producto.descripcion && (
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {producto.descripcion}
-            </Typography>
-          )}
-
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
-              ${producto.precio}
-            </Typography>
-            <Chip
-              label="Disponible"
-              color="success"
-              size="small"
-            />
-          </Box>
-        </ModernCard>
-      </Box>
-    </Fade>
+    <ProductCard key={producto.id} producto={producto} />
   );
 
   // Nueva función para agrupar items principales y sus adicionales
