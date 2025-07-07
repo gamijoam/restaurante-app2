@@ -42,7 +42,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Navbar: React.FC = () => {
-  const { userInfo, logout, hasPermission } = useAuth();
+  const { userInfo, logout, hasPermission, roles } = useAuth();
     const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
@@ -149,8 +149,18 @@ const Navbar: React.FC = () => {
     },
   ];
 
+  // Agregar Configuración del Sistema solo para GERENTE
+  if (roles && roles.includes('ROLE_GERENTE')) {
+    menuItems.push({
+      text: 'Config. Sistema',
+      icon: <Settings />,
+      path: '/configuracion/sistema',
+      permission: '',
+    });
+  }
+
   const filteredMenuItems = menuItems.filter(item => 
-    hasPermission(item.permission)
+    !item.permission || hasPermission(item.permission)
   );
 
   const drawer = (

@@ -14,6 +14,7 @@ import com.catasoft.restaurante.backend.model.dto.CocinaItemDTO;
 import com.catasoft.restaurante.backend.model.enums.EstadoComanda;
 import com.catasoft.restaurante.backend.model.enums.EstadoMesa;
 import com.catasoft.restaurante.backend.repository.*;
+import com.catasoft.restaurante.backend.service.SystemConfigService;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +47,7 @@ public class ComandaService {
     private final WebSocketService webSocketService;
     private final PrinterConfigurationService printerConfigService;
     private final UsuarioRepository usuarioRepository;
+    private final SystemConfigService systemConfigService;
 
     @Autowired
     public ComandaService(
@@ -57,7 +59,8 @@ public class ComandaService {
             InventarioService inventarioService,
             WebSocketService webSocketService,
             PrinterConfigurationService printerConfigService,
-            UsuarioRepository usuarioRepository) {
+            UsuarioRepository usuarioRepository,
+            SystemConfigService systemConfigService) {
         this.comandaRepository = comandaRepository;
         this.mesaRepository = mesaRepository;
         this.productoRepository = productoRepository;
@@ -67,6 +70,7 @@ public class ComandaService {
         this.webSocketService = webSocketService;
         this.printerConfigService = printerConfigService;
         this.usuarioRepository = usuarioRepository;
+        this.systemConfigService = systemConfigService;
     }
 
     // --- MÉTODO MAPPER RESTAURADO A SU FORMA ORIGINAL Y CORRECTA ---
@@ -331,9 +335,10 @@ public class ComandaService {
             factura.setComanda(comanda);
             factura.setNumeroFactura("FAC-" + System.currentTimeMillis()); // Generar número único
             factura.setSubtotal(comanda.getTotal()); // El subtotal es el total sin impuestos
-            factura.setTotal(comanda.getTotal());
-            BigDecimal impuesto = comanda.getTotal().multiply(new BigDecimal("0.16"));
+            BigDecimal impuestoRate = systemConfigService.getImpuesto();
+            BigDecimal impuesto = comanda.getTotal().multiply(impuestoRate);
             factura.setImpuesto(impuesto);
+            factura.setTotal(comanda.getTotal().add(impuesto));
             factura.setMetodoPago("EFECTIVO"); // Por defecto efectivo, se puede cambiar después
             facturaRepository.save(factura);
             logger.info("Factura creada con ID: {} para la comanda ID: {}", factura.getId(), comanda.getId());

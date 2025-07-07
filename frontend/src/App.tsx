@@ -20,6 +20,7 @@ import RecetasPage from './pages/RecetasPage';
 import InventarioHelpPage from './pages/InventarioHelpPage';
 import RolesPermisosPage from './pages/RolesPermisosPage';
 import PrinterSettingsPage from './pages/PrinterSettingsPage.tsx';
+import ConfiguracionPage from './pages/ConfiguracionPage';
 
 function App() {
   return (
@@ -137,6 +138,14 @@ function App() {
               element={
                 <ProtectedRoute allowedPermissions={['CONFIGURAR_IMPRESORAS']}>
                   <PrinterSettingsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="configuracion/sistema" 
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                  <ConfiguracionPage />
                 </ProtectedRoute>
               } 
             />

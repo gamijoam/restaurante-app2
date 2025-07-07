@@ -17,5 +17,6 @@
     <include file="db/changelog/changes/007-mesa-venta-rapida.xml"/>
     <include file="db/changelog/changes/009-add-estado-factura.xml"/>
     <include file="db/changelog/changes/009-add-fecha-agregado-items-fecha-ultima-lista-comanda.xml"/>
+    <include file="db/changelog/changes/007-system-config-table.xml"/>
 
 </databaseChangeLog> 
