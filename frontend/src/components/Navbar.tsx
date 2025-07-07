@@ -196,6 +196,12 @@ const Navbar: React.FC = () => {
           path: '/roles-permisos',
           permission: 'GESTIONAR_ROLES',
         },
+        {
+          text: 'Áreas de Preparación',
+          icon: <Kitchen />,
+          path: '/areas-preparacion',
+          permission: 'GESTIONAR_ROLES',
+        },
       ]
     }
   ];

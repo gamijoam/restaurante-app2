@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <!-- Tabla de áreas de preparación -->
+    <changeSet id="007-01" author="system">
+        <createTable tableName="preparation_areas">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="area_id" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_index" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Tabla de asociación producto-área -->
+    <changeSet id="007-02" author="system">
+        <createTable tableName="product_areas">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_product_areas_product" references="productos(id)"/>
+            </column>
+            <column name="area_id" type="VARCHAR(50)">
+                <constraints nullable="false" foreignKeyName="fk_product_areas_area" references="preparation_areas(area_id)"/>
+            </column>
+            <column name="preparation_time" type="INT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addUniqueConstraint tableName="product_areas" columnNames="product_id, area_id" constraintName="uk_product_area"/>
+    </changeSet>
+
+    <!-- Tabla de comandas por área -->
+    <changeSet id="007-03" author="system">
+        <createTable tableName="comanda_areas">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="comanda_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_comanda_areas_comanda" references="comandas(id)"/>
+            </column>
+            <column name="area_id" type="VARCHAR(50)">
+                <constraints nullable="false" foreignKeyName="fk_comanda_areas_area" references="preparation_areas(area_id)"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assigned_to" type="VARCHAR(100)"/>
+            <column name="notes" type="TEXT"/>
+            <column name="estimated_time" type="INT"/>
+            <column name="started_at" type="TIMESTAMP"/>
+            <column name="completed_at" type="TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Tabla de items de comanda por área -->
+    <changeSet id="007-04" author="system">
+        <createTable tableName="comanda_area_items">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="comanda_area_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_comanda_area_items_comanda_area" references="comanda_areas(id)"/>
+            </column>
+            <column name="product_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_comanda_area_items_product" references="productos(id)"/>
+            </column>
+            <column name="quantity" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unit_price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Insertar áreas por defecto -->
+    <changeSet id="007-05" author="system">
+        <insert tableName="preparation_areas">
+            <column name="area_id" value="cocina-caliente"/>
+            <column name="name" value="Cocina Caliente"/>
+            <column name="type" value="KITCHEN"/>
+            <column name="description" value="Área para preparación de platos calientes"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="order_index" valueNumeric="1"/>
+        </insert>
+        
+        <insert tableName="preparation_areas">
+            <column name="area_id" value="cocina-fria"/>
+            <column name="name" value="Cocina Fría"/>
+            <column name="type" value="KITCHEN"/>
+            <column name="description" value="Área para preparación de platos fríos y ensaladas"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="order_index" valueNumeric="2"/>
+        </insert>
+        
+        <insert tableName="preparation_areas">
+            <column name="area_id" value="barra"/>
+            <column name="name" value="Barra"/>
+            <column name="type" value="BAR"/>
+            <column name="description" value="Área para preparación de bebidas y cócteles"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="order_index" valueNumeric="3"/>
+        </insert>
+    </changeSet>
+
+    <!-- Asignar productos existentes a áreas por defecto -->
+    <changeSet id="007-06" author="system">
+        <!-- Productos calientes van a cocina caliente -->
+        <sql>
+            INSERT INTO product_areas (product_id, area_id, preparation_time)
+            SELECT id, 'cocina-caliente', 15
+            FROM productos 
+            WHERE categoria IN ('Platos Principales', 'Carnes', 'Pasta', 'Pizza')
+            AND id NOT IN (SELECT product_id FROM product_areas);
+        </sql>
+        
+        <!-- Productos fríos van a cocina fría -->
+        <sql>
+            INSERT INTO product_areas (product_id, area_id, preparation_time)
+            SELECT id, 'cocina-fria', 10
+            FROM productos 
+            WHERE categoria IN ('Ensaladas', 'Sándwiches', 'Entradas Frías')
+            AND id NOT IN (SELECT product_id FROM product_areas);
+        </sql>
+        
+        <!-- Bebidas van a barra -->
+        <sql>
+            INSERT INTO product_areas (product_id, area_id, preparation_time)
+            SELECT id, 'barra', 3
+            FROM productos 
+            WHERE categoria IN ('Bebidas', 'Cócteles', 'Cervezas')
+            AND id NOT IN (SELECT product_id FROM product_areas);
+        </sql>
+    </changeSet>
+
+    <!-- Agregar índices para mejor rendimiento -->
+    <changeSet id="007-07" author="system">
+        <createIndex tableName="comanda_areas" indexName="idx_comanda_areas_status">
+            <column name="status"/>
+        </createIndex>
+        
+        <createIndex tableName="comanda_areas" indexName="idx_comanda_areas_area_status">
+            <column name="area_id"/>
+            <column name="status"/>
+        </createIndex>
+        
+        <createIndex tableName="comanda_areas" indexName="idx_comanda_areas_comanda">
+            <column name="comanda_id"/>
+        </createIndex>
+        
+        <createIndex tableName="product_areas" indexName="idx_product_areas_area">
+            <column name="area_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog> 

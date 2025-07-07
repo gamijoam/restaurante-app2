@@ -19,5 +19,6 @@
     <include file="db/changelog/changes/009-add-fecha-agregado-items-fecha-ultima-lista-comanda.xml"/>
     <include file="db/changelog/changes/007-system-config-table.xml"/>
     <include file="db/changelog/changes/007-ticket-templates-system.xml"/>
+    <include file="db/changelog/changes/007-multiple-areas-system.xml"/>
 
 </databaseChangeLog> 

@@ -23,6 +23,7 @@ import PrinterSettingsPage from './pages/PrinterSettingsPage.tsx';
 import ConfiguracionGeneralPage from './pages/ConfiguracionGeneralPage';
 import TicketEditorPage from './pages/TicketEditorPage';
 import TicketTemplatesPage from './pages/TicketTemplatesPage';
+import PreparationAreasPage from './pages/PreparationAreasPage';
 
 function App() {
   return (
@@ -148,6 +149,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
                   <TicketTemplatesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="areas-preparacion" 
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                  <PreparationAreasPage />
                 </ProtectedRoute>
               } 
             />
