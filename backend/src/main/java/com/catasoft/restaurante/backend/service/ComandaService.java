@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Arrays;
 
 @Service
 public class ComandaService {
@@ -87,6 +88,13 @@ public class ComandaService {
             itemDTO.setCantidad(item.getCantidad());
             itemDTO.setPrecioUnitario(item.getPrecioUnitario());
             itemDTO.setItemPrincipalId(item.getItemPrincipal() != null ? item.getItemPrincipal().getId() : null);
+            // Marcar esNuevo si el item fue agregado después de la última vez que la comanda fue LISTA
+            LocalDateTime fechaUltimaLista = comanda.getFechaUltimaLista();
+            if (fechaUltimaLista != null && item.getFechaAgregado() != null && item.getFechaAgregado().isAfter(fechaUltimaLista)) {
+                itemDTO.setEsNuevo(true);
+            } else {
+                itemDTO.setEsNuevo(false);
+            }
             return itemDTO;
         }).collect(Collectors.toList()));
         return dto;
@@ -293,6 +301,10 @@ public class ComandaService {
 
         EstadoComanda nuevoEstado = EstadoComanda.valueOf(nuevoEstadoStr.toUpperCase());
 
+        if (nuevoEstado == EstadoComanda.LISTA) {
+            comanda.setFechaUltimaLista(LocalDateTime.now());
+        }
+
         if (nuevoEstado == EstadoComanda.CANCELADA) {
             if (comanda.getEstado() == EstadoComanda.CANCELADA || comanda.getEstado() == EstadoComanda.PAGADA) {
                 throw new IllegalStateException("No se puede cancelar una comanda que ya está cancelada o pagada.");
@@ -355,8 +367,20 @@ public class ComandaService {
         Comanda comanda = comandaRepository.findById(comandaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comanda no encontrada con id: " + comandaId));
 
-        if (comanda.getEstado() != EstadoComanda.EN_PROCESO) {
-            throw new IllegalStateException("Solo se pueden añadir items a una comanda que está EN PROCESO.");
+        // Permitir agregar productos si la comanda está EN_PROCESO, LISTA o ENTREGADA
+        if (comanda.getEstado() != EstadoComanda.EN_PROCESO &&
+            comanda.getEstado() != EstadoComanda.LISTA &&
+            comanda.getEstado() != EstadoComanda.ENTREGADA) {
+            throw new IllegalStateException("Solo se pueden añadir items a una comanda que está EN_PROCESO, LISTA o ENTREGADA.");
+        }
+
+        // Si la comanda está LISTA o ENTREGADA, volver a EN_PROCESO
+        if (comanda.getEstado() == EstadoComanda.LISTA || comanda.getEstado() == EstadoComanda.ENTREGADA) {
+            comanda.setEstado(EstadoComanda.EN_PROCESO);
+            // También actualizar el estado de la mesa si es necesario
+            Mesa mesa = comanda.getMesa();
+            mesa.setEstado(EstadoMesa.OCUPADA);
+            mesaRepository.save(mesa);
         }
 
         for (ItemRequestDTO itemDTO : itemsRequest) {
@@ -373,6 +397,7 @@ public class ComandaService {
             BigDecimal subtotal = producto.getPrecio().multiply(BigDecimal.valueOf(itemDTO.getCantidad()));
             comandaItem.setSubtotal(subtotal);
             comandaItem.setComanda(comanda);
+            comandaItem.setFechaAgregado(LocalDateTime.now());
             // Asociar adicional si corresponde
             if (itemDTO.getItemPrincipalId() != null) {
                 ComandaItem itemPrincipal = comanda.getItems().stream()
@@ -424,8 +449,12 @@ public class ComandaService {
 
     @Transactional(readOnly = true)
     public Optional<ComandaResponseDTO> getComandaActivaPorMesa(Long mesaId) {
-        return comandaRepository
-                .findFirstByMesaIdAndEstadoOrderByFechaHoraCreacionDesc(mesaId, EstadoComanda.EN_PROCESO)
+        // Buscar la comanda más reciente en estado EN_PROCESO, LISTA o ENTREGADA
+        List<EstadoComanda> estadosActivos = Arrays.asList(EstadoComanda.EN_PROCESO, EstadoComanda.LISTA, EstadoComanda.ENTREGADA);
+        return comandaRepository.findByEstadoIn(estadosActivos).stream()
+                .filter(c -> c.getMesa().getId().equals(mesaId))
+                .sorted((c1, c2) -> c2.getFechaHoraCreacion().compareTo(c1.getFechaHoraCreacion()))
+                .findFirst()
                 .map(this::mapToComandaResponseDTO);
     }
 }

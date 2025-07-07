@@ -3,6 +3,7 @@ package com.catasoft.restaurante.backend.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "comanda_items")
@@ -36,6 +37,9 @@ public class ComandaItem {
 
     @Column
     private String notas;
+
+    @Column(name = "fecha_agregado")
+    private LocalDateTime fechaAgregado;
 
     // --- Getters y Setters ---
 
@@ -101,5 +105,12 @@ public class ComandaItem {
 
     public void setItemPrincipal(ComandaItem itemPrincipal) {
         this.itemPrincipal = itemPrincipal;
+    }
+
+    public LocalDateTime getFechaAgregado() {
+        return fechaAgregado;
+    }
+    public void setFechaAgregado(LocalDateTime fechaAgregado) {
+        this.fechaAgregado = fechaAgregado;
     }
 }

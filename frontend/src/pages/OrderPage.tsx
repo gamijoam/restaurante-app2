@@ -50,7 +50,9 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import SkeletonLoader from '../components/SkeletonLoader';
 import { getProductos } from '../services/productoService';
 import { crearComandaAPI } from '../services/comandaService';
+import { getComandaActivaPorMesa } from '../services/mesaService';
 import type { Producto } from '../types';
+import type { ComandaResponseDTO, ComandaItemResponseDTO } from '../types';
 import ProductCard from '../components/ProductCard';
 
 interface OrderItem {
@@ -66,7 +68,7 @@ const OrderPage: React.FC = () => {
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
   const { showError, showSuccess } = useNotification();
-  const { orderItems, addProductToOrder, updateItemQuantity, removeItemFromOrder, clearOrder } = useOrder();
+  const { orderItems, addProductToOrder, updateItemQuantity, removeItemFromOrder, clearOrder, loadExistingOrder } = useOrder();
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -76,14 +78,33 @@ const OrderPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   // Cambiar el tipo de selectedProducto a { principal: OrderItem, adicional: Producto | null } | null
-  const [selectedAdicional, setSelectedAdicional] = useState<{ principal: OrderItem, adicional: Producto | null } | null>(null);
+  const [selectedAdicional, setSelectedAdicional] = useState<{ principal: OrderItem | null, adicional: Producto | null } | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [comandaActiva, setComandaActiva] = useState<ComandaResponseDTO | null>(null);
 
     useEffect(() => {
-    loadProductos();
-  }, []);
+        loadProductos();
+        // Al montar, buscar comanda activa para la mesa
+        if (mesaId) {
+            getComandaActivaPorMesa(Number(mesaId))
+                .then((comanda: ComandaResponseDTO) => {
+                    if (comanda && comanda.items && comanda.estado !== 'PAGADA' && comanda.estado !== 'CANCELADA') {
+                        setComandaActiva(comanda);
+                        // Usar la función del contexto para cargar la comanda activa
+                        loadExistingOrder(comanda);
+                    } else {
+                        setComandaActiva(null);
+                        clearOrder();
+                    }
+                })
+                .catch(() => {
+                    setComandaActiva(null);
+                    clearOrder();
+                });
+        }
+    }, [mesaId]);
 
   const loadProductos = async () => {
             try {
@@ -206,15 +227,6 @@ const OrderPage: React.FC = () => {
           >
             <Delete />
           </IconButton>
-          {/* Botón para agregar adicional */}
-          <ModernButton
-            variant="secondary"
-            size="small"
-            icon="add"
-            onClick={() => setSelectedAdicional({ principal: item, adicional: null })}
-          >
-            Agregar adicional
-          </ModernButton>
         </Box>
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
@@ -337,6 +349,16 @@ const OrderPage: React.FC = () => {
           {orderItems.length > 0 && (
             <>
               <Divider sx={{ my: 2 }} />
+              <ModernButton
+                variant="secondary"
+                size="large"
+                fullWidth
+                onClick={() => setSelectedAdicional({ principal: null, adicional: null })}
+                icon="add"
+                sx={{ mb: 2 }}
+              >
+                Agregar adicional
+              </ModernButton>
               <Box sx={{ mb: 2 }}>
                 <Typography variant="h5" sx={{ fontWeight: 700, textAlign: 'center' }}>
                   Total: ${getTotal()}
@@ -422,6 +444,16 @@ const OrderPage: React.FC = () => {
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <ModernButton
+                variant="secondary"
+                size="large"
+                fullWidth
+                onClick={() => setSelectedAdicional({ principal: null, adicional: null })}
+                icon="add"
+                sx={{ mb: 2 }}
+              >
+                Agregar adicional
+              </ModernButton>
+              <ModernButton
                 variant="primary"
                 size="large"
                 fullWidth
@@ -493,7 +525,9 @@ const OrderPage: React.FC = () => {
       {/* Modal para seleccionar el producto adicional */}
       {selectedAdicional && (
         <ModernModal open={!!selectedAdicional} onClose={() => setSelectedAdicional(null)}>
-          <Typography variant="h6" sx={{ mb: 2 }}>Selecciona un adicional para {selectedAdicional.principal.productoNombre}</Typography>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Selecciona un producto para agregar como adicional
+          </Typography>
           <Grid container spacing={2}>
             {productos.map(producto => (
               <Grid item xs={6} sm={4} key={producto.id}>
@@ -505,9 +539,13 @@ const OrderPage: React.FC = () => {
                       variant="primary"
                       size="small"
                       icon="add"
-                      onClick={() => handleAddAdicional(producto, selectedAdicional.principal)}
+                      onClick={() => {
+                        addProductToOrder(producto);
+                        showSuccess('Adicional agregado', `${producto.nombre} agregado a la comanda`);
+                        setSelectedAdicional(null);
+                      }}
                     >
-                      Agregar este adicional
+                      Agregar este producto
                     </ModernButton>
                   }
                 >

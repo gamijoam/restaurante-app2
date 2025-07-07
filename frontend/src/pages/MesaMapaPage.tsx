@@ -28,6 +28,7 @@ import {
 import { getMesasMapa, updateMesaPosicion, updateMesasPosiciones, createMesa, updateMesaEstado, type MesaMapa } from '../services/mesaService';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../context/WebSocketContext';
+import { useNavigate } from 'react-router-dom';
 
 interface MesaVisual extends MesaMapa {
     isDragging?: boolean;
@@ -60,6 +61,7 @@ const MesaMapaPage = () => {
     const mapRef = useRef<HTMLDivElement>(null);
     const [draggedMesa, setDraggedMesa] = useState<MesaVisual | null>(null);
     const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+    const navigate = useNavigate();
 
     const loadMesas = useCallback(async () => {
         try {
@@ -272,6 +274,12 @@ const MesaMapaPage = () => {
         }
     };
 
+    // Nueva función para manejar el click en una mesa (selección)
+    const handleMesaClick = (mesa: MesaVisual) => {
+        // Navegar siempre a la página de la comanda de la mesa
+        navigate(`/order/${mesa.id}`);
+    };
+
     if (loading) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -364,6 +372,7 @@ const MesaMapaPage = () => {
                             }
                         }}
                         onMouseDown={(e) => handleMouseDown(e, mesa)}
+                        onClick={() => handleMesaClick(mesa)}
                     >
                         <Typography 
                             variant="h6" 

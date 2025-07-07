@@ -23,6 +23,7 @@ export interface ComandaItemResponseDTO {
     cantidad: number;
     precioUnitario: number;
     // El precio total se calcula y no viene en este DTO
+    esNuevo?: boolean;
 }
 
 export interface ComandaResponseDTO {

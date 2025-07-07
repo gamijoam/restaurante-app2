@@ -290,16 +290,14 @@ const KitchenViewPage: React.FC = () => {
             {comanda.items.length} productos • ${comanda.total.toFixed(2)}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            {comanda.items.slice(0, 3).map((item, index) => (
-              <Typography key={index} variant="body2" color="text.secondary">
+            {comanda.items.map((item, index) => (
+              <Typography key={index} variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 {item.cantidad}x {item.productoNombre}
+                {item.esNuevo && (
+                  <Chip label="Nuevo" color="secondary" size="small" sx={{ ml: 1 }} />
+                )}
               </Typography>
             ))}
-            {comanda.items.length > 3 && (
-              <Typography variant="body2" color="text.secondary">
-                +{comanda.items.length - 3} más...
-              </Typography>
-            )}
           </Box>
           <Typography variant="h6" color="primary" sx={{ fontWeight: 700, mt: 2 }}>
             ${comanda.total.toFixed(2)}

@@ -39,6 +39,9 @@ public class Comanda {
     @Column(nullable = false)
     private BigDecimal total;
 
+    @Column(name = "fecha_ultima_lista")
+    private LocalDateTime fechaUltimaLista;
+
     // --- Getters y Setters ---
 
     public Long getId() {
@@ -103,5 +106,12 @@ public class Comanda {
 
     public void setTotal(BigDecimal total) {
         this.total = total;
+    }
+
+    public LocalDateTime getFechaUltimaLista() {
+        return fechaUltimaLista;
+    }
+    public void setFechaUltimaLista(LocalDateTime fechaUltimaLista) {
+        this.fechaUltimaLista = fechaUltimaLista;
     }
 }

@@ -74,15 +74,7 @@ const TableSelectionPage: React.FC = () => {
   };
 
   const handleMesaClick = (mesa: MesaWithComanda) => {
-    if (mesa.estado === 'LIBRE') {
-      navigate(`/order/${mesa.id}`);
-    } else if (mesa.estado === 'OCUPADA') {
-      showError('Mesa ocupada', 'Esta mesa ya tiene una comanda activa');
-    } else if (mesa.estado === 'RESERVADA') {
-      showError('Mesa reservada', 'Esta mesa está reservada');
-    } else {
-      showError('Mesa en mantenimiento', 'Esta mesa no está disponible');
-    }
+    navigate(`/order/${mesa.id}`);
   };
 
   const getEstadoColor = (estado: string) => {
