@@ -273,32 +273,31 @@ const CashierViewPage: React.FC = () => {
           <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
             ${comanda.total.toFixed(2)}
           </Typography>
-          
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <ModernButton
-                                        variant="outlined"
-              size="small"
-              icon="print"
-              loading={printingId === comanda.id}
-              onClick={() => handlePrintClick(comanda)}
-            >
-              Imprimir
-            </ModernButton>
-            
-            <ModernButton
-              variant="primary"
-                                        size="small"
-              icon="save"
-              loading={submittingId === comanda.id}
-              onClick={() => {
-                setSelectedComanda(comanda);
-                setConfirmModalOpen(true);
-              }}
-            >
-              Cobrar
-            </ModernButton>
-          </Box>
         </Box>
+      </Box>
+      <Divider sx={{ my: 2 }} />
+      <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 1 }}>
+        <ModernButton
+          variant="outlined"
+          size="small"
+          icon="print"
+          loading={printingId === comanda.id}
+          onClick={() => handlePrintClick(comanda)}
+        >
+          Imprimir
+        </ModernButton>
+        <ModernButton
+          variant="primary"
+          size="small"
+          icon="save"
+          loading={submittingId === comanda.id}
+          onClick={() => {
+            setSelectedComanda(comanda);
+            setConfirmModalOpen(true);
+          }}
+        >
+          Cobrar
+        </ModernButton>
       </Box>
     </Paper>
   );
@@ -429,17 +428,10 @@ const CashierViewPage: React.FC = () => {
         <Grid container spacing={3}>
           {comandas.map(comanda => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={comanda.id}>
-              <Box sx={{ position: 'relative' }}>
+              <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 {renderComandaCard(comanda)}
-                
-                {/* Action Buttons */}
-                <Box sx={{ 
-                  position: 'absolute', 
-                  bottom: 16, 
-                  right: 16,
-                  display: 'flex',
-                  gap: 1
-                }}>
+                {/* Action Buttons debajo de la tarjeta */}
+                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 2 }}>
                   <ModernButton
                     variant="outlined"
                     size="small"
@@ -449,7 +441,6 @@ const CashierViewPage: React.FC = () => {
                   >
                     Imprimir
                   </ModernButton>
-                  
                   <ModernButton
                     variant="primary"
                     size="small"

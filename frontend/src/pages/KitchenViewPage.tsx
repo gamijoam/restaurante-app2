@@ -267,62 +267,59 @@ const KitchenViewPage: React.FC = () => {
           borderLeft: `4px solid ${theme.palette[getPrioridadColor(prioridad)].main}`,
         }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <Kitchen color="primary" />
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Mesa {comanda.numeroMesa}
-              </Typography>
-              <Chip
-                label={getPrioridadText(prioridad)}
-                color={getPrioridadColor(prioridad) as any}
-                size="small"
-              />
-              <Chip
-                label={`${tiempoEstimado} min`}
-                color="info"
-                size="small"
-                variant="outlined"
-              />
-            </Box>
-            
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {comanda.items.length} productos • ${comanda.total.toFixed(2)}
+        {/* Contenido principal de la tarjeta */}
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <Kitchen color="primary" />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Mesa {comanda.numeroMesa}
             </Typography>
-            
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-              {comanda.items.slice(0, 3).map((item, index) => (
-                <Typography key={index} variant="body2" color="text.secondary">
-                  {item.cantidad}x {item.productoNombre}
-                </Typography>
-              ))}
-              {comanda.items.length > 3 && (
-                <Typography variant="body2" color="text.secondary">
-                  +{comanda.items.length - 3} más...
-                </Typography>
-              )}
-            </Box>
-          </Box>
-          
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
-            <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
-              ${comanda.total.toFixed(2)}
-            </Typography>
-            
-            <ModernButton
-              variant="primary"
+            <Chip
+              label={getPrioridadText(prioridad)}
+              color={getPrioridadColor(prioridad) as any}
               size="small"
-              icon="save"
-              loading={submittingId === comanda.id}
-              onClick={() => {
-                setSelectedComanda(comanda);
-                setConfirmModalOpen(true);
-              }}
-            >
-              Marcar Lista
-            </ModernButton>
+            />
+            <Chip
+              label={`${tiempoEstimado} min`}
+              color="info"
+              size="small"
+              variant="outlined"
+            />
           </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {comanda.items.length} productos • ${comanda.total.toFixed(2)}
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+            {comanda.items.slice(0, 3).map((item, index) => (
+              <Typography key={index} variant="body2" color="text.secondary">
+                {item.cantidad}x {item.productoNombre}
+              </Typography>
+            ))}
+            {comanda.items.length > 3 && (
+              <Typography variant="body2" color="text.secondary">
+                +{comanda.items.length - 3} más...
+              </Typography>
+            )}
+          </Box>
+          <Typography variant="h6" color="primary" sx={{ fontWeight: 700, mt: 2 }}>
+            ${comanda.total.toFixed(2)}
+          </Typography>
+        </Box>
+        {/* Divider y botón fuera del Box principal */}
+        <Divider sx={{ my: 2 }} />
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', pt: 1 }}>
+          <ModernButton
+            variant="primary"
+            size="small"
+            icon="save"
+            loading={submittingId === comanda.id}
+            onClick={() => {
+              setSelectedComanda(comanda);
+              setConfirmModalOpen(true);
+            }}
+          >
+            Marcar Lista
+          </ModernButton>
         </Box>
       </Paper>
     );
@@ -483,15 +480,10 @@ const KitchenViewPage: React.FC = () => {
         <Grid container spacing={3}>
           {filteredComandas.map(comanda => (
             <Grid item xs={12} sm={6} md={4} lg={3} key={comanda.id}>
-              <Box sx={{ position: 'relative' }}>
+              <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 {renderComandaCard(comanda)}
-                
-                {/* Action Button */}
-                <Box sx={{ 
-                  position: 'absolute', 
-                  bottom: 16, 
-                  right: 16,
-                }}>
+                {/* Action Button debajo de la tarjeta */}
+                <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', pt: 2 }}>
                   <ModernButton
                     variant="primary"
                     size="small"
