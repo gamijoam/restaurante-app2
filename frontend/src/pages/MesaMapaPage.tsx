@@ -81,11 +81,14 @@ const MesaMapaPage = () => {
         if (isConnected && stompClient) {
             console.log("MesaMapaPage: Suscribiendo a /topic/mesas");
             const subscription = stompClient.subscribe('/topic/mesas', (message) => {
-                console.log("MesaMapaPage: Notificación recibida:", message.body);
-                // Agregar un pequeño delay para evitar race conditions
-                setTimeout(() => {
-                    loadMesas();
-                }, 100);
+                try {
+                    const mesaActualizada = JSON.parse(message.body);
+                    setMesas(prevMesas =>
+                        prevMesas.map(m => m.id === mesaActualizada.id ? { ...m, ...mesaActualizada } : m)
+                    );
+                } catch (e) {
+                    console.warn('Mensaje de /topic/mesas no es un objeto Mesa:', message.body);
+                }
             });
             return () => {
                 console.log("MesaMapaPage: Desuscribiendo de /topic/mesas");

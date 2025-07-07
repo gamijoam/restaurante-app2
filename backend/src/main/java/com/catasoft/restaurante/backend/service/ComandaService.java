@@ -343,8 +343,8 @@ public class ComandaService {
         }
         if (nuevoEstado == EstadoComanda.PAGADA || nuevoEstado == EstadoComanda.CANCELADA ||
                 nuevoEstado == EstadoComanda.LISTA || nuevoEstado == EstadoComanda.ENTREGADA) {
-            String mensaje = "Mesa " + comanda.getMesa().getNumero() + " actualizada a " + comanda.getMesa().getEstado();
-            messagingTemplate.convertAndSend("/topic/mesas", mensaje);
+            Mesa mesaActualizada = mesaRepository.findById(comanda.getMesa().getId()).orElseThrow();
+            messagingTemplate.convertAndSend("/topic/mesas", mesaActualizada);
         }
 
         return dto;
