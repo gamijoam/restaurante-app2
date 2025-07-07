@@ -202,6 +202,18 @@ const Navbar: React.FC = () => {
           path: '/areas-preparacion',
           permission: 'GESTIONAR_ROLES',
         },
+        {
+          text: 'Asignación Productos',
+          icon: <Inventory />,
+          path: '/asignacion-productos',
+          permission: 'GESTIONAR_ROLES',
+        },
+        {
+          text: 'Comandas por Área',
+          icon: <Receipt />,
+          path: '/comandas-areas',
+          permission: 'GESTIONAR_ROLES',
+        },
       ]
     }
   ];

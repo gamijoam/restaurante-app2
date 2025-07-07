@@ -24,6 +24,8 @@ import ConfiguracionGeneralPage from './pages/ConfiguracionGeneralPage';
 import TicketEditorPage from './pages/TicketEditorPage';
 import TicketTemplatesPage from './pages/TicketTemplatesPage';
 import PreparationAreasPage from './pages/PreparationAreasPage';
+import ProductAreaAssignmentPage from './pages/ProductAreaAssignmentPage';
+import ComandaAreaManagementPage from './pages/ComandaAreaManagementPage';
 
 function App() {
   return (
@@ -157,6 +159,22 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
                   <PreparationAreasPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="asignacion-productos" 
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                  <ProductAreaAssignmentPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="comandas-areas" 
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_GERENTE', 'ROLE_COCINERO']}>
+                  <ComandaAreaManagementPage />
                 </ProtectedRoute>
               } 
             />
