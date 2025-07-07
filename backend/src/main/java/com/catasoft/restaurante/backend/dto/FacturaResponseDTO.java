@@ -12,6 +12,7 @@ public class FacturaResponseDTO {
     private BigDecimal total;
     private BigDecimal impuesto;
     private LocalDateTime fechaEmision;
+    private String estado;
 
     // El campo 'items' ahora está DENTRO de la clase, junto a los demás.
     private List<ComandaItemResponseDTO> items;
@@ -29,6 +30,8 @@ public class FacturaResponseDTO {
     public void setImpuesto(BigDecimal impuesto) { this.impuesto = impuesto; }
     public LocalDateTime getFechaEmision() { return fechaEmision; }
     public void setFechaEmision(LocalDateTime fechaEmision) { this.fechaEmision = fechaEmision; }
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
 
     // Getters y Setters para 'items'
     public List<ComandaItemResponseDTO> getItems() { return items; } // Corregido para que no se llame a sí mismo

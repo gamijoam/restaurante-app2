@@ -73,4 +73,5 @@ export interface FacturaResponseDTO {
     total: number;
     impuesto: number;
     fechaEmision: string; // Las fechas se reciben como strings
+    estado: string;
 }

@@ -76,6 +76,7 @@ import { getProductos } from '../services/productoService';
 import { agregarItemsAComanda } from '../services/comandaService';
 import type { Producto } from '../types';
 import { crearComandaAPI } from '../services/comandaService';
+import { getFacturas, updateFacturaEstado } from '../services/facturaService';
 
 // --- Componente interno para selección de productos ---
 interface ProductSelectorWizardModalProps {
@@ -273,16 +274,28 @@ const CashierViewPage: React.FC = () => {
 
   const handleMarcarComoPagada = async (comanda: ComandaResponseDTO) => {
     setSubmittingId(comanda.id);
-        try {
+    try {
       await updateComandaEstado(comanda.id, 'PAGADA');
+      // Buscar y actualizar la factura asociada a la comanda
+      try {
+        // Buscar la factura asociada (puedes tener un endpoint para esto, aquí se asume que la factura tiene el mismo id que la comanda)
+        // Si tienes la lista de facturas en memoria, puedes buscarla ahí
+        const facturas = await getFacturas();
+        const factura = facturas.find(f => f.comandaId === comanda.id);
+        if (factura) {
+          await updateFacturaEstado(factura.id, 'PAGADA');
+        }
+      } catch (e) {
+        // Si no hay factura, no hacer nada
+      }
       setComandas(prevComandas => prevComandas.filter(c => c.id !== comanda.id));
       showSuccess('Comanda pagada', `Mesa ${comanda.numeroMesa} marcada como pagada`);
-        } catch (err) {
+    } catch (err) {
       showError('Error al pagar', 'No se pudo marcar la comanda como pagada');
-        } finally {
-            setSubmittingId(null);
-        }
-    };
+    } finally {
+      setSubmittingId(null);
+    }
+  };
 
   const handlePrintClick = async (comanda: ComandaResponseDTO) => {
     setPrintingId(comanda.id);

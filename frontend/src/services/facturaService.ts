@@ -19,3 +19,8 @@ export const descargarFacturaPdf = async (facturaId: number): Promise<Blob> => {
     });
     return new Blob([response.data], { type: 'application/pdf' });
 };
+
+export const updateFacturaEstado = async (facturaId: number, estado: string): Promise<FacturaResponseDTO> => {
+    const response = await api.put(`/facturas/${facturaId}/estado`, { estado });
+    return response.data;
+};

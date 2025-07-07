@@ -11,5 +11,5 @@ import com.catasoft.restaurante.backend.model.Factura;
 @Repository
 public interface FacturaRepository extends JpaRepository<Factura,Long>{
     List<Factura> findByFechaEmisionBetween(LocalDateTime fechaInicio, LocalDateTime fechaFin);
-    
+    Factura findByComanda_Id(Long comandaId);
 } 

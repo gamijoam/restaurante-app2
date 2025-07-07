@@ -38,6 +38,7 @@ public class FacturaService {
         dto.setTotal(factura.getTotal());
         dto.setImpuesto(factura.getImpuesto());
         dto.setFechaEmision(factura.getFechaEmision());
+        dto.setEstado(factura.getEstado());
     
         // --- LÓGICA AÑADIDA PARA INCLUIR LOS ITEMS ---
         List<ComandaItemResponseDTO> itemDTOs = factura.getComanda().getItems().stream().map(item -> {
@@ -67,4 +68,12 @@ public Factura getFacturaEntityById(Long id) {
     return facturaRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Factura no encontrada con id: " + id));
 }
+
+    public Factura getFacturaByComandaId(Long comandaId) {
+        return facturaRepository.findByComanda_Id(comandaId);
+    }
+
+    public Factura saveFactura(Factura factura) {
+        return facturaRepository.save(factura);
+    }
 }

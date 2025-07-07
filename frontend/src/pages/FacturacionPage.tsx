@@ -119,13 +119,8 @@ const FacturacionPage = () => {
     };
 
     const getStatusFromFactura = (factura: FacturaResponseDTO): 'paid' | 'pending' | 'overdue' => {
-        // Simular estados basados en la fecha y total
-        const fecha = new Date(factura.fechaEmision);
-        const hoy = new Date();
-        const diasDiferencia = Math.floor((hoy.getTime() - fecha.getTime()) / (1000 * 60 * 60 * 24));
-        
-        if (factura.total > 100) return 'paid';
-        if (diasDiferencia > 30) return 'overdue';
+        if (factura.estado === 'PAGADA') return 'paid';
+        if (factura.estado === 'ANULADA') return 'overdue';
         return 'pending';
     };
 
@@ -148,7 +143,7 @@ const FacturacionPage = () => {
         switch (status) {
             case 'paid': return 'Pagada';
             case 'pending': return 'Pendiente';
-            case 'overdue': return 'Vencida';
+            case 'overdue': return 'Anulada';
             default: return 'Desconocido';
         }
     };

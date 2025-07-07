@@ -33,6 +33,9 @@ public class Factura {
     @Column(name = "metodo_pago", nullable = false)
     private String metodoPago;
 
+    @Column(name = "estado", nullable = false)
+    private String estado = "PENDIENTE";
+
     @CreationTimestamp
     @Column(name = "fecha_emision", nullable = false, updatable = false)
     private LocalDateTime fechaEmision;
@@ -55,6 +58,8 @@ public class Factura {
     public void setImpuesto(BigDecimal impuesto) { this.impuesto = impuesto; }
     public String getMetodoPago() { return metodoPago; }
     public void setMetodoPago(String metodoPago) { this.metodoPago = metodoPago; }
+    public String getEstado() { return estado; }
+    public void setEstado(String estado) { this.estado = estado; }
     public LocalDateTime getFechaEmision() { return fechaEmision; }
     public void setFechaEmision(LocalDateTime fechaEmision) { this.fechaEmision = fechaEmision; }
 }

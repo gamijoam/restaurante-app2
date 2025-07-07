@@ -20,6 +20,9 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/facturas")
@@ -57,5 +60,18 @@ public class FacturaController {
                 .headers(headers)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(new InputStreamResource(pdf));
+    }
+
+    @PutMapping("/{id}/estado")
+    @PreAuthorize("hasRole('GERENTE') or hasRole('CAJERO')")
+    public ResponseEntity<FacturaResponseDTO> updateEstadoFactura(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+        String nuevoEstado = payload.get("estado");
+        Factura factura = facturaService.getFacturaEntityById(id);
+        factura.setEstado(nuevoEstado);
+        facturaService.saveFactura(factura);
+        FacturaResponseDTO dto = facturaService.getAllFacturas().stream()
+            .filter(f -> f.getId().equals(id))
+            .findFirst().orElse(null);
+        return ResponseEntity.ok(dto);
     }
 }
