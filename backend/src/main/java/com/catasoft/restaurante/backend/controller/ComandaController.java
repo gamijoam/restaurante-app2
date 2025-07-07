@@ -45,13 +45,15 @@ public ResponseEntity<ComandaResponseDTO> agregarItemsAComanda(
     return ResponseEntity.ok(comandaService.agregarItemsAComanda(id, items));
 }
     @PostMapping
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
     public ResponseEntity<ComandaResponseDTO> createComanda(@RequestBody ComandaRequestDTO request) {
         ComandaResponseDTO nuevaComanda = comandaService.crearComanda(request);
         return new ResponseEntity<>(nuevaComanda, HttpStatus.CREATED);
     }
 
     @GetMapping
-public ResponseEntity<List<ComandaResponseDTO>> getAllComandas(@RequestParam(required = false) List<String> estados) {
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
+    public ResponseEntity<List<ComandaResponseDTO>> getAllComandas(@RequestParam(required = false) List<String> estados) {
     // Si no se provee el parámetro "estados" o está vacío, devolvemos todas las comandas.
     if (estados == null || estados.isEmpty()) {
         return ResponseEntity.ok(comandaService.getAllComandas());
@@ -70,18 +72,20 @@ public ResponseEntity<List<ComandaResponseDTO>> getAllComandas(@RequestParam(req
     }
 }
     @GetMapping("/{id}/ticket")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
     public ResponseEntity<TicketDTO> getComandaAsTicket(@PathVariable Long id) {
         TicketDTO ticketData = comandaService.getTicketData(id);
         return ResponseEntity.ok(ticketData);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
     public ResponseEntity<ComandaResponseDTO> getComandaById(@PathVariable Long id) {
         return ResponseEntity.ok(comandaService.getComandaById(id));
     }
 
     @PutMapping("/{id}/estado")
-    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
     public ResponseEntity<ComandaResponseDTO> updateEstadoComanda(@PathVariable Long id, @RequestBody Map<String, String> payload) {
         return ResponseEntity.ok(comandaService.updateEstadoComanda(id, payload));
     }

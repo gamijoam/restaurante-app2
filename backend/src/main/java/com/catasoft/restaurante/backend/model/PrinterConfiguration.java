@@ -12,18 +12,15 @@ public class PrinterConfiguration {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // --- CAMPO DE VERSIONADO AÑADIDO ---
-    @Version
-    private Long version;
-    // ------------------------------------
 
-    @Column(nullable = false, unique = true, length = 50)
+
+    @Column(name = "nombre", nullable = false, unique = true, length = 50)
     private String role;
 
-    @Column(nullable = false, length = 20)
+    @Column(name = "tipo", nullable = false, length = 20)
     private String printerType;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "configuracion", nullable = false, length = 100)
     private String printerTarget;
 
     // --- Getters y Setters (incluyendo el nuevo para version) ---
@@ -34,14 +31,6 @@ public class PrinterConfiguration {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
     }
 
     public String getRole() {

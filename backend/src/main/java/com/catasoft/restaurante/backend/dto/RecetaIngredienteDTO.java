@@ -18,8 +18,6 @@ public class RecetaIngredienteDTO {
     @NotNull
     @Min(0)
     private Double cantidad;
-    
-    private String unidad;
 
     // Getters y setters
     public Long getId() { return id; }
@@ -36,7 +34,4 @@ public class RecetaIngredienteDTO {
     
     public Double getCantidad() { return cantidad; }
     public void setCantidad(Double cantidad) { this.cantidad = cantidad; }
-    
-    public String getUnidad() { return unidad; }
-    public void setUnidad(String unidad) { this.unidad = unidad; }
 } 

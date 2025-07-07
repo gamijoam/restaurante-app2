@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="001" author="system">
+        
+        <!-- Tabla Usuario -->
+        <createTable tableName="usuarios">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="apellido" type="VARCHAR(100)" defaultValue="">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fecha_creacion" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Tabla Usuario Roles -->
+        <createTable tableName="usuario_roles">
+            <column name="usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rol" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint baseTableName="usuario_roles" baseColumnNames="usuario_id"
+                                referencedTableName="usuarios" referencedColumnNames="id"
+                                constraintName="fk_usuario_roles_usuario"/>
+        <createIndex tableName="usuario_roles" indexName="idx_usuario_roles_usuario_id">
+            <column name="usuario_id"/>
+        </createIndex>
+
+        <!-- Tabla Mesa -->
+        <createTable tableName="mesas">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="numero" type="INT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="capacidad" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="estado" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="posicion_x" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="posicion_y" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Tabla Producto -->
+        <createTable tableName="productos">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="descripcion" type="TEXT"/>
+            <column name="precio" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="categoria" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stock" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Tabla Ingrediente -->
+        <createTable tableName="ingredientes">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="descripcion" type="TEXT"/>
+            <column name="stock" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="unidad_medida" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="precio_unitario" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Tabla RecetaIngrediente -->
+        <createTable tableName="receta_ingrediente">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="producto_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ingrediente_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cantidad" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Tabla Comanda -->
+        <createTable tableName="comandas">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="mesa_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="estado" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fecha_creacion" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fecha_modificacion" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total" type="DECIMAL(10,2)" defaultValueNumeric="0.00">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Tabla ComandaItem -->
+        <createTable tableName="comanda_items">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="comanda_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="producto_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cantidad" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="precio_unitario" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subtotal" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notas" type="TEXT"/>
+        </createTable>
+
+        <!-- Tabla Factura -->
+        <createTable tableName="facturas">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="comanda_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="numero_factura" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="fecha_emision" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subtotal" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="impuesto" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="metodo_pago" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Tabla PrinterConfiguration -->
+        <createTable tableName="printer_configurations">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tipo" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="configuracion" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Foreign Keys -->
+        <addForeignKeyConstraint baseTableName="receta_ingrediente" baseColumnNames="producto_id"
+                                referencedTableName="productos" referencedColumnNames="id"
+                                constraintName="fk_receta_producto"/>
+        
+        <addForeignKeyConstraint baseTableName="receta_ingrediente" baseColumnNames="ingrediente_id"
+                                referencedTableName="ingredientes" referencedColumnNames="id"
+                                constraintName="fk_receta_ingrediente"/>
+        
+        <addForeignKeyConstraint baseTableName="comandas" baseColumnNames="mesa_id"
+                                referencedTableName="mesas" referencedColumnNames="id"
+                                constraintName="fk_comanda_mesa"/>
+        
+        <addForeignKeyConstraint baseTableName="comandas" baseColumnNames="usuario_id"
+                                referencedTableName="usuarios" referencedColumnNames="id"
+                                constraintName="fk_comanda_usuario"/>
+        
+        <addForeignKeyConstraint baseTableName="comanda_items" baseColumnNames="comanda_id"
+                                referencedTableName="comandas" referencedColumnNames="id"
+                                constraintName="fk_comanda_item_comanda"/>
+        
+        <addForeignKeyConstraint baseTableName="comanda_items" baseColumnNames="producto_id"
+                                referencedTableName="productos" referencedColumnNames="id"
+                                constraintName="fk_comanda_item_producto"/>
+        
+        <addForeignKeyConstraint baseTableName="facturas" baseColumnNames="comanda_id"
+                                referencedTableName="comandas" referencedColumnNames="id"
+                                constraintName="fk_factura_comanda"/>
+
+    </changeSet>
+
+</databaseChangeLog> 

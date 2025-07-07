@@ -18,14 +18,23 @@ public class Factura {
     @JoinColumn(name = "comanda_id", nullable = false)
     private Comanda comanda;
 
+    @Column(name = "numero_factura", nullable = false, unique = true)
+    private String numeroFactura;
+
+    @Column(nullable = false)
+    private BigDecimal subtotal;
+
     @Column(nullable = false)
     private BigDecimal total;
 
     @Column(nullable = false)
     private BigDecimal impuesto; // Por ejemplo, el IVA
 
+    @Column(name = "metodo_pago", nullable = false)
+    private String metodoPago;
+
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "fecha_emision", nullable = false, updatable = false)
     private LocalDateTime fechaEmision;
 
     // Podríamos añadir más campos como datos del cliente, número de factura, etc.
@@ -36,10 +45,16 @@ public class Factura {
     public void setId(Long id) { this.id = id; }
     public Comanda getComanda() { return comanda; }
     public void setComanda(Comanda comanda) { this.comanda = comanda; }
+    public String getNumeroFactura() { return numeroFactura; }
+    public void setNumeroFactura(String numeroFactura) { this.numeroFactura = numeroFactura; }
+    public BigDecimal getSubtotal() { return subtotal; }
+    public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
     public BigDecimal getImpuesto() { return impuesto; }
     public void setImpuesto(BigDecimal impuesto) { this.impuesto = impuesto; }
+    public String getMetodoPago() { return metodoPago; }
+    public void setMetodoPago(String metodoPago) { this.metodoPago = metodoPago; }
     public LocalDateTime getFechaEmision() { return fechaEmision; }
     public void setFechaEmision(LocalDateTime fechaEmision) { this.fechaEmision = fechaEmision; }
 }

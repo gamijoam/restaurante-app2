@@ -14,6 +14,8 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.function.Function;
 
 @Service
@@ -21,6 +23,9 @@ public class JwtService {
 
     @Value("${application.jwt.secret-key}")
     private String secretKey;
+    
+    @Value("${jwt.expiration}")
+    private long jwtExpiration;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -29,16 +34,47 @@ public class JwtService {
     // --- MÉTODO generateToken MODIFICADO ---
     public String generateToken(Usuario usuario) {
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("roles", usuario.getRoles());
-        // Aquí podríamos añadir más información como el nombre, id, etc.
+        
+        // Convertir roles a strings
+        Set<String> roles = usuario.getRoles().stream()
+            .map(rol -> rol.name())
+            .collect(Collectors.toSet());
+        extraClaims.put("roles", roles);
+        
+        // Agregar permisos al token
+        Set<String> permisos = usuario.getPermisos().stream()
+            .map(permiso -> permiso.getNombre())
+            .collect(Collectors.toSet());
+        extraClaims.put("permisos", permisos);
+        
+        // Agregar información adicional del usuario
+        extraClaims.put("userId", usuario.getId());
+        extraClaims.put("nombre", usuario.getNombre());
+        extraClaims.put("apellido", usuario.getApellido());
 
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(usuario.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 horas
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+    
+    // Método para extraer permisos del token
+    public Set<String> extractPermissions(String token) {
+        Claims claims = extractAllClaims(token);
+        @SuppressWarnings("unchecked")
+        Set<String> permisos = (Set<String>) claims.get("permisos");
+        return permisos;
+    }
+    
+    // Método para extraer roles del token
+    public Set<String> extractRoles(String token) {
+        Claims claims = extractAllClaims(token);
+        @SuppressWarnings("unchecked")
+        Set<String> roles = (Set<String>) claims.get("roles");
+        return roles;
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {

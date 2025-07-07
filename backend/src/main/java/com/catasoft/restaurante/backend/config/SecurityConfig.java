@@ -27,22 +27,37 @@ public class SecurityConfig {
     }
 
     @Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    http
-        .cors(withDefaults())
-        .csrf(csrf -> csrf.disable())
-        .authorizeHttpRequests(auth -> auth
-            // Permitimos auth, websockets Y NUESTRO PING DE PRUEBA
-            .requestMatchers("/api/auth/**", "/ws/**", "/ping").permitAll()
-            .requestMatchers("/api/v1/reportes/**").hasRole("GERENTE")
-            .anyRequest().authenticated()
-        )
-        .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-        )
-        .authenticationProvider(authenticationProvider)
-        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .cors(withDefaults())
+            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                // Permitimos auth, websockets Y NUESTRO PING DE PRUEBA
+                .requestMatchers("/api/auth/**", "/ws/**", "/ping", "/test/**").permitAll()
+                
+                // Endpoints que requieren permisos específicos
+                .requestMatchers("/api/v1/reportes/**").hasAuthority("VER_REPORTES")
+                .requestMatchers("/api/v1/productos/**").hasAuthority("GESTIONAR_INGREDIENTES")
+                .requestMatchers("/api/v1/usuarios/**").hasAuthority("CREAR_USUARIOS")
+                .requestMatchers("/api/v1/mesas/**").hasAuthority("GESTIONAR_MESAS")
+                .requestMatchers("/api/v1/facturas/**").hasAuthority("VER_FACTURAS")
+                .requestMatchers("/api/v1/ingredientes/**").hasAuthority("GESTIONAR_INGREDIENTES")
+                .requestMatchers("/api/v1/recetas/**").hasAuthority("GESTIONAR_RECETAS")
+                .requestMatchers("/api/v1/permisos/**").hasAuthority("GESTIONAR_ROLES")
+                .requestMatchers("/api/v1/comandas/**").hasAuthority("TOMAR_PEDIDOS")
+                .requestMatchers("/api/v1/cocina/**").hasAuthority("VER_COCINA")
+                .requestMatchers("/api/v1/caja/**").hasAuthority("VER_CAJA")
+                .requestMatchers("/api/v1/impresoras/**").hasAuthority("CONFIGURAR_IMPRESORAS")
+                
+                // Cualquier otra petición requiere autenticación
+                .anyRequest().authenticated()
+            )
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .authenticationProvider(authenticationProvider)
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-    return http.build();
-}
+        return http.build();
+    }
 }

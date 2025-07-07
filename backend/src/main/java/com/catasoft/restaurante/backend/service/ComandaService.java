@@ -19,6 +19,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,7 @@ public class ComandaService {
     private final InventarioService inventarioService;
     private final WebSocketService webSocketService;
     private final PrinterConfigurationService printerConfigService;
+    private final UsuarioRepository usuarioRepository;
 
     @Autowired
     public ComandaService(
@@ -52,7 +55,8 @@ public class ComandaService {
             FacturaRepository facturaRepository,
             InventarioService inventarioService,
             WebSocketService webSocketService,
-            PrinterConfigurationService printerConfigService) {
+            PrinterConfigurationService printerConfigService,
+            UsuarioRepository usuarioRepository) {
         this.comandaRepository = comandaRepository;
         this.mesaRepository = mesaRepository;
         this.productoRepository = productoRepository;
@@ -61,6 +65,7 @@ public class ComandaService {
         this.inventarioService = inventarioService;
         this.webSocketService = webSocketService;
         this.printerConfigService = printerConfigService;
+        this.usuarioRepository = usuarioRepository;
     }
 
     // --- MÉTODO MAPPER RESTAURADO A SU FORMA ORIGINAL Y CORRECTA ---
@@ -90,6 +95,12 @@ public class ComandaService {
 
     @Transactional
     public ComandaResponseDTO crearComanda(ComandaRequestDTO request) {
+        // Obtener el usuario actual del SecurityContext
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado: " + username));
+
         Mesa mesa = mesaRepository.findById(request.getMesaId())
                 .orElseThrow(() -> new ResourceNotFoundException("Mesa no encontrada con id: " + request.getMesaId()));
 
@@ -99,7 +110,9 @@ public class ComandaService {
 
         Comanda comanda = new Comanda();
         comanda.setMesa(mesa);
+        comanda.setUsuario(usuario);
         comanda.setFechaHoraCreacion(LocalDateTime.now());
+        comanda.setFechaModificacion(LocalDateTime.now());
         comanda.setEstado(EstadoComanda.EN_PROCESO);
         BigDecimal totalComanda = BigDecimal.ZERO;
 
@@ -114,10 +127,12 @@ public class ComandaService {
             comandaItem.setProducto(producto);
             comandaItem.setCantidad(itemDTO.getCantidad());
             comandaItem.setPrecioUnitario(producto.getPrecio());
+            BigDecimal subtotal = producto.getPrecio().multiply(BigDecimal.valueOf(itemDTO.getCantidad()));
+            comandaItem.setSubtotal(subtotal);
             comandaItem.setComanda(comanda);
             comanda.getItems().add(comandaItem);
 
-            totalComanda = totalComanda.add(producto.getPrecio().multiply(BigDecimal.valueOf(itemDTO.getCantidad())));
+            totalComanda = totalComanda.add(subtotal);
         }
         comanda.setTotal(totalComanda);
         mesa.setEstado(EstadoMesa.OCUPADA);
@@ -298,11 +313,15 @@ public class ComandaService {
             mesa.setEstado(EstadoMesa.LIBRE);
             mesaRepository.save(mesa);
 
+            // Crear factura con todos los campos obligatorios
             Factura factura = new Factura();
             factura.setComanda(comanda);
+            factura.setNumeroFactura("FAC-" + System.currentTimeMillis()); // Generar número único
+            factura.setSubtotal(comanda.getTotal()); // El subtotal es el total sin impuestos
             factura.setTotal(comanda.getTotal());
             BigDecimal impuesto = comanda.getTotal().multiply(new BigDecimal("0.16"));
             factura.setImpuesto(impuesto);
+            factura.setMetodoPago("EFECTIVO"); // Por defecto efectivo, se puede cambiar después
             facturaRepository.save(factura);
             logger.info("Factura creada con ID: {} para la comanda ID: {}", factura.getId(), comanda.getId());
         }
@@ -350,10 +369,12 @@ public class ComandaService {
             comandaItem.setProducto(producto);
             comandaItem.setCantidad(itemDTO.getCantidad());
             comandaItem.setPrecioUnitario(producto.getPrecio());
+            BigDecimal subtotal = producto.getPrecio().multiply(BigDecimal.valueOf(itemDTO.getCantidad()));
+            comandaItem.setSubtotal(subtotal);
             comandaItem.setComanda(comanda);
             comanda.getItems().add(comandaItem);
 
-            comanda.setTotal(comanda.getTotal().add(producto.getPrecio().multiply(BigDecimal.valueOf(itemDTO.getCantidad()))));
+            comanda.setTotal(comanda.getTotal().add(subtotal));
         }
 
         Comanda comandaActualizada = comandaRepository.save(comanda);

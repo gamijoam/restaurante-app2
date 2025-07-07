@@ -19,6 +19,10 @@ public class Comanda {
     @JoinColumn(name = "mesa_id", nullable = false)
     private Mesa mesa;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = false)
+    private Usuario usuario;
+
     @OneToMany(mappedBy = "comanda", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ComandaItem> items = new ArrayList<>();
 
@@ -26,8 +30,11 @@ public class Comanda {
     @Column(nullable = false, length = 20)
     private EstadoComanda estado;
 
-    @Column(nullable = false)
+    @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaHoraCreacion;
+
+    @Column(name = "fecha_modificacion", nullable = false)
+    private LocalDateTime fechaModificacion;
 
     @Column(nullable = false)
     private BigDecimal total;
@@ -48,6 +55,14 @@ public class Comanda {
 
     public void setMesa(Mesa mesa) {
         this.mesa = mesa;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
     public List<ComandaItem> getItems() {
@@ -72,6 +87,14 @@ public class Comanda {
 
     public void setFechaHoraCreacion(LocalDateTime fechaHoraCreacion) {
         this.fechaHoraCreacion = fechaHoraCreacion;
+    }
+
+    public LocalDateTime getFechaModificacion() {
+        return fechaModificacion;
+    }
+
+    public void setFechaModificacion(LocalDateTime fechaModificacion) {
+        this.fechaModificacion = fechaModificacion;
     }
 
     public BigDecimal getTotal() {

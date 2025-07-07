@@ -28,6 +28,12 @@ public class Producto {
     @Column
     private Double stock;
 
+    @Column(nullable = false)
+    private String categoria;
+
+    @Column(nullable = false)
+    private Boolean activo = true;
+
     // --- Constructores ---
 
     public Producto() {
@@ -86,5 +92,21 @@ public class Producto {
 
     public void setStock(Double stock) {
         this.stock = stock;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
     }
 }

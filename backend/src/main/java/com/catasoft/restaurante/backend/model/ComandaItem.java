@@ -24,8 +24,14 @@ public class ComandaItem {
     @Column(nullable = false)
     private Integer cantidad;
 
-    @Column(nullable = false)
+    @Column(name = "precio_unitario", nullable = false)
     private BigDecimal precioUnitario; // Guardamos el precio al momento de la compra
+
+    @Column(nullable = false)
+    private BigDecimal subtotal;
+
+    @Column
+    private String notas;
 
     // --- Getters y Setters ---
 
@@ -67,5 +73,21 @@ public class ComandaItem {
 
     public void setPrecioUnitario(BigDecimal precioUnitario) {
         this.precioUnitario = precioUnitario;
+    }
+
+    public BigDecimal getSubtotal() {
+        return subtotal;
+    }
+
+    public void setSubtotal(BigDecimal subtotal) {
+        this.subtotal = subtotal;
+    }
+
+    public String getNotas() {
+        return notas;
+    }
+
+    public void setNotas(String notas) {
+        this.notas = notas;
     }
 }

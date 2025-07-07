@@ -31,9 +31,12 @@ public class RecetaIngredienteController {
     }
 
     @GetMapping("/producto/{productoId}")
-    @PreAuthorize("hasRole('GERENTE')")
+    @PreAuthorize("hasAnyRole('GERENTE', 'COCINERO')")
     public List<RecetaIngredienteResponseDTO> getRecetasByProducto(@PathVariable Long productoId) {
+        System.out.println("Buscando recetas para producto ID: " + productoId);
         List<RecetaIngrediente> recetas = recetaIngredienteService.findByProductoId(productoId);
+        System.out.println("Recetas encontradas: " + recetas.size());
+        
         List<RecetaIngredienteResponseDTO> responseDTOs = new ArrayList<>();
         
         for (RecetaIngrediente receta : recetas) {
@@ -42,10 +45,11 @@ public class RecetaIngredienteController {
                 receta.getIngrediente().getId(),
                 receta.getIngrediente().getNombre(),
                 receta.getCantidad(),
-                receta.getUnidad()
+                receta.getIngrediente().getUnidad()
             ));
         }
         
+        System.out.println("DTOs creados: " + responseDTOs.size());
         return responseDTOs;
     }
 
@@ -68,7 +72,6 @@ public class RecetaIngredienteController {
             receta.setProducto(producto);
             receta.setIngrediente(ingrediente);
             receta.setCantidad(dto.getCantidad());
-            receta.setUnidad(dto.getUnidad());
             
             // Si el DTO incluye ingredienteNombre, lo ignoramos ya que se obtiene del ingrediente
             // dto.getIngredienteNombre() se puede usar para validación si es necesario

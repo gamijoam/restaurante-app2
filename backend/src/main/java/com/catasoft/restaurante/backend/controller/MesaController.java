@@ -30,7 +30,7 @@ public class MesaController {
 
     // --- MÉTODOS EXISTENTES ---
     @GetMapping
-    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
     public List<Mesa> getAllMesas() {
         return mesaRepository.findAll();
     }
@@ -79,7 +79,7 @@ public class MesaController {
     }
 
     @GetMapping("/{id}/comanda-activa")
-    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
     public ResponseEntity<ComandaResponseDTO> getComandaActivaPorMesa(@PathVariable Long id) {
         return comandaService.getComandaActivaPorMesa(id)
                 .map(ResponseEntity::ok)
@@ -102,7 +102,7 @@ public class MesaController {
      * Obtiene todas las mesas con información para el mapa visual
      */
     @GetMapping("/mapa")
-    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO')")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
     public List<MesaMapaDTO> getMesasMapa() {
         List<Mesa> mesas = mesaRepository.findAll();
         return mesas.stream()

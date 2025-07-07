@@ -4,12 +4,13 @@ import { useAuth } from '../context/AuthContext';
 
 // 1. Definimos una interfaz para las props del componente
 interface ProtectedRouteProps {
-    allowedRoles: string[];
-    children: React.ReactNode; // 2. Añadimos 'children' de tipo React.ReactNode
+    allowedRoles?: string[];
+    allowedPermissions?: string[];
+    children: React.ReactNode;
 }
 
-const ProtectedRoute = ({ allowedRoles, children }: ProtectedRouteProps) => {
-    const { isAuthenticated, roles } = useAuth();
+const ProtectedRoute = ({ allowedRoles, allowedPermissions, children }: ProtectedRouteProps) => {
+    const { isAuthenticated, roles, hasPermission } = useAuth();
     const location = useLocation();
 
     if (!isAuthenticated) {
@@ -17,16 +18,29 @@ const ProtectedRoute = ({ allowedRoles, children }: ProtectedRouteProps) => {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // Verificamos si alguno de los roles del usuario está en la lista de roles permitidos
-    const isAuthorized = roles.some(role => allowedRoles.includes(role));
+    // Verificar autorización por roles
+    let isAuthorized = false;
+    
+    if (allowedRoles && allowedRoles.length > 0) {
+        isAuthorized = roles.some(role => allowedRoles.includes(role));
+    }
+    
+    // Verificar autorización por permisos
+    if (allowedPermissions && allowedPermissions.length > 0) {
+        isAuthorized = allowedPermissions.some(permission => hasPermission(permission));
+    }
+    
+    // Si no se especificaron roles ni permisos, permitir acceso
+    if (!allowedRoles && !allowedPermissions) {
+        isAuthorized = true;
+    }
 
     if (!isAuthorized) {
-        // Si no está autorizado, lo podríamos redirigir a una página de "No Autorizado" o al inicio.
-        // Por ahora, lo redirigimos al inicio.
+        // Si no está autorizado, lo redirigimos al inicio
         return <Navigate to="/" replace />;
     }
 
-    // 3. Si está autenticado y autorizado, renderizamos los 'children'
+    // Si está autenticado y autorizado, renderizamos los 'children'
     return <>{children}</>;
 };
 

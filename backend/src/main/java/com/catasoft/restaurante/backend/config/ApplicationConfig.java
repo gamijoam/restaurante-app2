@@ -29,13 +29,27 @@ public class ApplicationConfig {
     public UserDetailsService userDetailsService() {
         return username -> usuarioRepository.findByUsername(username)
             // Mapeamos nuestro Usuario a un User de Spring Security
-            .map(usuario -> new User(
+            .map(usuario -> {
+                // Crear autoridades basadas en roles
+                var roleAuthorities = usuario.getRoles().stream()
+                        .map(rol -> new SimpleGrantedAuthority(rol.name()))
+                        .collect(Collectors.toList());
+                
+                // Crear autoridades basadas en permisos
+                var permissionAuthorities = usuario.getPermisos().stream()
+                        .map(permiso -> new SimpleGrantedAuthority(permiso.getNombre()))
+                        .collect(Collectors.toList());
+                
+                // Combinar roles y permisos
+                var allAuthorities = new java.util.ArrayList<>(roleAuthorities);
+                allAuthorities.addAll(permissionAuthorities);
+                
+                return new User(
                     usuario.getUsername(),
                     usuario.getPassword(),
-                    usuario.getRoles().stream()
-                            .map(rol -> new SimpleGrantedAuthority(rol.name()))
-                            .collect(Collectors.toList())
-            ))
+                        allAuthorities
+                );
+            })
             .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }
 

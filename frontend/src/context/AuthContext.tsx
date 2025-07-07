@@ -13,34 +13,69 @@ const getRolesFromToken = (token: string | null): string[] => {
     }
 };
 
+// Función para extraer permisos del token
+const getPermisosFromToken = (token: string | null): string[] => {
+    if (!token) return [];
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.permisos || [];
+    } catch (e) {
+        return [];
+    }
+};
+
+// Función para extraer información del usuario del token
+const getUserInfoFromToken = (token: string | null) => {
+    if (!token) return null;
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return {
+            userId: payload.userId,
+            nombre: payload.nombre,
+            apellido: payload.apellido
+        };
+    } catch (e) {
+        return null;
+    }
+};
+
 interface IAuthContext {
     token: string | null;
-    roles: string[]; // <-- AÑADIMOS ROLES AL CONTEXTO
+    roles: string[];
+    permisos: string[];
+    userInfo: { userId: number; nombre: string; apellido: string } | null;
     login: (credentials: LoginRequestDTO) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
+    hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<IAuthContext | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [token, setToken] = useState<string | null>(localStorage.getItem('authToken'));
-    const [roles, setRoles] = useState<string[]>(getRolesFromToken(token)); // <-- INICIALIZAMOS ROLES
+    const [roles, setRoles] = useState<string[]>(getRolesFromToken(token));
+    const [permisos, setPermisos] = useState<string[]>(getPermisosFromToken(token));
+    const [userInfo, setUserInfo] = useState(getUserInfoFromToken(token));
 
     useEffect(() => {
         if (token) {
             localStorage.setItem('authToken', token);
-            setRoles(getRolesFromToken(token)); // <-- ACTUALIZAMOS ROLES
+            setRoles(getRolesFromToken(token));
+            setPermisos(getPermisosFromToken(token));
+            setUserInfo(getUserInfoFromToken(token));
         } else {
             localStorage.removeItem('authToken');
-            setRoles([]); // <-- LIMPIAMOS ROLES
+            setRoles([]);
+            setPermisos([]);
+            setUserInfo(null);
         }
     }, [token]);
 
     const login = async (credentials: LoginRequestDTO) => {
         try {
             const response = await loginAPI(credentials);
-            setToken(response.token); // Esto disparará el useEffect de arriba
+            setToken(response.token);
         } catch (error) {
             console.error("Fallo el login:", error);
             throw new Error("Credenciales inválidas");
@@ -53,8 +88,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const isAuthenticated = !!token;
 
+    const hasPermission = (permission: string): boolean => {
+        return permisos.includes(permission);
+    };
+
     return (
-        <AuthContext.Provider value={{ token, roles, login, logout, isAuthenticated }}>
+        <AuthContext.Provider value={{ 
+            token, 
+            roles, 
+            permisos, 
+            userInfo, 
+            login, 
+            logout, 
+            isAuthenticated, 
+            hasPermission 
+        }}>
             {children}
         </AuthContext.Provider>
     );

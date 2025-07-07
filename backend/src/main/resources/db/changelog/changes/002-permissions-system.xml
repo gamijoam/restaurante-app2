@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002" author="system">
+        
+        <!-- Tabla Permission -->
+        <createTable tableName="permisos">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(100)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="descripcion" type="TEXT"/>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Tabla de relación Usuario-Permiso -->
+        <createTable tableName="usuario_permisos">
+            <column name="usuario_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="permiso_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- Primary Key compuesta para usuario_permisos -->
+        <addPrimaryKey tableName="usuario_permisos" columnNames="usuario_id, permiso_id" 
+                      constraintName="pk_usuario_permisos"/>
+
+        <!-- Foreign Keys para usuario_permisos -->
+        <addForeignKeyConstraint baseTableName="usuario_permisos" baseColumnNames="usuario_id"
+                                referencedTableName="usuarios" referencedColumnNames="id"
+                                constraintName="fk_usuario_permisos_usuario"/>
+        
+        <addForeignKeyConstraint baseTableName="usuario_permisos" baseColumnNames="permiso_id"
+                                referencedTableName="permisos" referencedColumnNames="id"
+                                constraintName="fk_usuario_permisos_permiso"/>
+
+        <!-- Insertar permisos básicos -->
+        <insert tableName="permisos">
+            <column name="nombre" value="CREAR_USUARIOS"/>
+            <column name="descripcion" value="Crear nuevos usuarios"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="permisos">
+            <column name="nombre" value="GESTIONAR_ROLES"/>
+            <column name="descripcion" value="Gestionar roles y permisos"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="permisos">
+            <column name="nombre" value="TOMAR_PEDIDOS"/>
+            <column name="descripcion" value="Tomar pedidos de clientes"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="permisos">
+            <column name="nombre" value="VER_COCINA"/>
+            <column name="descripcion" value="Ver vista de cocina"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="permisos">
+            <column name="nombre" value="VER_CAJA"/>
+            <column name="descripcion" value="Ver vista de caja"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="permisos">
+            <column name="nombre" value="GESTIONAR_MESAS"/>
+            <column name="descripcion" value="Gestionar mesas del restaurante"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="permisos">
+            <column name="nombre" value="VER_REPORTES"/>
+            <column name="descripcion" value="Ver reportes del sistema"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="permisos">
+            <column name="nombre" value="VER_FACTURAS"/>
+            <column name="descripcion" value="Ver facturas"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="permisos">
+            <column name="nombre" value="GESTIONAR_INGREDIENTES"/>
+            <column name="descripcion" value="Gestionar ingredientes"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="permisos">
+            <column name="nombre" value="GESTIONAR_RECETAS"/>
+            <column name="descripcion" value="Gestionar recetas"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="permisos">
+            <column name="nombre" value="CONFIGURAR_IMPRESORAS"/>
+            <column name="descripcion" value="Configurar impresoras"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog> 

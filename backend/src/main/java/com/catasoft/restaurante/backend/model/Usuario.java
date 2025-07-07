@@ -35,7 +35,7 @@ public class Usuario {
     private boolean activo = true;
 
     @CreationTimestamp
-    @Column(nullable = false, updatable = false)
+    @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
     @ElementCollection(targetClass = Rol.class, fetch = FetchType.EAGER)
@@ -43,6 +43,15 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     @Column(name = "rol", nullable = false)
     private Set<Rol> roles = new HashSet<>();
+
+    // Relación Many-to-Many con Permission
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "usuario_permisos",
+        joinColumns = @JoinColumn(name = "usuario_id"),
+        inverseJoinColumns = @JoinColumn(name = "permiso_id")
+    )
+    private Set<Permission> permisos = new HashSet<>();
 
     // Getters y Setters (solo los de nuestros campos)
     public Long getId() { return id; }
@@ -63,4 +72,6 @@ public class Usuario {
     public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
     public Set<Rol> getRoles() { return roles; }
     public void setRoles(Set<Rol> roles) { this.roles = roles; }
+    public Set<Permission> getPermisos() { return permisos; }
+    public void setPermisos(Set<Permission> permisos) { this.permisos = permisos; }
 }

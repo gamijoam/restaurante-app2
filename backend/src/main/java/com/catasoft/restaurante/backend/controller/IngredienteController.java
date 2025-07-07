@@ -20,7 +20,7 @@ public class IngredienteController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('GERENTE')")
+    @PreAuthorize("hasAnyRole('GERENTE', 'COCINERO')")
     public List<Ingrediente> getAll() {
         return ingredienteService.findAll();
     }

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="006" author="system">
+        
+        <!-- Crear usuario cocina -->
+        <insert tableName="usuarios">
+            <column name="username" value="cocina"/>
+            <column name="password" value="$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa"/> <!-- password: cocina123 -->
+            <column name="nombre" value="Usuario Cocina"/>
+            <column name="email" value="cocina@restaurante.com"/>
+            <column name="activo" value="1"/>
+        </insert>
+
+        <!-- Asignar rol COCINERO al usuario cocina -->
+        <insert tableName="usuario_roles">
+            <column name="usuario_id" valueComputed="(SELECT id FROM usuarios WHERE username = 'cocina')"/>
+            <column name="rol" value="ROLE_COCINERO"/>
+        </insert>
+        
+        <!-- Asignar permisos específicos al usuario cocina -->
+        <sql>
+            INSERT INTO usuario_permisos (usuario_id, permiso_id)
+            SELECT 
+                (SELECT id FROM usuarios WHERE username = 'cocina'),
+                id
+            FROM permisos 
+            WHERE nombre IN ('VER_COCINA', 'TOMAR_PEDIDOS', 'GESTIONAR_INGREDIENTES', 'GESTIONAR_RECETAS');
+        </sql>
+
+    </changeSet>
+
+</databaseChangeLog> 

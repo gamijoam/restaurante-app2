@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="003" author="system">
+        
+        <!-- Insertar usuario administrador por defecto -->
+        <insert tableName="usuarios">
+            <column name="username" value="admin"/>
+            <column name="password" value="$2a$10$.eEEkuhQ/laVPMULcP2oLuhPh1tCcXES22nTSQtYOC0EbcsgtxfeG"/>
+            <column name="nombre" value="Administrador del Sistema"/>
+            <column name="email" value="admin@restaurante.com"/>
+            <column name="apellido" value=""/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+
+        <!-- Asignar rol ROLE_GERENTE al usuario administrador -->
+        <insert tableName="usuario_roles">
+            <column name="usuario_id" valueComputed="(SELECT id FROM usuarios WHERE username = 'admin')"/>
+            <column name="rol" value="ROLE_GERENTE"/>
+        </insert>
+
+        <!-- Asignar todos los permisos al usuario administrador -->
+        <sql>
+            INSERT INTO usuario_permisos (usuario_id, permiso_id)
+            SELECT 
+                (SELECT id FROM usuarios WHERE username = 'admin'),
+                id
+            FROM permisos;
+        </sql>
+
+        <!-- Insertar algunos datos de ejemplo -->
+        <insert tableName="mesas">
+            <column name="numero" valueNumeric="1"/>
+            <column name="capacidad" valueNumeric="4"/>
+            <column name="estado" value="LIBRE"/>
+            <column name="posicion_x" valueNumeric="100"/>
+            <column name="posicion_y" valueNumeric="100"/>
+        </insert>
+        
+        <insert tableName="mesas">
+            <column name="numero" valueNumeric="2"/>
+            <column name="capacidad" valueNumeric="6"/>
+            <column name="estado" value="LIBRE"/>
+            <column name="posicion_x" valueNumeric="300"/>
+            <column name="posicion_y" valueNumeric="100"/>
+        </insert>
+        
+        <insert tableName="mesas">
+            <column name="numero" valueNumeric="3"/>
+            <column name="capacidad" valueNumeric="2"/>
+            <column name="estado" value="LIBRE"/>
+            <column name="posicion_x" valueNumeric="500"/>
+            <column name="posicion_y" valueNumeric="100"/>
+        </insert>
+
+        <!-- Insertar algunos productos de ejemplo -->
+        <insert tableName="productos">
+            <column name="nombre" value="Hamburguesa Clásica"/>
+            <column name="descripcion" value="Hamburguesa con carne, lechuga, tomate y queso"/>
+            <column name="precio" valueNumeric="12.50"/>
+            <column name="categoria" value="PLATO_PRINCIPAL"/>
+            <column name="stock" valueNumeric="50"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="productos">
+            <column name="nombre" value="Pizza Margherita"/>
+            <column name="descripcion" value="Pizza con tomate, mozzarella y albahaca"/>
+            <column name="precio" valueNumeric="15.00"/>
+            <column name="categoria" value="PLATO_PRINCIPAL"/>
+            <column name="stock" valueNumeric="30"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="productos">
+            <column name="nombre" value="Coca Cola"/>
+            <column name="descripcion" value="Refresco Coca Cola 350ml"/>
+            <column name="precio" valueNumeric="2.50"/>
+            <column name="categoria" value="BEBIDA"/>
+            <column name="stock" valueNumeric="100"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+
+        <!-- Insertar algunos ingredientes de ejemplo -->
+        <insert tableName="ingredientes">
+            <column name="nombre" value="Carne de Res"/>
+            <column name="descripcion" value="Carne molida de res para hamburguesas"/>
+            <column name="stock" valueNumeric="20"/>
+            <column name="unidad_medida" value="KG"/>
+            <column name="precio_unitario" valueNumeric="8.00"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="ingredientes">
+            <column name="nombre" value="Pan de Hamburguesa"/>
+            <column name="descripcion" value="Pan especial para hamburguesas"/>
+            <column name="stock" valueNumeric="50"/>
+            <column name="unidad_medida" value="UNIDADES"/>
+            <column name="precio_unitario" valueNumeric="0.50"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        
+        <insert tableName="ingredientes">
+            <column name="nombre" value="Queso Cheddar"/>
+            <column name="descripcion" value="Queso cheddar en lonchas"/>
+            <column name="stock" valueNumeric="30"/>
+            <column name="unidad_medida" value="UNIDADES"/>
+            <column name="precio_unitario" valueNumeric="0.30"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog> 

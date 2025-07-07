@@ -22,11 +22,17 @@ public class Ingrediente {
     private Double stock;
 
     @NotBlank
-    @Column(nullable = false, length = 20)
+    @Column(name = "unidad_medida", nullable = false, length = 20)
     private String unidad;
 
     @Column(length = 255)
     private String descripcion;
+
+    @Column(name = "precio_unitario", nullable = false)
+    private Double precioUnitario;
+
+    @Column(nullable = false)
+    private Boolean activo = true;
 
     // Getters y setters
     public Long getId() { return id; }
@@ -39,4 +45,8 @@ public class Ingrediente {
     public void setUnidad(String unidad) { this.unidad = unidad; }
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    public Double getPrecioUnitario() { return precioUnitario; }
+    public void setPrecioUnitario(Double precioUnitario) { this.precioUnitario = precioUnitario; }
+    public Boolean getActivo() { return activo; }
+    public void setActivo(Boolean activo) { this.activo = activo; }
 }

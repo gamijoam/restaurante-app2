@@ -1,63 +1,516 @@
-import { useEffect, useState } from 'react';
-import ProductList from './ProductList';
-import OrderSummary from '../components/OrderSummary';
-import { Container, Grid, Typography, Alert, CircularProgress } from '@mui/material';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Grid,
+  Typography,
+  Paper,
+  Chip,
+  IconButton,
+  useTheme,
+  useMediaQuery,
+  Fade,
+  Divider,
+  Badge,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Fab,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
+  AppBar,
+  Toolbar,
+  Alert,
+} from '@mui/material';
+import {
+  ShoppingCart,
+  Restaurant,
+  Add,
+  Remove,
+  Delete,
+  Save,
+  Print,
+  ArrowBack,
+  Menu,
+  Close,
+  LocalDining,
+  AttachMoney,
+  Receipt,
+} from '@mui/icons-material';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../hooks/useNotification';
 import { useOrder } from '../hooks/useOrder';
-import { getComandaActivaPorMesa } from '../services/mesaService';
+import ModernCard from '../components/ModernCard';
+import ModernButton from '../components/ModernButton';
+import ModernModal from '../components/ModernModal';
+import LoadingSpinner from '../components/LoadingSpinner';
+import SkeletonLoader from '../components/SkeletonLoader';
+import { getProductos } from '../services/productoService';
+import { crearComandaAPI } from '../services/comandaService';
+import type { Producto } from '../types';
 
-const OrderPage = () => {
+interface OrderItem {
+  productoId: number;
+  productoNombre: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+const OrderPage: React.FC = () => {
     const { mesaId } = useParams<{ mesaId: string }>();
-    const { loadExistingOrder, clearOrder } = useOrder();
+  const navigate = useNavigate();
+  const { hasPermission } = useAuth();
+  const { showError, showSuccess } = useNotification();
+  const { orderItems, addProductToOrder, clearOrder } = useOrder();
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
+
+  const [productos, setProductos] = useState<Producto[]>([]);
     const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
+  const [cartOpen, setCartOpen] = useState(false);
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        const idMesaNum = mesaId ? parseInt(mesaId, 10) : NaN;
-        if (isNaN(idMesaNum)) {
-            setLoading(false);
-            return;
-        }
+    loadProductos();
+  }, []);
 
-        const checkForActiveOrder = async () => {
+  const loadProductos = async () => {
             try {
-                // Intentamos buscar una comanda activa para esta mesa
-                const comandaActiva = await getComandaActivaPorMesa(idMesaNum);
-                // Si la encontramos, la cargamos en nuestro contexto
-                loadExistingOrder(comandaActiva);
-            } catch (error) {
-                // Si da un error (ej. 404 Not Found), significa que no hay orden activa.
-                // Limpiamos el contexto para empezar una orden nueva.
-                clearOrder();
+      setLoading(true);
+      setError(null);
+      const response = await getProductos();
+      setProductos(response);
+    } catch (err) {
+      setError('Error al cargar los productos');
+      showError('Error al cargar los productos', 'Intenta nuevamente');
             } finally {
                 setLoading(false);
             }
         };
 
-        checkForActiveOrder();
+  const handleAddToCart = async (producto: Producto) => {
+    try {
+      await addProductToOrder(producto);
+      showSuccess('Producto agregado', `${producto.nombre} agregado al pedido`);
+    } catch (err) {
+      showError('Error al agregar producto', 'No se pudo agregar el producto al pedido');
+    }
+  };
 
-        // Al salir de la página, limpiamos la orden para no dejar datos residuales
-        return () => {
+  const handleRemoveFromCart = (productoId: number) => {
+    // Implementar lógica para remover item
+    showSuccess('Producto removido', 'Producto removido del pedido');
+  };
+
+  const handleUpdateQuantity = (productoId: number, cantidad: number) => {
+    // Implementar lógica para actualizar cantidad
+  };
+
+  const getTotal = () => {
+    return orderItems.reduce((total, item) => total + (item.cantidad * item.precioUnitario), 0);
+  };
+
+  const handleSaveOrder = async () => {
+    if (orderItems.length === 0) {
+      showError('Pedido vacío', 'Agrega productos al pedido antes de guardar');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const comandaData = {
+        mesaId: parseInt(mesaId!),
+        items: orderItems.map(item => ({
+          productoId: item.productoId,
+          cantidad: item.cantidad,
+        })),
+      };
+
+      await crearComandaAPI(comandaData);
+      showSuccess('Pedido guardado', 'El pedido se ha guardado exitosamente');
             clearOrder();
-        };
-    }, [mesaId, loadExistingOrder, clearOrder]);
+      navigate('/');
+    } catch (err) {
+      showError('Error al guardar', 'No se pudo guardar el pedido');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    if (loading) return <Container sx={{ py: 8, textAlign: 'center' }}><CircularProgress /></Container>;
-    if (!mesaId || isNaN(parseInt(mesaId, 10))) return <Alert severity="error">Número de mesa inválido.</Alert>;
-    console.log(`OrderPage está renderizando y va a pasar mesaId: ${mesaId}`);
-    return (
-        <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
-            <Typography variant="h4" component="h2" gutterBottom>
-                Comanda para la Mesa #{mesaId}
+  const renderProductoCard = (producto: Producto) => (
+    <Fade in={true} timeout={300}>
+      <Box sx={{ height: '100%', cursor: 'pointer' }}>
+        <ModernCard
+          key={producto.id}
+          title={producto.nombre}
+          subtitle={producto.descripcion}
+          variant="elevated"
+          hover={true}
+          actions={
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
+                ${producto.precio}
+              </Typography>
+              <ModernButton
+                variant="primary"
+                size="small"
+                icon="add"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart(producto);
+                }}
+              >
+                Agregar
+              </ModernButton>
+            </Box>
+          }
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <LocalDining color="primary" />
+            <Box sx={{ flexGrow: 1 }}>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                {producto.nombre}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Sin categoría
+              </Typography>
+            </Box>
+          </Box>
+
+          {producto.descripcion && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              {producto.descripcion}
             </Typography>
-            <Grid container spacing={3}>
-                <Grid item xs={12} md={8}>
-                    <ProductList />
+          )}
+
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
+              ${producto.precio}
+            </Typography>
+            <Chip
+              label="Disponible"
+              color="success"
+              size="small"
+            />
+          </Box>
+        </ModernCard>
+      </Box>
+    </Fade>
+  );
+
+  const renderCartItem = (item: OrderItem) => (
+    <Paper
+      key={item.productoId}
+      sx={{
+        p: 2,
+        mb: 1,
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            {item.productoNombre}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            ${item.precioUnitario} c/u
+          </Typography>
+        </Box>
+        
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconButton
+            size="small"
+            onClick={() => handleUpdateQuantity(item.productoId, item.cantidad - 1)}
+            disabled={item.cantidad <= 1}
+          >
+            <Remove />
+          </IconButton>
+          
+          <Typography variant="h6" sx={{ minWidth: 40, textAlign: 'center' }}>
+            {item.cantidad}
+          </Typography>
+          
+          <IconButton
+            size="small"
+            onClick={() => handleUpdateQuantity(item.productoId, item.cantidad + 1)}
+          >
+            <Add />
+          </IconButton>
+          
+          <IconButton
+            size="small"
+            color="error"
+            onClick={() => handleRemoveFromCart(item.productoId)}
+          >
+            <Delete />
+          </IconButton>
+        </Box>
+      </Box>
+      
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+        <Typography variant="body2" color="text.secondary">
+          Subtotal: ${item.cantidad * item.precioUnitario}
+        </Typography>
+      </Box>
+    </Paper>
+  );
+
+  const renderMobileView = () => (
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <AppBar position="static" elevation={0}>
+        <Toolbar>
+          <IconButton
+            edge="start"
+            onClick={() => navigate('/')}
+            sx={{ mr: 2 }}
+          >
+            <ArrowBack />
+          </IconButton>
+          
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Mesa {mesaId} - Tomar Pedido
+          </Typography>
+          
+          <Badge badgeContent={orderItems.length} color="error">
+            <IconButton onClick={() => setCartOpen(true)}>
+              <ShoppingCart />
+            </IconButton>
+          </Badge>
+        </Toolbar>
+      </AppBar>
+
+      {/* Products Grid */}
+      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+        <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+          Productos Disponibles
+        </Typography>
+        
+        <Grid container spacing={2}>
+          {productos.map(producto => (
+            <Grid item xs={12} sm={6} key={producto.id}>
+              {renderProductoCard(producto)}
                 </Grid>
-                <Grid item xs={12} md={4}>
-                    <OrderSummary mesaId={parseInt(mesaId, 10)} />
+          ))}
                 </Grid>
+      </Box>
+
+      {/* Floating Action Button */}
+      <Fab
+        color="primary"
+        aria-label="cart"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+        }}
+        onClick={() => setCartOpen(true)}
+      >
+        <Badge badgeContent={orderItems.length} color="error">
+          <ShoppingCart />
+        </Badge>
+      </Fab>
+
+      {/* Cart Drawer */}
+      <Drawer
+        anchor="right"
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        PaperProps={{
+          sx: { width: { xs: '100%', sm: 400 } },
+        }}
+      >
+        <Box sx={{ p: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Pedido Actual
+            </Typography>
+            <IconButton onClick={() => setCartOpen(false)}>
+              <Close />
+            </IconButton>
+          </Box>
+
+          <Divider sx={{ mb: 2 }} />
+
+          {orderItems.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <ShoppingCart sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+              <Typography variant="body1" color="text.secondary">
+                No hay productos en el pedido
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ mb: 2 }}>
+              {orderItems.map(renderCartItem)}
+            </Box>
+          )}
+
+          {orderItems.length > 0 && (
+            <>
+              <Divider sx={{ my: 2 }} />
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="h5" sx={{ fontWeight: 700, textAlign: 'center' }}>
+                  Total: ${getTotal()}
+                </Typography>
+              </Box>
+              <ModernButton
+                variant="primary"
+                size="large"
+                fullWidth
+                loading={saving}
+                onClick={handleSaveOrder}
+                icon="save"
+              >
+                Guardar Pedido
+              </ModernButton>
+            </>
+          )}
+        </Box>
+      </Drawer>
+    </Box>
+  );
+
+  const renderDesktopView = () => (
+    <Box sx={{ height: '100vh', display: 'flex' }}>
+      {/* Products Section */}
+      <Box sx={{ flex: 1, p: 3, overflow: 'auto' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+              Mesa {mesaId} - Tomar Pedido
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Selecciona los productos para el pedido
+            </Typography>
+          </Box>
+          
+          <ModernButton
+            variant="outlined"
+            onClick={() => navigate('/')}
+          >
+            Volver
+          </ModernButton>
+        </Box>
+
+        <Grid container spacing={3}>
+          {productos.map(producto => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={producto.id}>
+              {renderProductoCard(producto)}
             </Grid>
-        </Container>
+          ))}
+        </Grid>
+      </Box>
+
+      {/* Cart Section */}
+      <Box sx={{ width: 400, borderLeft: '1px solid', borderColor: 'divider', p: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 600, mb: 3 }}>
+          Pedido Actual
+        </Typography>
+
+        {orderItems.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <ShoppingCart sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+              Carrito vacío
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Agrega productos para comenzar el pedido
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            <Box sx={{ mb: 3, maxHeight: 400, overflow: 'auto' }}>
+              {orderItems.map(renderCartItem)}
+            </Box>
+
+            <Divider sx={{ my: 2 }} />
+
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, textAlign: 'center' }}>
+                Total: ${getTotal()}
+              </Typography>
+            </Box>
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <ModernButton
+                variant="primary"
+                size="large"
+                fullWidth
+                loading={saving}
+                onClick={handleSaveOrder}
+                icon="save"
+              >
+                Guardar Pedido
+              </ModernButton>
+              
+              <ModernButton
+                variant="outlined"
+                size="large"
+                fullWidth
+                onClick={() => setConfirmModalOpen(true)}
+                icon="delete"
+              >
+                Limpiar Pedido
+              </ModernButton>
+            </Box>
+          </>
+        )}
+      </Box>
+    </Box>
+  );
+
+  if (loading) {
+    return <LoadingSpinner message="Cargando productos..." />;
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <ModernButton
+          variant="primary"
+          icon="refresh"
+          onClick={loadProductos}
+        >
+          Reintentar
+        </ModernButton>
+      </Box>
+    );
+  }
+
+  return (
+    <>
+      {isMobile ? renderMobileView() : renderDesktopView()}
+
+      {/* Confirm Clear Modal */}
+      <ModernModal
+        open={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        title="Limpiar Pedido"
+        message="¿Estás seguro de que quieres limpiar el pedido actual? Esta acción no se puede deshacer."
+        variant="confirm"
+        type="warning"
+        onConfirm={() => {
+          clearOrder();
+          setConfirmModalOpen(false);
+          showSuccess('Pedido limpiado', 'El pedido se ha limpiado exitosamente');
+        }}
+        confirmText="Limpiar"
+        cancelText="Cancelar"
+      />
+    </>
     );
 };
 

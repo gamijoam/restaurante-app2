@@ -24,9 +24,6 @@ public class RecetaIngrediente {
     @Column(nullable = false)
     private Double cantidad;
 
-    @Column(length = 20)
-    private String unidad; // Puede ser redundante, pero útil para flexibilidad
-
     // Getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -36,6 +33,4 @@ public class RecetaIngrediente {
     public void setIngrediente(Ingrediente ingrediente) { this.ingrediente = ingrediente; }
     public Double getCantidad() { return cantidad; }
     public void setCantidad(Double cantidad) { this.cantidad = cantidad; }
-    public String getUnidad() { return unidad; }
-    public void setUnidad(String unidad) { this.unidad = unidad; }
 }

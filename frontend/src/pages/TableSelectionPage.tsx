@@ -1,124 +1,403 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Grid,
+  Typography,
+  Paper,
+  Chip,
+  IconButton,
+  useTheme,
+  useMediaQuery,
+  Fade,
+  Skeleton,
+  Alert,
+  Fab,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
+} from '@mui/material';
+import {
+  TableRestaurant,
+  Restaurant,
+  People,
+  AccessTime,
+  Add,
+  Refresh,
+  FilterList,
+  ViewList,
+  GridView,
+  Search,
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../hooks/useNotification';
+import ModernCard from '../components/ModernCard';
+import ModernButton from '../components/ModernButton';
+import LoadingSpinner from '../components/LoadingSpinner';
+import SkeletonLoader from '../components/SkeletonLoader';
 import { getMesas, type Mesa } from '../services/mesaService';
-import { useWebSocket } from '../context/WebSocketContext';
-import { Link as RouterLink } from 'react-router-dom';
-import { Container, Grid, Typography, CircularProgress, Alert, Card, CardActionArea, CardContent, Box } from '@mui/material';
 
-const getStatusColor = (estado: Mesa['estado']) => {
+interface MesaWithComanda extends Mesa {
+  comandaActual?: any;
+}
+
+const TableSelectionPage: React.FC = () => {
+  const { hasPermission } = useAuth();
+  const navigate = useNavigate();
+  const { showError, showSuccess } = useNotification();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
+
+  const [mesas, setMesas] = useState<MesaWithComanda[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [filter, setFilter] = useState<'all' | 'libre' | 'ocupada' | 'reservada'>('all');
+
+  useEffect(() => {
+    loadMesas();
+  }, []);
+
+  const loadMesas = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getMesas();
+      setMesas(response as MesaWithComanda[]);
+    } catch (err) {
+      setError('Error al cargar las mesas');
+      showError('Error al cargar las mesas', 'Intenta nuevamente');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMesaClick = (mesa: MesaWithComanda) => {
+    if (mesa.estado === 'LIBRE') {
+      navigate(`/order/${mesa.id}`);
+    } else if (mesa.estado === 'OCUPADA') {
+      showError('Mesa ocupada', 'Esta mesa ya tiene una comanda activa');
+    } else if (mesa.estado === 'RESERVADA') {
+      showError('Mesa reservada', 'Esta mesa está reservada');
+    } else {
+      showError('Mesa en mantenimiento', 'Esta mesa no está disponible');
+    }
+  };
+
+  const getEstadoColor = (estado: string) => {
     switch (estado) {
-        case 'LIBRE': return 'success.main';
-        case 'OCUPADA': return 'error.main';
-        case 'RESERVADA': return 'warning.main';
-        case 'MANTENIMIENTO': return 'error.main';
-        case 'LISTA_PARA_PAGAR': return 'warning.main';
-        default: return 'text.secondary';
+      case 'LIBRE':
+        return 'success';
+      case 'OCUPADA':
+        return 'error';
+      case 'RESERVADA':
+        return 'warning';
+      case 'MANTENIMIENTO':
+        return 'default';
+      default:
+        return 'default';
     }
-};
+  };
 
-const getStatusText = (estado: Mesa['estado']) => {
+  const getEstadoText = (estado: string) => {
     switch (estado) {
-        case 'LIBRE': return 'Libre';
-        case 'OCUPADA': return 'Ocupada';
-        case 'RESERVADA': return 'Reservada';
-        case 'MANTENIMIENTO': return 'En Mantenimiento';
-        case 'LISTA_PARA_PAGAR': return 'Lista para pagar';
-        default: return estado;
+      case 'LIBRE':
+        return 'Libre';
+      case 'OCUPADA':
+        return 'Ocupada';
+      case 'RESERVADA':
+        return 'Reservada';
+      case 'MANTENIMIENTO':
+        return 'Mantenimiento';
+      default:
+        return estado;
     }
-};
+  };
 
-const isMesaSelectable = (estado: Mesa['estado']) => {
-    return estado === 'LIBRE' || estado === 'RESERVADA' || estado === 'OCUPADA';
-};
+  const filteredMesas = mesas.filter(mesa => {
+    if (filter === 'all') return true;
+    return mesa.estado.toLowerCase() === filter;
+  });
 
-const TableSelectionPage = () => {
-    const [mesas, setMesas] = useState<Mesa[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const { stompClient, isConnected } = useWebSocket();
+  const renderMesaCard = (mesa: MesaWithComanda) => (
+    <Fade in={true} timeout={300}>
+      <Box 
+        sx={{ 
+          cursor: mesa.estado === 'LIBRE' ? 'pointer' : 'default',
+          opacity: mesa.estado !== 'LIBRE' ? 0.7 : 1,
+          '&:hover': mesa.estado === 'LIBRE' ? {
+            transform: 'translateY(-4px)',
+          } : {},
+        }}
+        onClick={() => handleMesaClick(mesa)}
+      >
+        <ModernCard
+          key={mesa.id}
+          title={`Mesa ${mesa.numero}`}
+          subtitle={mesa.nombre || 'Sin ubicación'}
+          chips={[getEstadoText(mesa.estado)]}
+          variant="elevated"
+          hover={mesa.estado === 'LIBRE'}
+          actions={
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <Chip
+                label={getEstadoText(mesa.estado)}
+                color={getEstadoColor(mesa.estado) as any}
+                size="small"
+                variant="filled"
+              />
+              {mesa.comandaActual && (
+                <Chip
+                  label={`$${mesa.comandaActual.total || 0}`}
+                  color="primary"
+                  size="small"
+                  variant="outlined"
+                />
+              )}
+            </Box>
+          }
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <TableRestaurant color="primary" />
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Mesa {mesa.numero}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Capacidad: {mesa.capacidad} personas
+              </Typography>
+            </Box>
+          </Box>
 
-    const fetchMesas = useCallback(async () => {
-        try {
-            const data = await getMesas();
-            setMesas(Array.isArray(data) ? data : []);
-        } catch (err) {
-            console.error("Error al cargar las mesas:", err);
-            setError('Error al cargar la información de las mesas.');
-        } finally {
-            if (loading) setLoading(false);
-        }
-    }, [loading]); // La dependencia de 'loading' es intencional para el flujo de carga inicial
+          {mesa.comandaActual && (
+            <Box sx={{ mt: 2, p: 2, bgcolor: 'background.light', borderRadius: 1 }}>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                Comanda activa:
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2">
+                  {mesa.comandaActual.items?.length || 0} items
+                </Typography>
+                <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
+                  ${mesa.comandaActual.total || 0}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+        </ModernCard>
+      </Box>
+    </Fade>
+  );
 
-    useEffect(() => {
-        // Carga inicial al montar el componente
-        fetchMesas();
+  const renderMobileView = () => (
+    <Box sx={{ p: 2 }}>
+      {/* Header */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+          Seleccionar Mesa
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Elige una mesa libre para tomar el pedido
+        </Typography>
+      </Box>
 
-        // Lógica de WebSocket para actualizaciones en tiempo real
-        if (isConnected && stompClient) {
-            console.log("TableSelectionPage: Suscribiendo a /topic/mesas");
-            const subscription = stompClient.subscribe('/topic/mesas', (message) => {
-                console.log("TableSelectionPage: Notificación recibida:", message.body);
-                // Agregar un pequeño delay para evitar race conditions
-                setTimeout(() => {
-                fetchMesas();
-                }, 100);
-            });
-            return () => {
-                console.log("TableSelectionPage: Desuscribiendo de /topic/mesas");
-                subscription.unsubscribe();
-            };
-        }
-    }, [isConnected, stompClient, fetchMesas]);
+      {/* Stats */}
+      <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
+        <Chip
+          label={`${mesas.filter(m => m.estado === 'LIBRE').length} Libres`}
+          color="success"
+          size="small"
+        />
+        <Chip
+          label={`${mesas.filter(m => m.estado === 'OCUPADA').length} Ocupadas`}
+          color="error"
+          size="small"
+        />
+        <Chip
+          label={`${mesas.filter(m => m.estado === 'RESERVADA').length} Reservadas`}
+          color="warning"
+          size="small"
+        />
+      </Box>
 
-    if (loading) {
-        return <Container sx={{ py: 8, textAlign: 'center' }}><CircularProgress /></Container>;
-    }
+      {/* Mesas List */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {filteredMesas.map(mesa => (
+          <Paper
+            key={mesa.id}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              cursor: mesa.estado === 'LIBRE' ? 'pointer' : 'default',
+              opacity: mesa.estado !== 'LIBRE' ? 0.7 : 1,
+              '&:hover': mesa.estado === 'LIBRE' ? {
+                backgroundColor: 'action.hover',
+              } : {},
+            }}
+            onClick={() => handleMesaClick(mesa)}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Mesa {mesa.numero}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {mesa.capacidad} personas • {mesa.nombre || 'Sin ubicación'}
+                </Typography>
+              </Box>
+              <Chip
+                label={getEstadoText(mesa.estado)}
+                color={getEstadoColor(mesa.estado) as any}
+                size="small"
+              />
+            </Box>
+            
+            {mesa.comandaActual && (
+              <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="body2" color="text.secondary">
+                  Comanda activa: {mesa.comandaActual.items?.length || 0} items
+                </Typography>
+                <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
+                  ${mesa.comandaActual.total || 0}
+                </Typography>
+              </Box>
+            )}
+          </Paper>
+        ))}
+      </Box>
+    </Box>
+  );
 
-    if (error) {
-        return <Container sx={{ py: 8 }}><Alert severity="error">{error}</Alert></Container>;
-    }
+  const renderDesktopView = () => (
+    <Box sx={{ p: 3 }}>
+      {/* Debug indicator */}
+      <Box sx={{ 
+        mb: 2, 
+        p: 1, 
+        bgcolor: 'primary.light', 
+        borderRadius: 1,
+        color: 'primary.contrastText',
+        fontSize: '0.75rem'
+      }}>
+        🎯 Layout corregido: Contenido no se solapa con sidebar
+      </Box>
 
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+            Seleccionar Mesa
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Elige una mesa libre para tomar el pedido
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <ModernButton
+            variant="outlined"
+            icon="refresh"
+            onClick={loadMesas}
+            loading={loading}
+            tooltip="Actualizar mesas"
+          >
+            Actualizar
+          </ModernButton>
+          
+          <IconButton
+            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            sx={{ border: '1px solid', borderColor: 'divider' }}
+          >
+            {viewMode === 'grid' ? <ViewList /> : <GridView />}
+          </IconButton>
+        </Box>
+      </Box>
+
+      {/* Stats */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+        <Chip
+          label={`${mesas.filter(m => m.estado === 'LIBRE').length} Libres`}
+          color="success"
+          icon={<Restaurant />}
+        />
+        <Chip
+          label={`${mesas.filter(m => m.estado === 'OCUPADA').length} Ocupadas`}
+          color="error"
+          icon={<People />}
+        />
+        <Chip
+          label={`${mesas.filter(m => m.estado === 'RESERVADA').length} Reservadas`}
+          color="warning"
+          icon={<AccessTime />}
+        />
+      </Box>
+
+      {/* Mesas Grid */}
+      <Grid container spacing={3}>
+        {filteredMesas.map(mesa => (
+          <Grid
+            item
+            key={mesa.id}
+            xs={12}
+            sm={6}
+            md={4}
+            lg={3}
+            xl={2}
+          >
+            {renderMesaCard(mesa)}
+          </Grid>
+        ))}
+      </Grid>
+    </Box>
+  );
+
+  if (loading) {
     return (
-        <Container sx={{ py: 4 }} maxWidth="lg">
-            <Typography variant="h4" align="center" gutterBottom>Seleccionar Mesa (En Tiempo Real)</Typography>
-            <Grid container spacing={4}>
-                {mesas.map(mesa => (
-                    <Grid item key={mesa.id} xs={12} sm={6} md={3}>
-                        <Card sx={{ 
-                            borderTop: 5, 
-                            borderColor: getStatusColor(mesa.estado),
-                            opacity: isMesaSelectable(mesa.estado) ? 1 : 0.6
-                        }}>
-                            <CardActionArea 
-                                component={isMesaSelectable(mesa.estado) ? RouterLink : 'div'}
-    // --- CORRECCIÓN AQUÍ ---
-    // ANTES: to={isMesaSelectable(mesa.estado) ? `/comanda/mesa/${mesa.id}` : undefined}
-    // DESPUÉS:
-    to={isMesaSelectable(mesa.estado) ? `/order/${mesa.id}` : undefined}
-    
-    disabled={!isMesaSelectable(mesa.estado)}
-    sx={{ 
-        cursor: isMesaSelectable(mesa.estado) ? 'pointer' : 'not-allowed'
-    }}
-                            >
-                                <CardContent>
-                                    <Typography variant="h5" component="div">Mesa {mesa.numero}</Typography>
-                                    <Typography variant="body2" color="text.secondary">Capacidad: {mesa.capacidad}</Typography>
-                                    <Typography variant="caption" display="block" sx={{ mt: 1, fontWeight: 'bold' }}>
-                                        {getStatusText(mesa.estado)}
-                                    </Typography>
-                                    {!isMesaSelectable(mesa.estado) && (
-                                        <Typography variant="caption" display="block" color="error" sx={{ mt: 1 }}>
-                                            No disponible
-                                        </Typography>
-                                    )}
-                                </CardContent>
-                            </CardActionArea>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
-        </Container>
+      <Box sx={{ p: 3 }}>
+        <SkeletonLoader variant="grid" count={8} height={200} />
+      </Box>
     );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <ModernButton
+          variant="primary"
+          icon="refresh"
+          onClick={loadMesas}
+        >
+          Reintentar
+        </ModernButton>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ backgroundColor: 'background.default' }}>
+      {isMobile ? renderMobileView() : renderDesktopView()}
+
+      {/* Floating Action Button for Mobile */}
+      {isMobile && (
+        <Fab
+          color="primary"
+          aria-label="add"
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+          }}
+          onClick={loadMesas}
+        >
+          <Refresh />
+        </Fab>
+      )}
+    </Box>
+  );
 };
 
 export default TableSelectionPage;

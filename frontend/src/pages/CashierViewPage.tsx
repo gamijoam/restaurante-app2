@@ -1,23 +1,77 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Box,
+  Grid,
+  Typography,
+  Card,
+  CardContent,
+  CardActions,
+  Button,
+  CircularProgress,
+  Alert,
+  Chip,
+  IconButton,
+  useTheme,
+  useMediaQuery,
+  Fade,
+  Divider,
+  Badge,
+  AppBar,
+  Toolbar,
+  Fab,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  ListItemSecondaryAction,
+} from '@mui/material';
+import {
+  PointOfSale,
+  Receipt,
+  Print,
+  CheckCircle,
+  AccessTime,
+  Restaurant,
+  Refresh,
+  FilterList,
+  ViewList,
+  GridView,
+  AttachMoney,
+  LocalDining,
+  Timer,
+  Payment,
+} from '@mui/icons-material';
 import type { ComandaResponseDTO } from '../types';
 import { getComandasPorMultiplesEstados, updateComandaEstado } from '../services/comandaService';
 import { useWebSocket } from '../context/WebSocketContext';
-import { Container, Grid, Typography, Card, CardContent, CardActions, Button, CircularProgress, Alert } from '@mui/material';
-
-// 1. Importamos nuestro nuevo y único servicio de impresión
+import { useNotification } from '../hooks/useNotification';
+import ModernCard from '../components/ModernCard';
+import ModernButton from '../components/ModernButton';
+import ModernModal from '../components/ModernModal';
+import LoadingSpinner from '../components/LoadingSpinner';
+import SkeletonLoader from '../components/SkeletonLoader';
 import { imprimirTicketCaja } from '../services/impresionService';
 
-const CashierViewPage = () => {
+const CashierViewPage: React.FC = () => {
     const [comandas, setComandas] = useState<ComandaResponseDTO[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const { stompClient, isConnected } = useWebSocket();
     const [submittingId, setSubmittingId] = useState<number | null>(null);
-    
-    // 2. Nuevo estado para saber qué ticket se está imprimiendo
     const [printingId, setPrintingId] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [selectedComanda, setSelectedComanda] = useState<ComandaResponseDTO | null>(null);
+  
+  const { stompClient, isConnected } = useWebSocket();
+  const { showError, showSuccess } = useNotification();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
 
-    // --- LÓGICA PARA CARGAR Y ACTUALIZAR COMANDAS (SIN CAMBIOS) ---
     const fetchInitialComandas = useCallback(async () => {
         setLoading(true);
         try {
@@ -25,10 +79,11 @@ const CashierViewPage = () => {
             setComandas(Array.isArray(data) ? data : []);
         } catch (err) {
             setError('Error al cargar las comandas a cobrar.');
+      showError('Error al cargar comandas', 'No se pudieron cargar las comandas pendientes');
         } finally {
             setLoading(false);
         }
-    }, []);
+  }, [showError]);
 
     useEffect(() => {
         if (isConnected && stompClient) {
@@ -43,91 +98,426 @@ const CashierViewPage = () => {
                         }
                         return [comandaActualizada, ...prevComandas];
                     });
+          showSuccess('Nueva comanda', `Mesa ${comandaActualizada.numeroMesa} lista para cobrar`);
                 }
             });
             return () => { subscription.unsubscribe(); };
         }
-    }, [isConnected, stompClient, fetchInitialComandas]);
+  }, [isConnected, stompClient, fetchInitialComandas, showSuccess]);
 
-    // --- LÓGICA PARA PAGAR (SIN CAMBIOS) ---
-    const handleMarcarComoPagada = async (comandaId: number) => {
-        setSubmittingId(comandaId);
+  const handleMarcarComoPagada = async (comanda: ComandaResponseDTO) => {
+    setSubmittingId(comanda.id);
         try {
-            await updateComandaEstado(comandaId, 'PAGADA');
-            setComandas(prevComandas => prevComandas.filter(c => c.id !== comandaId));
+      await updateComandaEstado(comanda.id, 'PAGADA');
+      setComandas(prevComandas => prevComandas.filter(c => c.id !== comanda.id));
+      showSuccess('Comanda pagada', `Mesa ${comanda.numeroMesa} marcada como pagada`);
         } catch (err) {
-            alert('Error al actualizar la comanda.');
+      showError('Error al pagar', 'No se pudo marcar la comanda como pagada');
         } finally {
             setSubmittingId(null);
         }
     };
 
-    // --- 3. NUEVA FUNCIÓN DE IMPRESIÓN ---
-    // Esta función ahora es mucho más simple. Solo llama a la API.
-    const handlePrintClick = async (comandaId: number) => {
-        setPrintingId(comandaId);
+  const handlePrintClick = async (comanda: ComandaResponseDTO) => {
+    setPrintingId(comanda.id);
         try {
-            await imprimirTicketCaja(comandaId);
-            // Opcional: podrías añadir una pequeña notificación de éxito aquí.
+      await imprimirTicketCaja(comanda.id);
+      showSuccess('Ticket impreso', `Ticket de mesa ${comanda.numeroMesa} enviado a impresora`);
         } catch (error: any) {
             if (error.response?.status === 404) {
-                alert("Error: No hay una impresora configurada para el rol 'CAJA'. Por favor, vaya a la sección de Configuración -> Impresoras.");
+        showError('Impresora no configurada', 'Configure una impresora para el rol CAJA en Configuración');
             } else {
-                alert("No se pudo enviar el ticket a la impresora. Verifique que el Puente de Impresión esté encendido y conectado.");
+        showError('Error de impresión', 'Verifique que el Puente de Impresión esté conectado');
             }
         } finally {
             setPrintingId(null);
         }
     };
 
-    if (loading) return <Container sx={{ py: 8, textAlign: 'center' }}><CircularProgress /></Container>;
-    if (error) return <Container sx={{ py: 8 }}><Alert severity="error">{error}</Alert></Container>;
+  const getEstadoColor = (estado: string) => {
+    switch (estado) {
+      case 'LISTA':
+        return 'warning';
+      case 'ENTREGADA':
+        return 'info';
+      default:
+        return 'default';
+    }
+  };
 
-    return (
-        // Ya no necesitamos el div 'root-app-container' ni el componente oculto
-        <Container sx={{ py: 4 }} maxWidth="xl">
-            <Typography variant="h4" align="center" gutterBottom>Comandas por Cobrar</Typography>
-            <Grid container spacing={3}>
-                {comandas.length > 0 ? (
-                    comandas.map((comanda) => (
-                        <Grid item key={comanda.id} xs={12} sm={6} md={4}>
-                            <Card>
-                                <CardContent>
-                                    <Typography variant="h6">Mesa #{comanda.numeroMesa}</Typography> 
-                                    <Typography variant="h5" color="text.secondary" sx={{ my: 1 }}>
-                                        Total: ${comanda.total.toFixed(2)}
-                                    </Typography>
-                                    <Typography variant="caption">Estado: {comanda.estado}</Typography>
-                                </CardContent>
-                                <CardActions>
-                                    {/* 4. BOTÓN DE IMPRESIÓN ACTUALIZADO */}
-                                    <Button
+  const getEstadoText = (estado: string) => {
+    switch (estado) {
+      case 'LISTA':
+        return 'Lista para Cobrar';
+      case 'ENTREGADA':
+        return 'Entregada';
+      default:
+        return estado;
+    }
+  };
+
+  const renderComandaCard = (comanda: ComandaResponseDTO) => (
+    <Fade in={true} timeout={300}>
+      <ModernCard
+        key={comanda.id}
+        title={`Mesa ${comanda.numeroMesa}`}
+        subtitle={`${comanda.items.length} items`}
+        chips={[getEstadoText(comanda.estado)]}
+        variant="elevated"
+        hover={true}
+        actions={
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Chip
+              label={getEstadoText(comanda.estado)}
+              color={getEstadoColor(comanda.estado) as any}
+              size="small"
+              icon={<Timer />}
+            />
+            <Chip
+              label={`$${comanda.total.toFixed(2)}`}
+              color="primary"
                                         size="small"
                                         variant="outlined"
-                                        color="secondary"
-                                        onClick={() => handlePrintClick(comanda.id)}
-                                        disabled={printingId === comanda.id}
-                                    >
-                                        {printingId === comanda.id ? <CircularProgress size={20} /> : 'Imprimir'}
-                                    </Button>
-                                    <Button
+              icon={<AttachMoney />}
+            />
+          </Box>
+        }
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <Restaurant color="primary" />
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Mesa {comanda.numeroMesa}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {comanda.items.length} productos • {comanda.total.toFixed(2)} items
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Lista de items */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Productos:
+          </Typography>
+          <Box sx={{ maxHeight: 120, overflow: 'auto' }}>
+            {comanda.items.slice(0, 3).map((item, index) => (
+              <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                <Typography variant="body2">
+                  {item.cantidad}x {item.productoNombre}
+                </Typography>
+                <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                  ${(item.cantidad * item.precioUnitario).toFixed(2)}
+                </Typography>
+              </Box>
+            ))}
+            {comanda.items.length > 3 && (
+              <Typography variant="body2" color="text.secondary">
+                +{comanda.items.length - 3} más...
+              </Typography>
+            )}
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
+            ${comanda.total.toFixed(2)}
+          </Typography>
+        </Box>
+      </ModernCard>
+    </Fade>
+  );
+
+  const renderComandaListItem = (comanda: ComandaResponseDTO) => (
+    <Paper
+      key={comanda.id}
+      sx={{
+        p: 2,
+        mb: 1,
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+            <Restaurant color="primary" />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Mesa {comanda.numeroMesa}
+            </Typography>
+            <Chip
+              label={getEstadoText(comanda.estado)}
+              color={getEstadoColor(comanda.estado) as any}
+              size="small"
+            />
+          </Box>
+          
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            {comanda.items.length} productos
+          </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            {comanda.items.slice(0, 3).map((item, index) => (
+              <Typography key={index} variant="body2" color="text.secondary">
+                {item.cantidad}x {item.productoNombre}
+              </Typography>
+            ))}
+            {comanda.items.length > 3 && (
+              <Typography variant="body2" color="text.secondary">
+                +{comanda.items.length - 3} más...
+              </Typography>
+            )}
+          </Box>
+        </Box>
+        
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 1 }}>
+          <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
+            ${comanda.total.toFixed(2)}
+          </Typography>
+          
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <ModernButton
+              variant="outlined"
+              size="small"
+              icon="print"
+              loading={printingId === comanda.id}
+              onClick={() => handlePrintClick(comanda)}
+            >
+              Imprimir
+            </ModernButton>
+            
+            <ModernButton
+              variant="primary"
                                         size="small"
-                                        variant="contained"
-                                        color="success"
-                                        onClick={() => handleMarcarComoPagada(comanda.id)}
-                                        disabled={submittingId === comanda.id}
-                                    >
-                                        {submittingId === comanda.id ? <CircularProgress size={20} /> : 'Cobrar y Cerrar Mesa'}
-                                    </Button>
-                                </CardActions>
-                            </Card>
-                        </Grid>
-                    ))
-                ) : (
-                    <Typography sx={{ p: 2, width: '100%', textAlign: 'center' }}>No hay comandas pendientes de pago.</Typography>
-                )}
+              icon="save"
+              loading={submittingId === comanda.id}
+              onClick={() => {
+                setSelectedComanda(comanda);
+                setConfirmModalOpen(true);
+              }}
+            >
+              Cobrar
+            </ModernButton>
+          </Box>
+        </Box>
+      </Box>
+    </Paper>
+  );
+
+  const renderMobileView = () => (
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <AppBar position="static" elevation={0}>
+        <Toolbar>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <PointOfSale color="primary" />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Caja
+            </Typography>
+          </Box>
+          
+          <Box sx={{ flexGrow: 1 }} />
+          
+          <IconButton onClick={fetchInitialComandas} disabled={loading}>
+            <Refresh />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+
+      {/* Content */}
+      <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+            Comandas por Cobrar
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {comandas.length} comandas pendientes
+          </Typography>
+        </Box>
+
+        {comandas.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <PointOfSale sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+              No hay comandas pendientes
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Las comandas aparecerán aquí cuando estén listas para cobrar
+            </Typography>
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {comandas.map(renderComandaListItem)}
+          </Box>
+        )}
+      </Box>
+
+      {/* Floating Action Button */}
+      <Fab
+        color="primary"
+        aria-label="refresh"
+        sx={{
+          position: 'fixed',
+          bottom: 16,
+          right: 16,
+        }}
+        onClick={fetchInitialComandas}
+        disabled={loading}
+      >
+        <Refresh />
+      </Fab>
+    </Box>
+  );
+
+  const renderDesktopView = () => (
+    <Box sx={{ p: 3 }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+            Vista de Caja
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Gestiona los pagos y facturación de comandas
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <ModernButton
+            variant="outlined"
+            icon="refresh"
+            onClick={fetchInitialComandas}
+            loading={loading}
+          >
+            Actualizar
+          </ModernButton>
+          
+          <IconButton
+            onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+            sx={{ border: '1px solid', borderColor: 'divider' }}
+          >
+            {viewMode === 'grid' ? <ViewList /> : <GridView />}
+          </IconButton>
+        </Box>
+      </Box>
+
+      {/* Stats */}
+      <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+        <Chip
+          label={`${comandas.length} Pendientes`}
+          color="warning"
+          icon={<Timer />}
+        />
+        <Chip
+          label={`$${comandas.reduce((sum, c) => sum + c.total, 0).toFixed(2)} Total`}
+          color="primary"
+          icon={<AttachMoney />}
+        />
+      </Box>
+
+      {/* Comandas Grid */}
+      {comandas.length === 0 ? (
+        <Box sx={{ textAlign: 'center', py: 8 }}>
+          <PointOfSale sx={{ fontSize: 96, color: 'text.secondary', mb: 3 }} />
+          <Typography variant="h5" color="text.secondary" sx={{ mb: 2 }}>
+            No hay comandas pendientes
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            Las comandas aparecerán aquí cuando estén listas para cobrar
+          </Typography>
+        </Box>
+      ) : (
+        <Grid container spacing={3}>
+          {comandas.map(comanda => (
+            <Grid item xs={12} sm={6} md={4} lg={3} key={comanda.id}>
+              <Box sx={{ position: 'relative' }}>
+                {renderComandaCard(comanda)}
+                
+                {/* Action Buttons */}
+                <Box sx={{ 
+                  position: 'absolute', 
+                  bottom: 16, 
+                  right: 16,
+                  display: 'flex',
+                  gap: 1
+                }}>
+                  <ModernButton
+                    variant="outlined"
+                    size="small"
+                    icon="print"
+                    loading={printingId === comanda.id}
+                    onClick={() => handlePrintClick(comanda)}
+                  >
+                    Imprimir
+                  </ModernButton>
+                  
+                  <ModernButton
+                    variant="primary"
+                    size="small"
+                    icon="save"
+                    loading={submittingId === comanda.id}
+                    onClick={() => {
+                      setSelectedComanda(comanda);
+                      setConfirmModalOpen(true);
+                    }}
+                  >
+                    Cobrar
+                  </ModernButton>
+                </Box>
+              </Box>
             </Grid>
-        </Container>
+          ))}
+        </Grid>
+      )}
+    </Box>
+  );
+
+  if (loading) {
+    return <LoadingSpinner message="Cargando comandas..." />;
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
+        <ModernButton
+          variant="primary"
+          icon="refresh"
+          onClick={fetchInitialComandas}
+        >
+          Reintentar
+        </ModernButton>
+      </Box>
+    );
+  }
+
+  return (
+    <>
+      {isMobile ? renderMobileView() : renderDesktopView()}
+
+      {/* Confirm Payment Modal */}
+      <ModernModal
+        open={confirmModalOpen}
+        onClose={() => setConfirmModalOpen(false)}
+        title="Confirmar Pago"
+        message={`¿Estás seguro de que quieres marcar como pagada la comanda de la Mesa ${selectedComanda?.numeroMesa} por $${selectedComanda?.total.toFixed(2)}?`}
+        variant="confirm"
+        type="success"
+        onConfirm={() => {
+          if (selectedComanda) {
+            handleMarcarComoPagada(selectedComanda);
+          }
+          setConfirmModalOpen(false);
+        }}
+        confirmText="Confirmar Pago"
+        cancelText="Cancelar"
+      />
+    </>
     );
 };
 

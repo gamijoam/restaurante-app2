@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="005" author="system">
+        
+        <!-- Insertar recetas de ejemplo -->
+        <insert tableName="receta_ingrediente">
+            <column name="producto_id" valueComputed="(SELECT id FROM productos WHERE nombre = 'Hamburguesa Clásica')"/>
+            <column name="ingrediente_id" valueComputed="(SELECT id FROM ingredientes WHERE nombre = 'Carne de Res')"/>
+            <column name="cantidad" valueNumeric="0.2"/>
+        </insert>
+        
+        <insert tableName="receta_ingrediente">
+            <column name="producto_id" valueComputed="(SELECT id FROM productos WHERE nombre = 'Hamburguesa Clásica')"/>
+            <column name="ingrediente_id" valueComputed="(SELECT id FROM ingredientes WHERE nombre = 'Pan de Hamburguesa')"/>
+            <column name="cantidad" valueNumeric="1"/>
+        </insert>
+        
+        <insert tableName="receta_ingrediente">
+            <column name="producto_id" valueComputed="(SELECT id FROM productos WHERE nombre = 'Hamburguesa Clásica')"/>
+            <column name="ingrediente_id" valueComputed="(SELECT id FROM ingredientes WHERE nombre = 'Queso Cheddar')"/>
+            <column name="cantidad" valueNumeric="1"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog> 
