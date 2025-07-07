@@ -49,9 +49,11 @@ import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ModernModal from '../components/ModernModal';
+import { useWebSocket } from '../context/WebSocketContext';
 
 const GestionMesasPage = () => {
     const { roles } = useAuth();
+    const { stompClient, isConnected } = useWebSocket();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const isGerente = roles.includes('ROLE_GERENTE');
@@ -75,7 +77,23 @@ const GestionMesasPage = () => {
 
     useEffect(() => {
         loadMesas();
-    }, []);
+
+        if (isConnected && stompClient) {
+            const subscription = stompClient.subscribe('/topic/mesas', (message) => {
+                try {
+                    const mesaActualizada = JSON.parse(message.body);
+                    setMesas(prevMesas =>
+                        prevMesas.map(m => m.id === mesaActualizada.id ? { ...m, ...mesaActualizada } : m)
+                    );
+                } catch (e) {
+                    // Mensaje no es una mesa válida
+                }
+            });
+            return () => {
+                subscription.unsubscribe();
+            };
+        }
+    }, [isConnected, stompClient]);
 
     const loadMesas = async () => {
         try {

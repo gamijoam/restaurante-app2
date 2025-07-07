@@ -272,6 +272,25 @@ const CashierViewPage: React.FC = () => {
         }
   }, [isConnected, stompClient, fetchInitialComandas, showSuccess]);
 
+  useEffect(() => {
+    if (isConnected && stompClient) {
+      const subscription = stompClient.subscribe('/topic/mesas', (message) => {
+        try {
+          const mesaActualizada = JSON.parse(message.body);
+          // Si tienes un estado de mesas, actualízalo aquí
+          // setMesas(prevMesas => prevMesas.map(m => m.id === mesaActualizada.id ? { ...m, ...mesaActualizada } : m));
+          // Si solo usas comandas, podrías refrescar la lista de comandas
+          // loadComandas();
+        } catch (e) {
+          // Mensaje no es una mesa válida
+        }
+      });
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [isConnected, stompClient]);
+
   const handleMarcarComoPagada = async (comanda: ComandaResponseDTO) => {
     setSubmittingId(comanda.id);
     try {

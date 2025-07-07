@@ -36,6 +36,7 @@ import ModernButton from '../components/ModernButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SkeletonLoader from '../components/SkeletonLoader';
 import { getMesas, type Mesa } from '../services/mesaService';
+import { useWebSocket } from '../context/WebSocketContext';
 
 interface MesaWithComanda extends Mesa {
   comandaActual?: any;
@@ -55,9 +56,27 @@ const TableSelectionPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [filter, setFilter] = useState<'all' | 'libre' | 'ocupada' | 'reservada'>('all');
 
+  const { stompClient, isConnected } = useWebSocket();
+
   useEffect(() => {
     loadMesas();
-  }, []);
+
+    if (isConnected && stompClient) {
+      const subscription = stompClient.subscribe('/topic/mesas', (message) => {
+        try {
+          const mesaActualizada = JSON.parse(message.body);
+          setMesas(prevMesas =>
+            prevMesas.map(m => m.id === mesaActualizada.id ? { ...m, ...mesaActualizada } : m)
+          );
+        } catch (e) {
+          // Mensaje no es una mesa válida
+        }
+      });
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [isConnected, stompClient]);
 
   const loadMesas = async () => {
     try {

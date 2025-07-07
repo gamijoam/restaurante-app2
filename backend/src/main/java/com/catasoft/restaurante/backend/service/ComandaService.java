@@ -148,8 +148,11 @@ public class ComandaService {
             totalComanda = totalComanda.add(subtotal);
         }
         comanda.setTotal(totalComanda);
-        mesa.setEstado(EstadoMesa.OCUPADA);
         Comanda comandaGuardada = comandaRepository.save(comanda);
+        // Al crear la comanda, actualizar y notificar la mesa
+        mesa.setEstado(EstadoMesa.OCUPADA);
+        mesaRepository.save(mesa);
+        messagingTemplate.convertAndSend("/topic/mesas", mesa);
 
         try {
             Optional<PrinterConfiguration> configOpt = printerConfigService.getConfigurationByRole("COCINA");
@@ -319,6 +322,7 @@ public class ComandaService {
             Mesa mesa = comanda.getMesa();
             mesa.setEstado(EstadoMesa.LIBRE);
             mesaRepository.save(mesa);
+            messagingTemplate.convertAndSend("/topic/mesas", mesa);
         }
 
         if (nuevoEstado == EstadoComanda.PAGADA) {
@@ -329,6 +333,7 @@ public class ComandaService {
             Mesa mesa = comanda.getMesa();
             mesa.setEstado(EstadoMesa.LIBRE);
             mesaRepository.save(mesa);
+            messagingTemplate.convertAndSend("/topic/mesas", mesa);
 
             // Crear factura con todos los campos obligatorios
             Factura factura = new Factura();
@@ -348,6 +353,7 @@ public class ComandaService {
             Mesa mesa = comanda.getMesa();
             mesa.setEstado(EstadoMesa.LISTA_PARA_PAGAR);
             mesaRepository.save(mesa);
+            messagingTemplate.convertAndSend("/topic/mesas", mesa);
         }
 
         comanda.setEstado(nuevoEstado);
@@ -362,6 +368,11 @@ public class ComandaService {
                 nuevoEstado == EstadoComanda.LISTA || nuevoEstado == EstadoComanda.ENTREGADA) {
             Mesa mesaActualizada = mesaRepository.findById(comanda.getMesa().getId()).orElseThrow();
             messagingTemplate.convertAndSend("/topic/mesas", mesaActualizada);
+        }
+
+        // Solo enviar a cocina si la comanda está EN_PROCESO
+        if (dto.getEstado().equals("EN_PROCESO")) {
+            messagingTemplate.convertAndSend("/topic/cocina", dto);
         }
 
         return dto;
@@ -386,6 +397,7 @@ public class ComandaService {
             Mesa mesa = comanda.getMesa();
             mesa.setEstado(EstadoMesa.OCUPADA);
             mesaRepository.save(mesa);
+            messagingTemplate.convertAndSend("/topic/mesas", mesa);
         }
 
         for (ItemRequestDTO itemDTO : itemsRequest) {
