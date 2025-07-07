@@ -13,5 +13,6 @@
     <include file="db/changelog/changes/005-sample-recipes.xml"/>
     <include file="db/changelog/changes/006-cocina-user-permissions.xml"/>
     <include file="db/changelog/changes/007-add-item-principal-id-comanda-items.xml"/>
+    <include file="db/changelog/changes/008-add-activo-mesas.xml"/>
 
 </databaseChangeLog> 

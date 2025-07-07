@@ -40,6 +40,9 @@ public class Mesa {
     @Column(nullable = true)
     private String nombre; // Nombre descriptivo (ej: "Mesa del Rincón", "Mesa VIP")
 
+    @Column(nullable = false)
+    private Boolean activo = true;
+
     // --- Constructores ---
 
     public Mesa() {
@@ -116,5 +119,12 @@ public class Mesa {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
     }
 }

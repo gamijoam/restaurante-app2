@@ -32,7 +32,7 @@ public class MesaController {
     @GetMapping
     @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
     public List<Mesa> getAllMesas() {
-        return mesaRepository.findAll();
+        return mesaRepository.findAll().stream().filter(Mesa::getActivo).collect(Collectors.toList());
     }
 
     @PostMapping
@@ -91,8 +91,8 @@ public class MesaController {
     public ResponseEntity<Void> deleteMesa(@PathVariable Long id) {
         Mesa mesa = mesaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Mesa no encontrada con id: " + id));
-        
-        mesaRepository.delete(mesa);
+        mesa.setActivo(false);
+        mesaRepository.save(mesa);
         return ResponseEntity.noContent().build();
     }
 
@@ -104,7 +104,7 @@ public class MesaController {
     @GetMapping("/mapa")
     @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
     public List<MesaMapaDTO> getMesasMapa() {
-        List<Mesa> mesas = mesaRepository.findAll();
+        List<Mesa> mesas = mesaRepository.findAll().stream().filter(Mesa::getActivo).collect(Collectors.toList());
         return mesas.stream()
                 .map(this::convertToMapaDTO)
                 .collect(Collectors.toList());
