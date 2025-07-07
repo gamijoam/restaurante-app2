@@ -8,7 +8,7 @@ import type { ComandaItemResponseDTO } from '../dto/comandaDTOs';
 interface IOrderContext {
     orderItems: OrderItem[];
     activeComandaId: number | null;
-    addProductToOrder: (product: Producto, itemPrincipalId?: number) => Promise<void>;
+    addProductToOrder: (product: Producto, itemPrincipalId?: number, cantidad?: number) => Promise<void>;
     updateItemQuantity: (productoId: number, cantidad: number, itemPrincipalId?: number) => void;
     removeItemFromOrder: (productoId: number, itemPrincipalId?: number) => void;
     submitNewOrder: (mesaId: number) => Promise<void>;
@@ -49,9 +49,9 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         setActiveComandaId(null);
     }, []);
 
-    const addProductToOrder = useCallback(async (productToAdd: Producto, itemPrincipalId?: number) => {
+    const addProductToOrder = useCallback(async (productToAdd: Producto, itemPrincipalId?: number, cantidad: number = 1) => {
         if (activeComandaId) {
-            const newItem: ItemRequestDTO = { productoId: productToAdd.id, cantidad: 1 };
+            const newItem: ItemRequestDTO = { productoId: productToAdd.id, cantidad };
             if (itemPrincipalId) newItem.itemPrincipalId = itemPrincipalId;
             try {
                 const response = await agregarItemsAComanda(activeComandaId, [newItem]);
@@ -66,14 +66,14 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
                 if (existingItem) {
                     return currentItems.map(item =>
                         item.productoId === productToAdd.id && item.itemPrincipalId === itemPrincipalId
-                            ? { ...item, cantidad: item.cantidad + 1 }
+                            ? { ...item, cantidad: item.cantidad + cantidad }
                             : item
                     );
                 }
                 return [...currentItems, {
                     productoId: productToAdd.id,
                     productoNombre: productToAdd.nombre,
-                    cantidad: 1,
+                    cantidad,
                     precioUnitario: productToAdd.precio,
                     itemPrincipalId: itemPrincipalId
                 }];

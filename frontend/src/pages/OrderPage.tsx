@@ -23,6 +23,7 @@ import {
   AppBar,
   Toolbar,
   Alert,
+  TextField,
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -68,7 +69,7 @@ const OrderPage: React.FC = () => {
   const navigate = useNavigate();
   const { hasPermission } = useAuth();
   const { showError, showSuccess } = useNotification();
-  const { orderItems, addProductToOrder, updateItemQuantity, removeItemFromOrder, clearOrder, loadExistingOrder } = useOrder();
+  const { orderItems, addProductToOrder, updateItemQuantity, removeItemFromOrder, clearOrder, loadExistingOrder, activeComandaId } = useOrder();
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -83,6 +84,7 @@ const OrderPage: React.FC = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [comandaActiva, setComandaActiva] = useState<ComandaResponseDTO | null>(null);
+  const [cantidades, setCantidades] = React.useState<{ [productoId: number]: string }>({});
 
     useEffect(() => {
         loadProductos();
@@ -204,29 +206,36 @@ const OrderPage: React.FC = () => {
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton
-            size="small"
-            onClick={() => handleUpdateQuantity(item.productoId, item.cantidad - 1, item.itemPrincipalId)}
-            disabled={item.cantidad <= 1}
-          >
-            <Remove />
-          </IconButton>
-          <Typography variant="h6" sx={{ minWidth: 40, textAlign: 'center' }}>
-            {item.cantidad}
-          </Typography>
-          <IconButton
-            size="small"
-            onClick={() => handleUpdateQuantity(item.productoId, item.cantidad + 1, item.itemPrincipalId)}
-          >
-            <Add />
-          </IconButton>
-          <IconButton
-            size="small"
-            color="error"
-            onClick={() => handleRemoveFromCart(item.productoId, item.itemPrincipalId)}
-          >
-            <Delete />
-          </IconButton>
+          {activeComandaId === null ? (
+            <TextField
+              type="number"
+              size="small"
+              value={cantidades[item.productoId] !== undefined ? cantidades[item.productoId] : String(item.cantidad)}
+              onChange={e => {
+                const val = e.target.value;
+                if (val === "") {
+                  setCantidades(prev => ({ ...prev, [item.productoId]: "" }));
+                } else {
+                  setCantidades(prev => ({ ...prev, [item.productoId]: val }));
+                  const parsed = parseInt(val);
+                  if (!isNaN(parsed) && parsed >= 1) {
+                    updateItemQuantity(item.productoId, parsed, item.itemPrincipalId);
+                  }
+                }
+              }}
+              onBlur={e => {
+                let val = cantidades[item.productoId];
+                if (val === "" || val === undefined) {
+                  setCantidades(prev => ({ ...prev, [item.productoId]: String(item.cantidad) }));
+                }
+              }}
+              inputProps={{ min: 1, style: { width: 60 } }}
+            />
+          ) : (
+            <Typography variant="h6" sx={{ minWidth: 40, textAlign: 'center' }}>
+              {item.cantidad}
+            </Typography>
+          )}
         </Box>
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
@@ -535,18 +544,29 @@ const OrderPage: React.FC = () => {
                   title={producto.nombre}
                   subtitle={producto.descripcion}
                   actions={
-                    <ModernButton
-                      variant="primary"
-                      size="small"
-                      icon="add"
-                      onClick={() => {
-                        addProductToOrder(producto);
-                        showSuccess('Adicional agregado', `${producto.nombre} agregado a la comanda`);
-                        setSelectedAdicional(null);
-                      }}
-                    >
-                      Agregar este producto
-                    </ModernButton>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <TextField
+                        type="number"
+                        label="Cantidad"
+                        size="small"
+                        value={cantidades[producto.id] ?? 1}
+                        onChange={e => setCantidades(prev => ({ ...prev, [producto.id]: Math.max(1, parseInt(e.target.value) || 1) }))}
+                        inputProps={{ min: 1, style: { width: 60 } }}
+                      />
+                      <ModernButton
+                        variant="primary"
+                        size="small"
+                        icon="add"
+                        onClick={() => {
+                          const cantidad = cantidades[producto.id] ?? 1;
+                          addProductToOrder(producto, undefined, cantidad);
+                          showSuccess('Adicional agregado', `${producto.nombre} x${cantidad} agregado a la comanda`);
+                          setSelectedAdicional(null);
+                        }}
+                      >
+                        Agregar este producto
+                      </ModernButton>
+                    </Box>
                   }
                 >
                   <Typography variant="body2">${producto.precio}</Typography>
