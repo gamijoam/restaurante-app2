@@ -362,8 +362,8 @@ const IngredientesPage = () => {
                     <Grid item xs={12} sm={6} md={2}>
                         <ModernButton
                             variant="primary"
-                            startIcon={<AddIcon />}
-                            onClick={() => handleOpenDialog()}
+                    startIcon={<AddIcon />}
+                    onClick={() => handleOpenDialog()}
                             fullWidth
                             disabled={!isGerente}
                         >
@@ -376,8 +376,8 @@ const IngredientesPage = () => {
             {/* Vista de tabla */}
             {viewMode === 'table' ? (
                 <TableContainer component={Paper} sx={{ borderRadius: 2, overflow: 'hidden' }}>
-                    <Table>
-                        <TableHead>
+                <Table>
+                    <TableHead>
                             <TableRow sx={{ bgcolor: 'primary.main' }}>
                                 <TableCell sx={{ color: 'white', fontWeight: 600 }}>Ingrediente</TableCell>
                                 <TableCell sx={{ color: 'white', fontWeight: 600 }}>Stock</TableCell>
@@ -385,9 +385,9 @@ const IngredientesPage = () => {
                                 <TableCell sx={{ color: 'white', fontWeight: 600 }}>Estado</TableCell>
                                 <TableCell sx={{ color: 'white', fontWeight: 600 }}>Descripción</TableCell>
                                 <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">Acciones</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
                             {filteredIngredientes.map((ingrediente) => {
                                 const stockStatus = getStockStatus(ingrediente.stock);
                                 return (
@@ -423,7 +423,7 @@ const IngredientesPage = () => {
                                                       stockStatus.status === 'bajo' ? <InfoIcon /> : <CheckIcon />}
                                             />
                                         </TableCell>
-                                        <TableCell>
+                                <TableCell>
                                             <Typography variant="body2" color="text.secondary">
                                                 {ingrediente.descripcion}
                                             </Typography>
@@ -444,32 +444,32 @@ const IngredientesPage = () => {
                                                 {isGerente && (
                                                     <>
                                                         <Tooltip title="Editar ingrediente">
-                                                            <IconButton
+                                    <IconButton
                                                                 size="small"
-                                                                onClick={() => handleOpenDialog(ingrediente)}
-                                                            >
-                                                                <EditIcon />
-                                                            </IconButton>
+                                        onClick={() => handleOpenDialog(ingrediente)}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
                                                         </Tooltip>
                                                         <Tooltip title="Eliminar ingrediente">
-                                                            <IconButton
+                                    <IconButton
                                                                 size="small"
-                                                                color="error"
-                                                                onClick={() => handleDelete(ingrediente.id!)}
-                                                            >
-                                                                <DeleteIcon />
-                                                            </IconButton>
+                                        color="error"
+                                        onClick={() => handleDelete(ingrediente.id!)}
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
                                                         </Tooltip>
                                                     </>
                                                 )}
                                             </Box>
-                                        </TableCell>
-                                    </TableRow>
+                                </TableCell>
+                            </TableRow>
                                 );
                             })}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                    </TableBody>
+                </Table>
+            </TableContainer>
             ) : (
                 /* Vista de cards */
                 <Grid container spacing={2}>
@@ -683,7 +683,7 @@ const IngredientesPage = () => {
                 <DialogTitle>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <RestaurantIcon />
-                        {editingIngrediente ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}
+                    {editingIngrediente ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}
                     </Box>
                 </DialogTitle>
                 <DialogContent>

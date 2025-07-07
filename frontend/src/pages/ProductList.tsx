@@ -88,9 +88,9 @@ const ProductList = () => {
     }, []);
 
     const loadProductos = async () => {
-        try {
+            try {
             setLoading(true);
-            const data = await getProductos();
+                const data = await getProductos();
             const productosWithStock = await Promise.all(
                 (Array.isArray(data) ? data : []).map(async (producto) => {
                     try {
@@ -114,12 +114,12 @@ const ProductList = () => {
                 })
             );
             setProductos(productosWithStock);
-        } catch (err) {
+            } catch (err) {
             setError('Error al cargar los productos');
-        } finally {
-            setLoading(false);
-        }
-    };
+            } finally {
+                setLoading(false);
+            }
+        };
 
     const getCategoriaFromProducto = (producto: Producto): string => {
         // Simular categorías basadas en el nombre del producto
@@ -213,7 +213,7 @@ const ProductList = () => {
         );
     }
 
-    return (
+   return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             {/* Header */}
             <Box sx={{ mb: 4 }}>
@@ -225,8 +225,8 @@ const ProductList = () => {
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                 }}>
-                    Menú de Productos
-                </Typography>
+            Menú de Productos
+        </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Explora nuestra selección de productos deliciosos
                 </Typography>
@@ -471,9 +471,9 @@ const ProductList = () => {
                                     </ModernButton>
                                 </CardActions>
                             </Card>
-                        </Grid>
-                    ))}
                 </Grid>
+            ))}
+        </Grid>
             ) : (
                 <Stack spacing={2}>
                     {filteredAndSortedProductos.map((producto) => (
@@ -561,8 +561,8 @@ const ProductList = () => {
                     <AddIcon />
                 </Fab>
             )}
-        </Container>
-    );
+    </Container>
+);
 };
 
 export default ProductList;

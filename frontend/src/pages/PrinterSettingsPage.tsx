@@ -767,47 +767,47 @@ const PrinterSettingsPage = () => {
                 <DialogContent>
                     <form onSubmit={handleSubmit}>
                         <Grid container spacing={2} sx={{ mt: 1 }}>
-                            <Grid item xs={12} sm={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel>Rol</InputLabel>
-                                    <Select
-                                        name="role"
-                                        value={currentConfig.role || 'COCINA'}
-                                        onChange={handleInputChange as any}
-                                        label="Rol"
-                                    >
-                                        <MenuItem value="COCINA">Cocina</MenuItem>
-                                        <MenuItem value="CAJA">Caja</MenuItem>
-                                        <MenuItem value="BARRA">Barra</MenuItem>
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <FormControl fullWidth>
-                                    <InputLabel>Tipo de Conexión</InputLabel>
-                                    <Select
-                                        name="printerType"
-                                        value={currentConfig.printerType || 'TCP'}
-                                        onChange={handleInputChange as any}
-                                        label="Tipo de Conexión"
-                                    >
-                                        <MenuItem value="TCP">Red (TCP/IP)</MenuItem>
-                                        <MenuItem value="USB">USB</MenuItem>
-                                        <MenuItem value="WIN">Driver de Windows</MenuItem>
-                                        <MenuItem value="SERIAL">Serial</MenuItem>
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={12}>
-                                <TextField
-                                    name="printerTarget"
-                                    label="Destino (ej: 192.168.1.100:9100 o EPSON-TM-T20)"
-                                    value={currentConfig.printerTarget || ''}
-                                    onChange={handleInputChange}
-                                    fullWidth
+                    <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth>
+                            <InputLabel>Rol</InputLabel>
+                            <Select
+                                name="role"
+                                value={currentConfig.role || 'COCINA'}
+                                onChange={handleInputChange as any}
+                                label="Rol"
+                            >
+                                <MenuItem value="COCINA">Cocina</MenuItem>
+                                <MenuItem value="CAJA">Caja</MenuItem>
+                                <MenuItem value="BARRA">Barra</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth>
+                            <InputLabel>Tipo de Conexión</InputLabel>
+                            <Select
+                                name="printerType"
+                                value={currentConfig.printerType || 'TCP'}
+                                onChange={handleInputChange as any}
+                                label="Tipo de Conexión"
+                            >
+                                <MenuItem value="TCP">Red (TCP/IP)</MenuItem>
+                                <MenuItem value="USB">USB</MenuItem>
+                                <MenuItem value="WIN">Driver de Windows</MenuItem>
+                                <MenuItem value="SERIAL">Serial</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <TextField
+                            name="printerTarget"
+                            label="Destino (ej: 192.168.1.100:9100 o EPSON-TM-T20)"
+                            value={currentConfig.printerTarget || ''}
+                            onChange={handleInputChange}
+                            fullWidth
                                     helperText="Para TCP: IP:Puerto, Para USB: Nombre del dispositivo, Para WIN: Nombre de la impresora"
-                                />
-                            </Grid>
+                        />
+                    </Grid>
                         </Grid>
                     </form>
                 </DialogContent>
@@ -819,8 +819,8 @@ const PrinterSettingsPage = () => {
                         Cancelar
                     </Button>
                     <Button onClick={handleSubmit} variant="contained">
-                        {isEditing ? 'Actualizar' : 'Guardar'}
-                    </Button>
+                            {isEditing ? 'Actualizar' : 'Guardar'}
+                        </Button>
                 </DialogActions>
             </Dialog>
 

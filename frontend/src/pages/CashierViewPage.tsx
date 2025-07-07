@@ -243,11 +243,11 @@ const CashierViewPage: React.FC = () => {
             <Restaurant color="primary" />
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               Mesa {comanda.numeroMesa}
-            </Typography>
+                                    </Typography>
             <Chip
               label={getEstadoText(comanda.estado)}
               color={getEstadoColor(comanda.estado) as any}
-              size="small"
+                                        size="small"
             />
           </Box>
           
@@ -276,7 +276,7 @@ const CashierViewPage: React.FC = () => {
           
           <Box sx={{ display: 'flex', gap: 1 }}>
             <ModernButton
-              variant="outlined"
+                                        variant="outlined"
               size="small"
               icon="print"
               loading={printingId === comanda.id}

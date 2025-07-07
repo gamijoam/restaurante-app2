@@ -51,7 +51,7 @@ import {
     StepContent,
     Snackbar,
 } from '@mui/material';
-import {
+import { 
     Restaurant as RestaurantIcon,
     Add as AddIcon,
     Edit as EditIcon,
@@ -349,8 +349,8 @@ const RecetasPage = () => {
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                 }}>
-                    Gestión de Recetas
-                </Typography>
+                Gestión de Recetas
+            </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Administra las recetas y ingredientes de los productos
                 </Typography>
@@ -419,7 +419,7 @@ const RecetasPage = () => {
                     </ModernCard>
                 </Grid>
             </Grid>
-
+                        
             {/* Filtros y controles */}
             <Box sx={{ mb: 4 }}>
                 <Grid container spacing={2} alignItems="center">
@@ -499,44 +499,44 @@ const RecetasPage = () => {
                                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                         Selecciona un producto para gestionar su receta:
                                     </Typography>
-                                    <Grid container spacing={2}>
-                                        {filteredProductos.map((producto) => (
-                                            <Grid item xs={12} sm={6} md={4} key={producto.id}>
-                                                <Card
-                                                    sx={{
-                                                        cursor: 'pointer',
+                        <Grid container spacing={2}>
+                            {filteredProductos.map((producto) => (
+                                <Grid item xs={12} sm={6} md={4} key={producto.id}>
+                                    <Card 
+                                        sx={{ 
+                                            cursor: 'pointer',
                                                         transition: 'all 0.3s ease',
-                                                        '&:hover': {
+                                            '&:hover': { 
                                                             transform: 'translateY(-4px)',
                                                             boxShadow: theme.shadows[8],
                                                         },
                                                         border: selectedProducto?.id === producto.id ? 2 : 1,
                                                         borderColor: selectedProducto?.id === producto.id ? 'primary.main' : 'divider',
-                                                    }}
-                                                    onClick={() => handleProductoSelect(producto)}
-                                                >
-                                                    <CardContent>
+                                        }}
+                                        onClick={() => handleProductoSelect(producto)}
+                                    >
+                                        <CardContent>
                                                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
                                                             <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
                                                                 {producto.nombre.charAt(0)}
                                                             </Avatar>
                                                             <Box>
                                                                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                                                    {producto.nombre}
-                                                                </Typography>
+                                                {producto.nombre}
+                                            </Typography>
                                                                 <Typography variant="body2" color="text.secondary">
-                                                                    ${producto.precio}
-                                                                </Typography>
+                                                ${producto.precio}
+                                            </Typography>
                                                             </Box>
                                                         </Box>
-                                                        <Typography variant="body2" color="text.secondary">
-                                                            {producto.descripcion}
-                                                        </Typography>
-                                                    </CardContent>
-                                                </Card>
-                                            </Grid>
-                                        ))}
-                                    </Grid>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {producto.descripcion}
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
                                 </Box>
                                 <Box sx={{ mb: 2 }}>
                                     <ModernButton
@@ -561,8 +561,8 @@ const RecetasPage = () => {
                                     <Box>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                                             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                                                Receta de: {selectedProducto.nombre}
-                                            </Typography>
+                                Receta de: {selectedProducto.nombre}
+                            </Typography>
                                             <ModernButton
                                                 variant="primary"
                                                 startIcon={<AddIcon />}
@@ -570,8 +570,8 @@ const RecetasPage = () => {
                                             >
                                                 Añadir Ingrediente
                                             </ModernButton>
-                                        </Box>
-                                        
+                        </Box>
+                        
                                         {recetas.length > 0 ? (
                                             <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
                                                 <Table>
@@ -584,7 +584,7 @@ const RecetasPage = () => {
                                                         </TableRow>
                                                     </TableHead>
                                                     <TableBody>
-                                                        {recetas.map((receta) => (
+                                {recetas.map((receta) => (
                                                             <TableRow key={receta.id} hover>
                                                                 <TableCell>
                                                                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -606,21 +606,21 @@ const RecetasPage = () => {
                                                                 <TableCell align="center">
                                                                     <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
                                                                         <Tooltip title="Editar">
-                                                                            <IconButton
+                                            <IconButton
                                                                                 size="small"
-                                                                                onClick={() => handleOpenDialog(receta)}
-                                                                            >
-                                                                                <EditIcon />
-                                                                            </IconButton>
+                                                onClick={() => handleOpenDialog(receta)}
+                                            >
+                                                <EditIcon />
+                                            </IconButton>
                                                                         </Tooltip>
                                                                         <Tooltip title="Eliminar">
-                                                                            <IconButton
+                                            <IconButton
                                                                                 size="small"
-                                                                                color="error"
-                                                                                onClick={() => handleDeleteReceta(receta.id!)}
-                                                                            >
-                                                                                <DeleteIcon />
-                                                                            </IconButton>
+                                                color="error"
+                                                onClick={() => handleDeleteReceta(receta.id!)}
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
                                                                         </Tooltip>
                                                                     </Box>
                                                                 </TableCell>
@@ -700,7 +700,7 @@ const RecetasPage = () => {
                                             ID: {producto.id}
                                         </Typography>
                                     </Box>
-                                </CardContent>
+                    </CardContent>
 
                                 <CardActions sx={{ p: 2, pt: 0 }}>
                                     <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
@@ -724,8 +724,8 @@ const RecetasPage = () => {
                                             </ModernButton>
                                         )}
                                     </Box>
-                                </CardActions>
-                            </Card>
+                    </CardActions>
+                </Card>
                         </Grid>
                     ))}
                 </Grid>
@@ -757,7 +757,7 @@ const RecetasPage = () => {
                 <DialogTitle>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <AddProductIcon />
-                        Crear Nuevo Producto
+                    Crear Nuevo Producto
                     </Box>
                 </DialogTitle>
                 <DialogContent>

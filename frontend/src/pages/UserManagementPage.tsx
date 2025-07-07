@@ -185,7 +185,7 @@ const UserManagementPage = () => {
     };
 
     if (loading) {
-        return (
+    return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
                 <Box sx={{ textAlign: 'center', py: 8 }}>
                     <LoadingSpinner />

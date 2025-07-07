@@ -59,56 +59,56 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import SkeletonLoader from '../components/SkeletonLoader';
 
 const KitchenViewPage: React.FC = () => {
-  const [comandas, setComandas] = useState<ComandaResponseDTO[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [comandas, setComandas] = useState<ComandaResponseDTO[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
   const [submittingId, setSubmittingId] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [selectedComanda, setSelectedComanda] = useState<ComandaResponseDTO | null>(null);
   const [filter, setFilter] = useState<'all' | 'urgent' | 'normal'>('all');
   
-  const { stompClient, isConnected } = useWebSocket();
+    const { stompClient, isConnected } = useWebSocket();
   const { showError, showSuccess } = useNotification();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
 
-  const fetchInitialComandas = useCallback(async () => {
+    const fetchInitialComandas = useCallback(async () => {
     setLoading(true);
-    try {
-      const data = await getComandasPorMultiplesEstados(['EN_PROCESO']);
-      if (Array.isArray(data)) {
-        setComandas(data);
-      }
-    } catch (err) {
-      console.error("Error al cargar comandas:", err);
-      setError('Error al cargar las comandas iniciales.');
+        try {
+            const data = await getComandasPorMultiplesEstados(['EN_PROCESO']);
+            if (Array.isArray(data)) {
+                setComandas(data);
+            }
+        } catch (err) {
+            console.error("Error al cargar comandas:", err);
+            setError('Error al cargar las comandas iniciales.');
       showError('Error al cargar comandas', 'No se pudieron cargar las comandas en proceso');
-    } finally {
-      setLoading(false);
-    }
+        } finally {
+            setLoading(false);
+        }
   }, [showError]);
 
-  useEffect(() => {
-    if (isConnected && stompClient) {
-      fetchInitialComandas();
+    useEffect(() => {
+        if (isConnected && stompClient) {
+            fetchInitialComandas();
 
-      const subscription = stompClient.subscribe('/topic/cocina', (message) => {
-        const comandaRecibida: ComandaResponseDTO = JSON.parse(message.body);
-        setComandas(prevComandas => {
-          if (prevComandas.find(c => c.id === comandaRecibida.id)) {
+            const subscription = stompClient.subscribe('/topic/cocina', (message) => {
+                const comandaRecibida: ComandaResponseDTO = JSON.parse(message.body);
+                setComandas(prevComandas => {
+                    if (prevComandas.find(c => c.id === comandaRecibida.id)) {
             return prevComandas.map(c => c.id === comandaRecibida.id ? comandaRecibida : c);
-          }
-          return [comandaRecibida, ...prevComandas];
-        });
+                    }
+                    return [comandaRecibida, ...prevComandas];
+                });
         showSuccess('Nueva comanda', `Mesa ${comandaRecibida.numeroMesa} agregada a cocina`);
-      });
+            });
 
-      return () => {
-        subscription.unsubscribe();
-      };
-    }
+            return () => {
+                subscription.unsubscribe();
+            };
+        }
   }, [isConnected, stompClient, fetchInitialComandas, showSuccess]);
 
   const handleMarcarComoLista = async (comanda: ComandaResponseDTO) => {
@@ -117,7 +117,7 @@ const KitchenViewPage: React.FC = () => {
       await updateComandaEstado(comanda.id, 'LISTA');
       setComandas(prevComandas => prevComandas.filter(c => c.id !== comanda.id));
       showSuccess('Comanda lista', `Mesa ${comanda.numeroMesa} marcada como lista`);
-    } catch (err) {
+        } catch (err) {
       showError('Error al actualizar', 'No se pudo marcar la comanda como lista');
     } finally {
       setSubmittingId(null);
@@ -556,7 +556,7 @@ const KitchenViewPage: React.FC = () => {
         cancelText="Cancelar"
       />
     </>
-  );
+    );
 };
 
 export default KitchenViewPage;

@@ -243,28 +243,28 @@ const ReportesPage = () => {
             <Paper sx={{ p: 3, mb: 4, borderRadius: 2 }}>
                 <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                     Configurar Reporte
-                </Typography>
+            </Typography>
                 
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} sm={6} md={3}>
-                        <TextField
+                <TextField
                             fullWidth
-                            label="Fecha de Inicio"
-                            type="date"
-                            value={fechaInicio}
-                            onChange={(e) => setFechaInicio(e.target.value)}
-                            InputLabelProps={{ shrink: true }}
+                    label="Fecha de Inicio"
+                    type="date"
+                    value={fechaInicio}
+                    onChange={(e) => setFechaInicio(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
                             size="small"
-                        />
+                />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <TextField
+                <TextField
                             fullWidth
-                            label="Fecha de Fin"
-                            type="date"
-                            value={fechaFin}
-                            onChange={(e) => setFechaFin(e.target.value)}
-                            InputLabelProps={{ shrink: true }}
+                    label="Fecha de Fin"
+                    type="date"
+                    value={fechaFin}
+                    onChange={(e) => setFechaFin(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
                             size="small"
                         />
                     </Grid>
@@ -292,7 +292,7 @@ const ReportesPage = () => {
                                 loading={loading}
                                 sx={{ flex: 1 }}
                             >
-                                Generar
+                    Generar
                             </ModernButton>
                             <Tooltip title="Actualizar datos">
                                 <IconButton onClick={handleGenerarReporte} disabled={loading}>
@@ -347,7 +347,7 @@ const ReportesPage = () => {
                                         +8.3% vs mes anterior
                                     </Typography>
                                 </Box>
-                            </Box>
+            </Box>
                         </ModernCard>
                     </Grid>
                     
@@ -535,7 +535,7 @@ const ReportesPage = () => {
                     </TabPanel>
 
                     <TabPanel value={tabValue} index={2}>
-                        <Box>
+                <Box>
                             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                                 Tendencias del Período
                             </Typography>
