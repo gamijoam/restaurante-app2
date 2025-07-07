@@ -16,3 +16,17 @@ export const getReporteVentas = async (fechaInicio: string, fechaFin: string): P
 
     return response.data;
 };
+
+export const descargarReporteVentasPdf = async (fechaInicio: string, fechaFin: string): Promise<Blob> => {
+    const response = await api.get(`/reportes/ventas/pdf?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`, {
+        responseType: 'blob',
+    });
+    return response.data;
+};
+
+export const descargarReporteVentasExcel = async (fechaInicio: string, fechaFin: string): Promise<Blob> => {
+    const response = await api.get(`/reportes/ventas/excel?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`, {
+        responseType: 'blob',
+    });
+    return response.data;
+};

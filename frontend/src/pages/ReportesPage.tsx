@@ -76,7 +76,7 @@ import {
     Info as InfoIcon,
 } from '@mui/icons-material';
 import type { ReporteVentasDTO, ProductoVendidoDTO } from '../dto/ReportesDTO';
-import { getReporteVentas } from '../services/reporteService';
+import { getReporteVentas, descargarReporteVentasPdf, descargarReporteVentasExcel } from '../services/reporteService';
 import { useAuth } from '../context/AuthContext';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
@@ -145,6 +145,50 @@ const ReportesPage = () => {
         } catch (err) {
             setError('Error al generar el reporte o no tienes permiso para acceder.');
             console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDescargarPdf = async () => {
+        if (!fechaInicio || !fechaFin) {
+            setError('Por favor selecciona las fechas de inicio y fin');
+            return;
+        }
+        setLoading(true);
+        try {
+            const blob = await descargarReporteVentasPdf(fechaInicio, fechaFin);
+            const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `reporte_ventas_${fechaInicio}_a_${fechaFin}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+        } catch (err) {
+            setError('Error al descargar el PDF.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDescargarExcel = async () => {
+        if (!fechaInicio || !fechaFin) {
+            setError('Por favor selecciona las fechas de inicio y fin');
+            return;
+        }
+        setLoading(true);
+        try {
+            const blob = await descargarReporteVentasExcel(fechaInicio, fechaFin);
+            const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `reporte_ventas_${fechaInicio}_a_${fechaFin}.xlsx`);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+        } catch (err) {
+            setError('Error al descargar el Excel.');
         } finally {
             setLoading(false);
         }
@@ -284,23 +328,43 @@ const ReportesPage = () => {
                         </FormControl>
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            <ModernButton
-                                variant="primary"
-                                startIcon={<AssessmentIcon />}
-                                onClick={handleGenerarReporte}
-                                loading={loading}
-                                sx={{ flex: 1 }}
-                            >
-                    Generar
-                            </ModernButton>
-                            <Tooltip title="Actualizar datos">
-                                <IconButton onClick={handleGenerarReporte} disabled={loading}>
-                                    <RefreshIcon />
-                                </IconButton>
-                            </Tooltip>
-                        </Box>
-                    </Grid>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                    <ModernButton
+                        variant="primary"
+                        startIcon={<AssessmentIcon />}
+                        onClick={handleGenerarReporte}
+                        loading={loading}
+                        sx={{ flex: 1 }}
+                    >
+                        Generar
+                    </ModernButton>
+                    <Tooltip title="Actualizar datos">
+                        <IconButton onClick={handleGenerarReporte} disabled={loading}>
+                            <RefreshIcon />
+                        </IconButton>
+                    </Tooltip>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                    <ModernButton
+                        variant="secondary"
+                        startIcon={<DownloadIcon />}
+                        onClick={handleDescargarPdf}
+                        disabled={loading}
+                        sx={{ flex: 1 }}
+                    >
+                        PDF
+                    </ModernButton>
+                    <ModernButton
+                        variant="secondary"
+                        startIcon={<DownloadIcon />}
+                        onClick={handleDescargarExcel}
+                        disabled={loading}
+                        sx={{ flex: 1 }}
+                    >
+                        Excel
+                    </ModernButton>
+                </Box>
+            </Grid>
                 </Grid>
             </Paper>
 
