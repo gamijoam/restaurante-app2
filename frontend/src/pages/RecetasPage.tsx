@@ -133,7 +133,8 @@ const RecetasPage = () => {
     const [newProductData, setNewProductData] = useState<Omit<Producto, 'id'>>({
         nombre: '',
         descripcion: '',
-        precio: 0
+        precio: 0,
+        categoria: ''
     });
     
     // Estados para feedback
@@ -211,7 +212,8 @@ const RecetasPage = () => {
         setNewProductData({
             nombre: '',
             descripcion: '',
-            precio: 0
+            precio: 0,
+            categoria: ''
         });
         setOpenProductDialog(true);
     };
@@ -221,7 +223,8 @@ const RecetasPage = () => {
         setNewProductData({
             nombre: '',
             descripcion: '',
-            precio: 0
+            precio: 0,
+            categoria: ''
         });
         setError(null);
     };
@@ -784,6 +787,14 @@ const RecetasPage = () => {
                         type="number"
                         value={newProductData.precio}
                         onChange={(e) => setNewProductData({ ...newProductData, precio: parseFloat(e.target.value) })}
+                        margin="normal"
+                        required
+                    />
+                    <TextField
+                        label="Categoría"
+                        value={newProductData.categoria}
+                        onChange={e => setNewProductData({ ...newProductData, categoria: e.target.value })}
+                        fullWidth
                         margin="normal"
                         required
                     />
