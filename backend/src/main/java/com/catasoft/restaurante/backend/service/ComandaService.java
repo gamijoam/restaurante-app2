@@ -86,6 +86,7 @@ public class ComandaService {
             itemDTO.setProductoNombre(item.getProducto().getNombre());
             itemDTO.setCantidad(item.getCantidad());
             itemDTO.setPrecioUnitario(item.getPrecioUnitario());
+            itemDTO.setItemPrincipalId(item.getItemPrincipal() != null ? item.getItemPrincipal().getId() : null);
             return itemDTO;
         }).collect(Collectors.toList()));
         return dto;
@@ -372,6 +373,14 @@ public class ComandaService {
             BigDecimal subtotal = producto.getPrecio().multiply(BigDecimal.valueOf(itemDTO.getCantidad()));
             comandaItem.setSubtotal(subtotal);
             comandaItem.setComanda(comanda);
+            // Asociar adicional si corresponde
+            if (itemDTO.getItemPrincipalId() != null) {
+                ComandaItem itemPrincipal = comanda.getItems().stream()
+                        .filter(i -> i.getId() != null && i.getId().equals(itemDTO.getItemPrincipalId()))
+                        .findFirst()
+                        .orElseThrow(() -> new ResourceNotFoundException("Item principal no encontrado con id: " + itemDTO.getItemPrincipalId()));
+                comandaItem.setItemPrincipal(itemPrincipal);
+            }
             comanda.getItems().add(comandaItem);
 
             comanda.setTotal(comanda.getTotal().add(subtotal));

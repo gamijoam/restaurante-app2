@@ -1,13 +1,14 @@
 import React, { createContext, useState, useContext, type ReactNode, useCallback } from 'react';
 import type { Producto, ComandaResponseDTO } from '../types';
-import { crearComandaAPI, agregarItemsAComandaAPI, updateComandaEstado, limpiarItemsComandaAPI } from '../services/comandaService';
-import type { ItemRequestDTO } from '../dto/comandaDTOs';
+import { crearComandaAPI, agregarItemsAComanda, updateComandaEstado, limpiarItemsComandaAPI } from '../services/comandaService';
+import type { ItemRequestDTO } from '../dto/ItemRequestDTO';
+import type { ComandaItemResponseDTO } from '../dto/comandaDTOs';
 
 // --- INTERFAZ UNIFICADA Y FINAL ---
 interface IOrderContext {
     orderItems: OrderItem[];
     activeComandaId: number | null;
-    addProductToOrder: (product: Producto) => Promise<void>;
+    addProductToOrder: (product: Producto, itemPrincipalId?: number) => Promise<void>;
     submitNewOrder: (mesaId: number) => Promise<void>;
     loadExistingOrder: (comanda: ComandaResponseDTO) => void;
     clearOrder: () => void;
@@ -20,6 +21,7 @@ interface OrderItem {
     productoNombre: string;
     cantidad: number;
     precioUnitario: number;
+    itemPrincipalId?: number; // Opcional, si es adicional de otro item
 }
 
 // --- EXPORTAMOS EL CONTEXTO ---
@@ -31,11 +33,12 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
     const loadExistingOrder = useCallback((comanda: ComandaResponseDTO) => {
         setActiveComandaId(comanda.id);
-        setOrderItems(comanda.items.map(item => ({
+        setOrderItems(comanda.items.map((item: any) => ({
             productoId: item.productoId,
             productoNombre: item.productoNombre,
             cantidad: item.cantidad,
-            precioUnitario: item.precioUnitario
+            precioUnitario: item.precioUnitario,
+            itemPrincipalId: item.itemPrincipalId ?? undefined
         })));
     }, []);
 
@@ -44,31 +47,33 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         setActiveComandaId(null);
     }, []);
 
-    const addProductToOrder = useCallback(async (productToAdd: Producto) => {
+    const addProductToOrder = useCallback(async (productToAdd: Producto, itemPrincipalId?: number) => {
         if (activeComandaId) {
             const newItem: ItemRequestDTO = { productoId: productToAdd.id, cantidad: 1 };
+            if (itemPrincipalId) newItem.itemPrincipalId = itemPrincipalId;
             try {
-                const comandaActualizada = await agregarItemsAComandaAPI(activeComandaId, [newItem]);
-                loadExistingOrder(comandaActualizada);
+                const response = await agregarItemsAComanda(activeComandaId, [newItem]);
+                loadExistingOrder(response.data);
             } catch (error) {
                 console.error("Error al añadir item:", error);
                 alert("Error al añadir el producto a la comanda.");
             }
         } else {
             setOrderItems(currentItems => {
-                const existingItem = currentItems.find(item => item.productoId === productToAdd.id);
+                const existingItem = currentItems.find(item => item.productoId === productToAdd.id && item.itemPrincipalId === itemPrincipalId);
                 if (existingItem) {
                     return currentItems.map(item =>
-                        item.productoId === productToAdd.id
+                        item.productoId === productToAdd.id && item.itemPrincipalId === itemPrincipalId
                             ? { ...item, cantidad: item.cantidad + 1 }
                             : item
                     );
                 }
-                return [...currentItems, { 
+                return [...currentItems, {
                     productoId: productToAdd.id,
                     productoNombre: productToAdd.nombre,
                     cantidad: 1,
-                    precioUnitario: productToAdd.precio
+                    precioUnitario: productToAdd.precio,
+                    itemPrincipalId: itemPrincipalId
                 }];
             });
         }

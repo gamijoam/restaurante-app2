@@ -57,6 +57,7 @@ interface OrderItem {
   productoNombre: string;
   cantidad: number;
   precioUnitario: number;
+  itemPrincipalId?: number; // Para identificar si es un item principal o un adicional
 }
 
 const OrderPage: React.FC = () => {
@@ -73,7 +74,8 @@ const OrderPage: React.FC = () => {
   const [productos, setProductos] = useState<Producto[]>([]);
     const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
+  // Cambiar el tipo de selectedProducto a { principal: OrderItem, adicional: Producto | null } | null
+  const [selectedAdicional, setSelectedAdicional] = useState<{ principal: OrderItem, adicional: Producto | null } | null>(null);
   const [cartOpen, setCartOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -206,7 +208,16 @@ const OrderPage: React.FC = () => {
     </Fade>
   );
 
-  const renderCartItem = (item: OrderItem) => (
+  // Nueva función para agrupar items principales y sus adicionales
+  function groupOrderItems(orderItems: OrderItem[]) {
+    const principales = orderItems.filter(item => !item.itemPrincipalId);
+    return principales.map(principal => ({
+      ...principal,
+      adicionales: orderItems.filter(ad => ad.itemPrincipalId === principal.productoId)
+    }));
+  }
+
+  const renderCartItem = (item: OrderItem, adicionales: OrderItem[] = []) => (
     <Paper
       key={item.productoId}
       sx={{
@@ -226,7 +237,6 @@ const OrderPage: React.FC = () => {
             ${item.precioUnitario} c/u
           </Typography>
         </Box>
-        
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <IconButton
             size="small"
@@ -235,18 +245,15 @@ const OrderPage: React.FC = () => {
           >
             <Remove />
           </IconButton>
-          
           <Typography variant="h6" sx={{ minWidth: 40, textAlign: 'center' }}>
             {item.cantidad}
           </Typography>
-          
           <IconButton
             size="small"
             onClick={() => handleUpdateQuantity(item.productoId, item.cantidad + 1)}
           >
             <Add />
           </IconButton>
-          
           <IconButton
             size="small"
             color="error"
@@ -254,16 +261,43 @@ const OrderPage: React.FC = () => {
           >
             <Delete />
           </IconButton>
+          {/* Botón para agregar adicional */}
+          <ModernButton
+            variant="secondary"
+            size="small"
+            icon="add"
+            onClick={() => setSelectedAdicional({ principal: item, adicional: null })}
+          >
+            Agregar adicional
+          </ModernButton>
         </Box>
       </Box>
-      
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
         <Typography variant="body2" color="text.secondary">
           Subtotal: ${item.cantidad * item.precioUnitario}
         </Typography>
       </Box>
+      {/* Mostrar adicionales debajo del principal */}
+      {adicionales.length > 0 && (
+        <Box sx={{ mt: 1, ml: 3 }}>
+          <Typography variant="subtitle2" color="text.secondary">Adicionales:</Typography>
+          {adicionales.map(ad => (
+            <Box key={ad.productoId} sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+              <Typography variant="body2">- {ad.productoNombre} (x{ad.cantidad})</Typography>
+              <Typography variant="body2" color="text.secondary">${ad.precioUnitario}</Typography>
+            </Box>
+          ))}
+        </Box>
+      )}
     </Paper>
   );
+
+  // Nueva función para agregar adicional
+  const handleAddAdicional = (producto: Producto, principal: OrderItem) => {
+    addProductToOrder(producto, principal.productoId);
+    showSuccess('Adicional agregado', `${producto.nombre} agregado como adicional de ${principal.productoNombre}`);
+    setSelectedAdicional(null);
+  };
 
   const renderMobileView = () => (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -351,7 +385,7 @@ const OrderPage: React.FC = () => {
             </Box>
           ) : (
             <Box sx={{ mb: 2 }}>
-              {orderItems.map(renderCartItem)}
+              {groupOrderItems(orderItems).map(({ adicionales, ...principal }) => renderCartItem(principal, adicionales))}
             </Box>
           )}
 
@@ -430,7 +464,7 @@ const OrderPage: React.FC = () => {
         ) : (
           <>
             <Box sx={{ mb: 3, maxHeight: 400, overflow: 'auto' }}>
-              {orderItems.map(renderCartItem)}
+              {groupOrderItems(orderItems).map(({ adicionales, ...principal }) => renderCartItem(principal, adicionales))}
             </Box>
 
             <Divider sx={{ my: 2 }} />
@@ -510,6 +544,35 @@ const OrderPage: React.FC = () => {
         confirmText="Limpiar"
         cancelText="Cancelar"
       />
+
+      {/* Modal para seleccionar el producto adicional */}
+      {selectedAdicional && (
+        <ModernModal open={!!selectedAdicional} onClose={() => setSelectedAdicional(null)}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Selecciona un adicional para {selectedAdicional.principal.productoNombre}</Typography>
+          <Grid container spacing={2}>
+            {productos.map(producto => (
+              <Grid item xs={6} sm={4} key={producto.id}>
+                <ModernCard
+                  title={producto.nombre}
+                  subtitle={producto.descripcion}
+                  actions={
+                    <ModernButton
+                      variant="primary"
+                      size="small"
+                      icon="add"
+                      onClick={() => handleAddAdicional(producto, selectedAdicional.principal)}
+                    >
+                      Agregar este adicional
+                    </ModernButton>
+                  }
+                >
+                  <Typography variant="body2">${producto.precio}</Typography>
+                </ModernCard>
+              </Grid>
+            ))}
+          </Grid>
+        </ModernModal>
+      )}
     </>
     );
 };

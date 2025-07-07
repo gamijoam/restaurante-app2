@@ -7,6 +7,7 @@ public class ComandaItemResponseDTO {
     private String productoNombre;
     private Integer cantidad;
     private BigDecimal precioUnitario;
+    private Long itemPrincipalId; // Opcional, si es adicional de otro item
 
     // Getters y Setters
     public Long getProductoId() { return productoId; }
@@ -17,4 +18,6 @@ public class ComandaItemResponseDTO {
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
     public BigDecimal getPrecioUnitario() { return precioUnitario; }
     public void setPrecioUnitario(BigDecimal precioUnitario) { this.precioUnitario = precioUnitario; }
+    public Long getItemPrincipalId() { return itemPrincipalId; }
+    public void setItemPrincipalId(Long itemPrincipalId) { this.itemPrincipalId = itemPrincipalId; }
 }

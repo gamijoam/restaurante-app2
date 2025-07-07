@@ -101,7 +101,8 @@ const IngredientesPage = () => {
         nombre: '',
         stock: 0,
         unidad: '',
-        descripcion: ''
+        descripcion: '',
+        precioUnitario: 0
     });
 
     useEffect(() => {
@@ -131,7 +132,8 @@ const IngredientesPage = () => {
                 nombre: '',
                 stock: 0,
                 unidad: '',
-                descripcion: ''
+                descripcion: '',
+                precioUnitario: 0
             });
         }
         setOpenDialog(true);
@@ -144,7 +146,8 @@ const IngredientesPage = () => {
             nombre: '',
             stock: 0,
             unidad: '',
-            descripcion: ''
+            descripcion: '',
+            precioUnitario: 0
         });
         setError(null);
     };
@@ -720,6 +723,16 @@ const IngredientesPage = () => {
                         margin="normal"
                         multiline
                         rows={3}
+                    />
+                    <TextField
+                        label="Precio Unitario"
+                        type="number"
+                        value={formData.precioUnitario}
+                        onChange={e => setFormData({ ...formData, precioUnitario: parseFloat(e.target.value) })}
+                        fullWidth
+                        margin="normal"
+                        required
+                        inputProps={{ min: 0, step: 0.01 }}
                     />
                 </DialogContent>
                 <DialogActions>

@@ -11,3 +11,11 @@ export interface ComandaRequestDTO {
     mesaId: number;
     items: ItemRequestDTO[];
 }
+
+export interface ComandaItemResponseDTO {
+  productoId: number;
+  productoNombre: string;
+  cantidad: number;
+  precioUnitario: number;
+  itemPrincipalId?: number; // Opcional, si es adicional de otro item
+}

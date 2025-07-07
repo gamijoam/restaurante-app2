@@ -21,10 +21,9 @@ export const updateComandaEstado = async (id: number, estado: string): Promise<C
     return response.data;
 };
 
-export const agregarItemsAComandaAPI = async (comandaId: number, items: ItemRequestDTO[]): Promise<ComandaResponseDTO> => {
-    const response = await api.post(`${API_URL_COMANDAS}/${comandaId}/items`, items);
-    return response.data;
-};
+export async function agregarItemsAComanda(comandaId: number, items: ItemRequestDTO[]) {
+  return api.post<ComandaResponseDTO>(`/comandas/${comandaId}/items`, items);
+}
 
 export const limpiarItemsComandaAPI = async (comandaId: number): Promise<void> => {
     await api.delete(`${API_URL_COMANDAS}/${comandaId}/items`);

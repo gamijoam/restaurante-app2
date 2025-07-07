@@ -21,6 +21,10 @@ public class ComandaItem {
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "item_principal_id")
+    private ComandaItem itemPrincipal; // Si es adicional, referencia al item principal
+
     @Column(nullable = false)
     private Integer cantidad;
 
@@ -89,5 +93,13 @@ public class ComandaItem {
 
     public void setNotas(String notas) {
         this.notas = notas;
+    }
+
+    public ComandaItem getItemPrincipal() {
+        return itemPrincipal;
+    }
+
+    public void setItemPrincipal(ComandaItem itemPrincipal) {
+        this.itemPrincipal = itemPrincipal;
     }
 }
