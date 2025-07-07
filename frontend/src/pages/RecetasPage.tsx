@@ -2,59 +2,122 @@ import React, { useState, useEffect } from 'react';
 import {
     Container,
     Typography,
-    Button,
+    Box,
+    Grid,
     Card,
     CardContent,
     CardActions,
+    Button,
+    TextField,
+    Alert,
+    Chip,
+    IconButton,
+    useTheme,
+    useMediaQuery,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Avatar,
+    Stack,
+    Divider,
+    Tooltip,
+    Fab,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    IconButton,
-    Alert,
-    Box,
     List,
     ListItem,
     ListItemText,
+    ListItemIcon,
     ListItemSecondaryAction,
-    Chip,
-    Grid,
-    Paper,
-    Divider,
+    Switch,
+    FormControlLabel,
+    Badge,
+    LinearProgress,
+    Slider,
+    Autocomplete,
     Stepper,
     Step,
     StepLabel,
     StepContent,
-    Autocomplete,
     Snackbar,
-    Fab
 } from '@mui/material';
-import { 
-    Edit as EditIcon, 
-    Delete as DeleteIcon, 
-    Add as AddIcon,
+import {
     Restaurant as RestaurantIcon,
+    Add as AddIcon,
+    Edit as EditIcon,
+    Delete as DeleteIcon,
+    Visibility as ViewIcon,
+    Search as SearchIcon,
+    FilterList as FilterIcon,
+    Refresh as RefreshIcon,
+    Download as DownloadIcon,
+    Print as PrintIcon,
+    Email as EmailIcon,
     Inventory as InventoryIcon,
+    LocalOffer as OfferIcon,
+    Star as StarIcon,
+    Warning as WarningIcon,
+    Info as InfoIcon,
+    CheckCircle as CheckIcon,
+    Cancel as CancelIcon,
+    TrendingUp as TrendingUpIcon,
+    TrendingDown as TrendingDownIcon,
+    Settings as SettingsIcon,
+    MoreVert as MoreIcon,
+    ThumbUp as ThumbUpIcon,
+    ThumbDown as ThumbDownIcon,
+    Schedule as ScheduleIcon,
+    AttachMoney as MoneyIcon,
     MenuBook as RecipeIcon,
-    Add as AddProductIcon
+    Add as AddProductIcon,
+    Kitchen as KitchenIcon,
+    Scale as ScaleIcon,
+    Calculate as CalculateIcon,
+    ListAlt as ListIcon,
+    Assignment as AssignmentIcon,
+    Book as BookIcon,
+    Science as ScienceIcon,
+    Build as BuildIcon,
+    Create as CreateIcon,
+    Save as SaveIcon,
+    Close as CloseIcon,
+    Check as CheckIcon2,
+    Error as ErrorIcon,
+    Success as SuccessIcon,
 } from '@mui/icons-material';
 import { getProductos, createProducto } from '../services/productoService';
 import type { Producto } from '../types';
 import { getIngredientes, type Ingrediente } from '../services/ingredienteService';
-import { getRecetasByProducto, actualizarRecetaProducto, type RecetaIngrediente } from '../services/recetaService';
+import { getRecetasByProducto, actualizarRecetaProducto, agregarIngredienteAProducto, actualizarReceta, deleteReceta, type RecetaIngrediente } from '../services/recetaService';
+import { useAuth } from '../context/AuthContext';
+import ModernCard from '../components/ModernCard';
+import ModernButton from '../components/ModernButton';
+import ModernModal from '../components/ModernModal';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const RecetasPage = () => {
+    const { roles } = useAuth();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const isGerente = roles.includes('ROLE_GERENTE');
+    
     // Estados principales
     const [productos, setProductos] = useState<Producto[]>([]);
     const [ingredientes, setIngredientes] = useState<Ingrediente[]>([]);
     const [selectedProducto, setSelectedProducto] = useState<Producto | null>(null);
     const [recetas, setRecetas] = useState<RecetaIngrediente[]>([]);
     const [activeStep, setActiveStep] = useState(0);
+    const [loading, setLoading] = useState(true);
     
     // Estados para el modal de añadir ingrediente
     const [openDialog, setOpenDialog] = useState(false);
@@ -82,12 +145,14 @@ const RecetasPage = () => {
     
     // Estado para búsqueda
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState<'stepper' | 'cards'>('stepper');
 
     useEffect(() => {
         loadData();
     }, []);
 
     const loadData = async () => {
+        setLoading(true);
         try {
             const [productosData, ingredientesData] = await Promise.all([
                 getProductos(),
@@ -97,6 +162,8 @@ const RecetasPage = () => {
             setIngredientes(ingredientesData);
         } catch (err) {
             showSnackbar('Error al cargar los datos', 'error');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -199,30 +266,19 @@ const RecetasPage = () => {
             
             if (editingReceta) {
                 // Actualizar receta existente
+                const updatedReceta = await actualizarReceta(editingReceta.id!, formData);
                 nuevasRecetas = nuevasRecetas.map(r => 
-                    r.id === editingReceta.id ? { ...formData, id: r.id } : r
+                    r.id === editingReceta.id ? updatedReceta : r
                 );
+                showSnackbar('Receta actualizada correctamente', 'success');
             } else {
-                // Agregar nueva receta
-                const ingrediente = ingredientes.find(i => i.id === formData.ingredienteId);
-                if (!ingrediente) {
-                    setError('Ingrediente no encontrado');
-                    return;
-                }
-                nuevasRecetas.push({
-                    ...formData,
-                    ingredienteNombre: ingrediente.nombre
-                });
+                // Añadir nueva receta
+                const nuevaReceta = await agregarIngredienteAProducto(selectedProducto.id!, formData);
+                nuevasRecetas.push(nuevaReceta);
+                showSnackbar('Ingrediente añadido a la receta', 'success');
             }
-
-            await actualizarRecetaProducto(selectedProducto.id!, nuevasRecetas);
+            
             setRecetas(nuevasRecetas);
-            showSnackbar(
-                editingReceta 
-                    ? 'Ingrediente actualizado en la receta' 
-                    : 'Ingrediente añadido a la receta', 
-                'success'
-            );
             handleCloseDialog();
         } catch (err) {
             showSnackbar('Error al guardar la receta', 'error');
@@ -230,28 +286,20 @@ const RecetasPage = () => {
     };
 
     const handleDeleteReceta = async (recetaId: number) => {
-        if (!selectedProducto) return;
-
         if (window.confirm('¿Estás seguro de que quieres eliminar este ingrediente de la receta?')) {
             try {
-                const nuevasRecetas = recetas.filter(r => r.id !== recetaId);
-                await actualizarRecetaProducto(selectedProducto.id!, nuevasRecetas);
-                setRecetas(nuevasRecetas);
+                await deleteReceta(recetaId);
+                setRecetas(recetas.filter(r => r.id !== recetaId));
                 showSnackbar('Ingrediente eliminado de la receta', 'success');
             } catch (err) {
-                showSnackbar('Error al eliminar el ingrediente de la receta', 'error');
+                showSnackbar('Error al eliminar el ingrediente', 'error');
             }
         }
     };
 
     const getIngredienteNombre = (receta: RecetaIngrediente) => {
-        // Si la receta ya tiene ingredienteNombre, usarlo
-        if (receta.ingredienteNombre) {
-            return receta.ingredienteNombre;
-        }
-        // Si no, buscar en la lista local de ingredientes
         const ingrediente = ingredientes.find(i => i.id === receta.ingredienteId);
-        return ingrediente?.nombre || 'Ingrediente no encontrado';
+        return ingrediente ? ingrediente.nombre : 'Ingrediente no encontrado';
     };
 
     const showSnackbar = (message: string, severity: 'success' | 'error') => {
@@ -265,231 +313,452 @@ const RecetasPage = () => {
     };
 
     const filteredProductos = productos.filter(producto =>
-        producto.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+        producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const steps = [
-        {
-            label: 'Seleccionar Producto',
-            description: 'Elige el producto para el cual quieres gestionar la receta'
-        },
-        {
-            label: 'Gestionar Receta',
-            description: 'Añade, edita o elimina ingredientes de la receta'
-        }
-    ];
+    const stats = {
+        total: productos.length,
+        conReceta: productos.filter(p => p.id && recetas.some(r => r.productoId === p.id)).length,
+        sinReceta: productos.filter(p => p.id && !recetas.some(r => r.productoId === p.id)).length,
+        ingredientes: ingredientes.length,
+    };
+
+    if (loading) {
+        return (
+            <Container maxWidth="lg" sx={{ py: 4 }}>
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                    <LoadingSpinner />
+                    <Typography variant="h6" sx={{ mt: 2, color: 'text.secondary' }}>
+                        Cargando recetas...
+                    </Typography>
+                </Box>
+            </Container>
+        );
+    }
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <RecipeIcon fontSize="large" />
-                Gestión de Recetas
-            </Typography>
+            {/* Header */}
+            <Box sx={{ mb: 4 }}>
+                <Typography variant="h4" component="h1" sx={{ 
+                    fontWeight: 700, 
+                    mb: 1,
+                    background: `linear-gradient(45deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                    backgroundClip: 'text',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                }}>
+                    Gestión de Recetas
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                    Administra las recetas y ingredientes de los productos
+                </Typography>
+            </Box>
 
-            <Paper sx={{ p: 3, mb: 3 }}>
-                <Stepper activeStep={activeStep} orientation="horizontal">
-                    {steps.map((step, index) => (
-                        <Step key={step.label}>
-                            <StepLabel>{step.label}</StepLabel>
-                        </Step>
-                    ))}
-                </Stepper>
-            </Paper>
+            {/* Alertas */}
+            {error && (
+                <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+                    {error}
+                </Alert>
+            )}
+            {success && (
+                <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
+                    {success}
+                </Alert>
+            )}
 
-            {/* Paso 1: Selección de Producto */}
-            {activeStep === 0 && (
-                <Card>
-                    <CardContent>
-                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <RestaurantIcon />
-                                Paso 1: Selecciona un Producto
+            {/* Estadísticas */}
+            <Grid container spacing={2} sx={{ mb: 4 }}>
+                <Grid item xs={6} sm={3}>
+                    <ModernCard>
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                            <Typography variant="h4" color="primary" sx={{ fontWeight: 700 }}>
+                                {stats.total}
                             </Typography>
-                            <Button
-                                variant="contained"
-                                startIcon={<AddProductIcon />}
-                                onClick={handleOpenProductDialog}
-                                color="primary"
-                            >
-                                Crear Nuevo Producto
-                            </Button>
+                            <Typography variant="body2" color="text.secondary">
+                                Total Productos
+                            </Typography>
                         </Box>
-                        
+                    </ModernCard>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                    <ModernCard>
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                            <Typography variant="h4" color="success.main" sx={{ fontWeight: 700 }}>
+                                {stats.conReceta}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Con Receta
+                            </Typography>
+                        </Box>
+                    </ModernCard>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                    <ModernCard>
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                            <Typography variant="h4" color="warning.main" sx={{ fontWeight: 700 }}>
+                                {stats.sinReceta}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Sin Receta
+                            </Typography>
+                        </Box>
+                    </ModernCard>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                    <ModernCard>
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                            <Typography variant="h4" color="info.main" sx={{ fontWeight: 700 }}>
+                                {stats.ingredientes}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Ingredientes
+                            </Typography>
+                        </Box>
+                    </ModernCard>
+                </Grid>
+            </Grid>
+
+            {/* Filtros y controles */}
+            <Box sx={{ mb: 4 }}>
+                <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={6} md={4}>
                         <TextField
                             fullWidth
-                            label="Buscar producto..."
+                            placeholder="Buscar productos..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            sx={{ mb: 3 }}
-                            placeholder="Escribe para buscar productos..."
+                            InputProps={{
+                                startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+                            }}
+                            size="small"
                         />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'stretch', md: 'flex-end' } }}>
+                            <IconButton
+                                onClick={() => setViewMode('stepper')}
+                                color={viewMode === 'stepper' ? 'primary' : 'default'}
+                            >
+                                <AssignmentIcon />
+                            </IconButton>
+                            <IconButton
+                                onClick={() => setViewMode('cards')}
+                                color={viewMode === 'cards' ? 'primary' : 'default'}
+                            >
+                                <RestaurantIcon />
+                            </IconButton>
+                            <ModernButton
+                                variant="outlined"
+                                startIcon={<RefreshIcon />}
+                                onClick={loadData}
+                                size="small"
+                            >
+                                Actualizar
+                            </ModernButton>
+                        </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3}>
+                        <ModernButton
+                            variant="primary"
+                            startIcon={<AddProductIcon />}
+                            onClick={handleOpenProductDialog}
+                            fullWidth
+                            disabled={!isGerente}
+                        >
+                            Nuevo Producto
+                        </ModernButton>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
+                        <ModernButton
+                            variant="outlined"
+                            startIcon={<RecipeIcon />}
+                            onClick={() => setActiveStep(0)}
+                            fullWidth
+                        >
+                            Ver Productos
+                        </ModernButton>
+                    </Grid>
+                </Grid>
+            </Box>
 
-                        <Grid container spacing={2}>
-                            {filteredProductos.map((producto) => (
-                                <Grid item xs={12} sm={6} md={4} key={producto.id}>
-                                    <Card 
-                                        variant="outlined" 
-                                        sx={{ 
-                                            cursor: 'pointer',
-                                            '&:hover': { 
-                                                backgroundColor: 'action.hover',
-                                                borderColor: 'primary.main'
-                                            }
-                                        }}
-                                        onClick={() => handleProductoSelect(producto)}
+            {/* Vista de Stepper */}
+            {viewMode === 'stepper' ? (
+                <Paper sx={{ p: 3, borderRadius: 2 }}>
+                    <Stepper activeStep={activeStep} orientation="vertical">
+                        <Step>
+                            <StepLabel>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <RestaurantIcon />
+                                    <Typography variant="h6">Seleccionar Producto</Typography>
+                                </Box>
+                            </StepLabel>
+                            <StepContent>
+                                <Box sx={{ mb: 2 }}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        Selecciona un producto para gestionar su receta:
+                                    </Typography>
+                                    <Grid container spacing={2}>
+                                        {filteredProductos.map((producto) => (
+                                            <Grid item xs={12} sm={6} md={4} key={producto.id}>
+                                                <Card
+                                                    sx={{
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.3s ease',
+                                                        '&:hover': {
+                                                            transform: 'translateY(-4px)',
+                                                            boxShadow: theme.shadows[8],
+                                                        },
+                                                        border: selectedProducto?.id === producto.id ? 2 : 1,
+                                                        borderColor: selectedProducto?.id === producto.id ? 'primary.main' : 'divider',
+                                                    }}
+                                                    onClick={() => handleProductoSelect(producto)}
+                                                >
+                                                    <CardContent>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                                            <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
+                                                                {producto.nombre.charAt(0)}
+                                                            </Avatar>
+                                                            <Box>
+                                                                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                                    {producto.nombre}
+                                                                </Typography>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    ${producto.precio}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {producto.descripcion}
+                                                        </Typography>
+                                                    </CardContent>
+                                                </Card>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </Box>
+                                <Box sx={{ mb: 2 }}>
+                                    <ModernButton
+                                        variant="primary"
+                                        onClick={() => setActiveStep(1)}
+                                        disabled={!selectedProducto}
                                     >
-                                        <CardContent>
-                                            <Typography variant="h6" component="div">
-                                                {producto.nombre}
+                                        Continuar
+                                    </ModernButton>
+                                </Box>
+                            </StepContent>
+                        </Step>
+                        <Step>
+                            <StepLabel>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <KitchenIcon />
+                                    <Typography variant="h6">Gestionar Receta</Typography>
+                                </Box>
+                            </StepLabel>
+                            <StepContent>
+                                {selectedProducto && (
+                                    <Box>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                Receta de: {selectedProducto.nombre}
                                             </Typography>
-                                            <Typography color="text.secondary" gutterBottom>
-                                                ${producto.precio}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {producto.descripcion}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Paso 2: Gestión de Receta */}
-            {activeStep === 1 && selectedProducto && (
-                <Card>
-                    <CardContent>
-                        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <InventoryIcon />
-                                Receta de: {selectedProducto.nombre}
-                            </Typography>
-                            <Button 
-                                variant="outlined" 
-                                onClick={() => {
-                                    setActiveStep(0);
-                                    setSelectedProducto(null);
-                                    setRecetas([]);
+                                            <ModernButton
+                                                variant="primary"
+                                                startIcon={<AddIcon />}
+                                                onClick={() => handleOpenDialog()}
+                                            >
+                                                Añadir Ingrediente
+                                            </ModernButton>
+                                        </Box>
+                                        
+                                        {recetas.length > 0 ? (
+                                            <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+                                                <Table>
+                                                    <TableHead>
+                                                        <TableRow sx={{ bgcolor: 'primary.main' }}>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 600 }}>Ingrediente</TableCell>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 600 }}>Cantidad</TableCell>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 600 }}>Unidad</TableCell>
+                                                            <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">Acciones</TableCell>
+                                                        </TableRow>
+                                                    </TableHead>
+                                                    <TableBody>
+                                                        {recetas.map((receta) => (
+                                                            <TableRow key={receta.id} hover>
+                                                                <TableCell>
+                                                                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                                                        {getIngredienteNombre(receta)}
+                                                                    </Typography>
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <Typography variant="body2">
+                                                                        {receta.cantidad}
+                                                                    </Typography>
+                                                                </TableCell>
+                                                                <TableCell>
+                                                                    <Chip
+                                                                        label={receta.unidad}
+                                                                        size="small"
+                                                                        variant="outlined"
+                                                                    />
+                                                                </TableCell>
+                                                                <TableCell align="center">
+                                                                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                                                                        <Tooltip title="Editar">
+                                                                            <IconButton
+                                                                                size="small"
+                                                                                onClick={() => handleOpenDialog(receta)}
+                                                                            >
+                                                                                <EditIcon />
+                                                                            </IconButton>
+                                                                        </Tooltip>
+                                                                        <Tooltip title="Eliminar">
+                                                                            <IconButton
+                                                                                size="small"
+                                                                                color="error"
+                                                                                onClick={() => handleDeleteReceta(receta.id!)}
+                                                                            >
+                                                                                <DeleteIcon />
+                                                                            </IconButton>
+                                                                        </Tooltip>
+                                                                    </Box>
+                                                                </TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </TableContainer>
+                                        ) : (
+                                            <Box sx={{ textAlign: 'center', py: 4 }}>
+                                                <KitchenIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+                                                <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                                                    No hay ingredientes en la receta
+                                                </Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    Añade ingredientes para crear la receta
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                )}
+                            </StepContent>
+                        </Step>
+                    </Stepper>
+                </Paper>
+            ) : (
+                /* Vista de Cards */
+                <Grid container spacing={2}>
+                    {filteredProductos.map((producto) => (
+                        <Grid item xs={12} sm={6} md={4} key={producto.id}>
+                            <Card
+                                sx={{
+                                    height: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    transition: 'all 0.3s ease',
+                                    '&:hover': {
+                                        transform: 'translateY(-4px)',
+                                        boxShadow: theme.shadows[8],
+                                    },
                                 }}
                             >
-                                Cambiar Producto
-                            </Button>
-                        </Box>
-                        
-                        {recetas.length === 0 ? (
-                            <Alert severity="info" sx={{ mb: 2 }}>
-                                No hay ingredientes en la receta. Agrega ingredientes para comenzar.
-                            </Alert>
-                        ) : (
-                            <List>
-                                {recetas.map((receta) => (
-                                    <ListItem key={receta.id} divider>
-                                        <ListItemText
-                                            primary={getIngredienteNombre(receta)}
-                                            secondary={`${receta.cantidad} ${receta.unidad || 'unidades'}`}
+                                <CardContent sx={{ flexGrow: 1, p: 3 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                        <Avatar
+                                            sx={{
+                                                bgcolor: 'primary.main',
+                                                mr: 2,
+                                                width: 48,
+                                                height: 48,
+                                            }}
+                                        >
+                                            {producto.nombre.charAt(0)}
+                                        </Avatar>
+                                        <Box>
+                                            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                                                {producto.nombre}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                ${producto.precio}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+
+                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                                        {producto.descripcion}
+                                    </Typography>
+
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Chip
+                                            label="Ver Receta"
+                                            color="primary"
+                                            size="small"
+                                            icon={<RecipeIcon />}
                                         />
-                                        <ListItemSecondaryAction>
-                                            <IconButton
-                                                color="primary"
-                                                onClick={() => handleOpenDialog(receta)}
-                                                sx={{ mr: 1 }}
+                                        <Typography variant="body2" color="text.secondary">
+                                            ID: {producto.id}
+                                        </Typography>
+                                    </Box>
+                                </CardContent>
+
+                                <CardActions sx={{ p: 2, pt: 0 }}>
+                                    <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
+                                        <ModernButton
+                                            variant="outlined"
+                                            size="small"
+                                            startIcon={<RecipeIcon />}
+                                            onClick={() => handleProductoSelect(producto)}
+                                            sx={{ flex: 1 }}
+                                        >
+                                            Ver Receta
+                                        </ModernButton>
+                                        {isGerente && (
+                                            <ModernButton
+                                                variant="outlined"
+                                                size="small"
+                                                startIcon={<EditIcon />}
+                                                sx={{ flex: 1 }}
                                             >
-                                                <EditIcon />
-                                            </IconButton>
-                                            <IconButton
-                                                color="error"
-                                                onClick={() => handleDeleteReceta(receta.id!)}
-                                            >
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </ListItemSecondaryAction>
-                                    </ListItem>
-                                ))}
-                            </List>
-                        )}
-                    </CardContent>
-                    <CardActions>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => handleOpenDialog()}
-                            size="large"
-                        >
-                            Añadir Ingrediente
-                        </Button>
-                    </CardActions>
-                </Card>
+                                                Editar
+                                            </ModernButton>
+                                        )}
+                                    </Box>
+                                </CardActions>
+                            </Card>
+                        </Grid>
+                    ))}
+                </Grid>
             )}
 
-            {/* Modal para añadir/editar ingrediente */}
-            <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {editingReceta ? 'Editar Ingrediente en Receta' : 'Añadir Ingrediente a Receta'}
-                </DialogTitle>
-                <DialogContent>
-                    <FormControl fullWidth margin="normal">
-                        <InputLabel>Ingrediente</InputLabel>
-                        <Select
-                            value={formData.ingredienteId || ''}
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                const ingrediente = ingredientes.find(i => i.id === value);
-                                setFormData({ 
-                                    ...formData, 
-                                    ingredienteId: value === '' ? 0 : Number(value),
-                                    unidad: ingrediente?.unidad || ''
-                                });
-                            }}
-                            label="Ingrediente"
-                        >
-                            <MenuItem value="">
-                                <em>Selecciona un ingrediente</em>
-                            </MenuItem>
-                            {ingredientes.map((ingrediente) => (
-                                <MenuItem key={ingrediente.id} value={ingrediente.id}>
-                                    {ingrediente.nombre} (Stock: {ingrediente.stock} {ingrediente.unidad})
-                                </MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                    <TextField
-                        fullWidth
-                        label="Cantidad"
-                        type="number"
-                        value={formData.cantidad || ''}
-                        onChange={(e) => {
-                            const value = parseFloat(e.target.value);
-                            setFormData({ ...formData, cantidad: isNaN(value) ? 0 : value });
-                        }}
-                        margin="normal"
-                        required
-                        inputProps={{ min: 0, step: 0.01 }}
-                    />
-                    <TextField
-                        fullWidth
-                        label="Unidad"
-                        value={formData.unidad}
-                        onChange={(e) => setFormData({ ...formData, unidad: e.target.value })}
-                        margin="normal"
-                        required
-                        helperText="Usa la misma unidad que definiste en el ingrediente (ej: UN, g, ml)"
-                    />
-                    {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDialog}>Cancelar</Button>
-                    <Button onClick={handleSubmit} variant="contained">
-                        {editingReceta ? 'Actualizar' : 'Añadir'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
+            {/* Mensaje cuando no hay productos */}
+            {filteredProductos.length === 0 && !loading && (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                    <RestaurantIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+                    <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                        No se encontraron productos
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {searchTerm
+                            ? 'Intenta ajustar los filtros de búsqueda'
+                            : 'No hay productos registrados en el sistema'
+                        }
+                    </Typography>
+                </Box>
+            )}
 
-            {/* Modal para crear nuevo producto */}
-            <Dialog open={openProductDialog} onClose={handleCloseProductDialog} maxWidth="sm" fullWidth>
+            {/* Modal de crear producto */}
+            <Dialog 
+                open={openProductDialog} 
+                onClose={handleCloseProductDialog}
+                maxWidth="sm"
+                fullWidth
+            >
                 <DialogTitle>
-                    Crear Nuevo Producto
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <AddProductIcon />
+                        Crear Nuevo Producto
+                    </Box>
                 </DialogTitle>
                 <DialogContent>
                     <TextField
@@ -499,7 +768,6 @@ const RecetasPage = () => {
                         onChange={(e) => setNewProductData({ ...newProductData, nombre: e.target.value })}
                         margin="normal"
                         required
-                        placeholder="Ej: Hamburguesa Clásica"
                     />
                     <TextField
                         fullWidth
@@ -509,23 +777,16 @@ const RecetasPage = () => {
                         margin="normal"
                         multiline
                         rows={3}
-                        placeholder="Describe el producto..."
                     />
                     <TextField
                         fullWidth
                         label="Precio"
                         type="number"
-                        value={newProductData.precio || ''}
-                        onChange={(e) => {
-                            const value = parseFloat(e.target.value);
-                            setNewProductData({ ...newProductData, precio: isNaN(value) ? 0 : value });
-                        }}
+                        value={newProductData.precio}
+                        onChange={(e) => setNewProductData({ ...newProductData, precio: parseFloat(e.target.value) })}
                         margin="normal"
                         required
-                        inputProps={{ min: 0, step: 0.01 }}
-                        placeholder="0.00"
                     />
-                    {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseProductDialog}>Cancelar</Button>
@@ -535,21 +796,88 @@ const RecetasPage = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Snackbar para notificaciones */}
+            {/* Modal de añadir/editar ingrediente */}
+            <Dialog 
+                open={openDialog} 
+                onClose={handleCloseDialog}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <KitchenIcon />
+                        {editingReceta ? 'Editar Ingrediente' : 'Añadir Ingrediente'}
+                    </Box>
+                </DialogTitle>
+                <DialogContent>
+                    <FormControl fullWidth margin="normal">
+                        <InputLabel>Ingrediente</InputLabel>
+                        <Select
+                            value={formData.ingredienteId}
+                            onChange={(e) => setFormData({ ...formData, ingredienteId: e.target.value as number })}
+                            label="Ingrediente"
+                        >
+                            {ingredientes.map((ingrediente) => (
+                                <MenuItem key={ingrediente.id} value={ingrediente.id}>
+                                    {ingrediente.nombre} ({ingrediente.unidad})
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <TextField
+                        fullWidth
+                        label="Cantidad"
+                        type="number"
+                        value={formData.cantidad}
+                        onChange={(e) => setFormData({ ...formData, cantidad: parseFloat(e.target.value) })}
+                        margin="normal"
+                        required
+                    />
+                    <TextField
+                        fullWidth
+                        label="Unidad"
+                        value={formData.unidad}
+                        onChange={(e) => setFormData({ ...formData, unidad: e.target.value })}
+                        margin="normal"
+                        required
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDialog}>Cancelar</Button>
+                    <Button onClick={handleSubmit} variant="contained">
+                        {editingReceta ? 'Actualizar' : 'Añadir'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Snackbar */}
             <Snackbar
                 open={snackbarOpen}
-                autoHideDuration={4000}
+                autoHideDuration={6000}
                 onClose={handleSnackbarClose}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
             >
-                <Alert 
-                    onClose={handleSnackbarClose} 
-                    severity={snackbarSeverity} 
-                    sx={{ width: '100%' }}
-                >
+                <Alert onClose={handleSnackbarClose} severity={snackbarSeverity}>
                     {snackbarMessage}
                 </Alert>
             </Snackbar>
+
+            {/* FAB para móviles */}
+            {isGerente && isMobile && (
+                <Fab
+                    color="primary"
+                    aria-label="Nuevo Producto"
+                    onClick={handleOpenProductDialog}
+                    sx={{
+                        position: 'fixed',
+                        bottom: 16,
+                        right: 16,
+                        zIndex: 1000,
+                    }}
+                >
+                    <AddProductIcon />
+                </Fab>
+            )}
         </Container>
     );
 };

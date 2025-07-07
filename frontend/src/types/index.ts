@@ -41,6 +41,7 @@ export interface ProductoVendidoDTO {
     productoId: number;
     nombreProducto: string;
     cantidadTotal: number;
+    precioUnitario: number;
 }
 
 export interface ReporteVentasDTO {

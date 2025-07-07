@@ -13,7 +13,6 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
-  Fade,
   Divider,
   Badge,
   AppBar,
@@ -28,6 +27,20 @@ import {
   ListItemText,
   ListItemIcon,
   ListItemSecondaryAction,
+  LinearProgress,
+  Avatar,
+  Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   PointOfSale,
@@ -157,77 +170,60 @@ const CashierViewPage: React.FC = () => {
   };
 
   const renderComandaCard = (comanda: ComandaResponseDTO) => (
-    <Fade in={true} timeout={300}>
-      <ModernCard
-        key={comanda.id}
-        title={`Mesa ${comanda.numeroMesa}`}
-        subtitle={`${comanda.items.length} items`}
-        chips={[getEstadoText(comanda.estado)]}
-        variant="elevated"
-        hover={true}
-        actions={
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Chip
-              label={getEstadoText(comanda.estado)}
-              color={getEstadoColor(comanda.estado) as any}
-              size="small"
-              icon={<Timer />}
-            />
-            <Chip
-              label={`$${comanda.total.toFixed(2)}`}
-              color="primary"
-                                        size="small"
-                                        variant="outlined"
-              icon={<AttachMoney />}
-            />
-          </Box>
-        }
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-          <Restaurant color="primary" />
-          <Box>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Mesa {comanda.numeroMesa}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {comanda.items.length} productos • {comanda.total.toFixed(2)} items
-            </Typography>
-          </Box>
-        </Box>
-
-        {/* Lista de items */}
-        <Box sx={{ mb: 2 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-            Productos:
+    <Paper
+      key={comanda.id}
+      sx={{
+        p: 2,
+        mb: 1,
+        borderRadius: 2,
+        border: '1px solid',
+        borderColor: 'divider',
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+        <Restaurant color="primary" />
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Mesa {comanda.numeroMesa}
           </Typography>
-          <Box sx={{ maxHeight: 120, overflow: 'auto' }}>
-            {comanda.items.slice(0, 3).map((item, index) => (
-              <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography variant="body2">
-                  {item.cantidad}x {item.productoNombre}
-                </Typography>
-                <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                  ${(item.cantidad * item.precioUnitario).toFixed(2)}
-                </Typography>
-              </Box>
-            ))}
-            {comanda.items.length > 3 && (
-              <Typography variant="body2" color="text.secondary">
-                +{comanda.items.length - 3} más...
+          <Typography variant="body2" color="text.secondary">
+            {comanda.items.length} productos • {comanda.total.toFixed(2)} items
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Lista de items */}
+      <Box sx={{ mb: 2 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          Productos:
+        </Typography>
+        <Box sx={{ maxHeight: 120, overflow: 'auto' }}>
+          {comanda.items.slice(0, 3).map((item, index) => (
+            <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+              <Typography variant="body2">
+                {item.cantidad}x {item.productoNombre}
               </Typography>
-            )}
-          </Box>
+              <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                ${(item.cantidad * item.precioUnitario).toFixed(2)}
+              </Typography>
+            </Box>
+          ))}
+          {comanda.items.length > 3 && (
+            <Typography variant="body2" color="text.secondary">
+              +{comanda.items.length - 3} más...
+            </Typography>
+          )}
         </Box>
+      </Box>
 
-        <Divider sx={{ my: 2 }} />
+      <Divider sx={{ my: 2 }} />
 
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
-            ${comanda.total.toFixed(2)}
-          </Typography>
-        </Box>
-      </ModernCard>
-    </Fade>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
+          ${comanda.total.toFixed(2)}
+        </Typography>
+      </Box>
+    </Paper>
   );
 
   const renderComandaListItem = (comanda: ComandaResponseDTO) => (

@@ -83,6 +83,65 @@ public class RecetaIngredienteController {
         return ResponseEntity.ok().build();
     }
 
+    // Nuevo endpoint para manejar recetas individuales
+    @PostMapping("/producto/{productoId}/ingrediente")
+    @PreAuthorize("hasRole('GERENTE')")
+    public ResponseEntity<RecetaIngredienteResponseDTO> agregarIngredienteAProducto(
+            @PathVariable Long productoId,
+            @Valid @RequestBody RecetaIngredienteDTO recetaDTO) {
+        
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        
+        Ingrediente ingrediente = ingredienteRepository.findById(recetaDTO.getIngredienteId())
+                .orElseThrow(() -> new RuntimeException("Ingrediente no encontrado con id: " + recetaDTO.getIngredienteId()));
+        
+        RecetaIngrediente receta = new RecetaIngrediente();
+        receta.setProducto(producto);
+        receta.setIngrediente(ingrediente);
+        receta.setCantidad(recetaDTO.getCantidad());
+        
+        RecetaIngrediente savedReceta = recetaIngredienteService.save(receta);
+        
+        RecetaIngredienteResponseDTO responseDTO = new RecetaIngredienteResponseDTO(
+            savedReceta.getId(),
+            savedReceta.getIngrediente().getId(),
+            savedReceta.getIngrediente().getNombre(),
+            savedReceta.getCantidad(),
+            savedReceta.getIngrediente().getUnidad()
+        );
+        
+        return ResponseEntity.ok(responseDTO);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('GERENTE')")
+    public ResponseEntity<RecetaIngredienteResponseDTO> actualizarReceta(
+            @PathVariable Long id,
+            @Valid @RequestBody RecetaIngredienteDTO recetaDTO) {
+        
+        RecetaIngrediente receta = recetaIngredienteService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Receta no encontrada con id: " + id));
+        
+        Ingrediente ingrediente = ingredienteRepository.findById(recetaDTO.getIngredienteId())
+                .orElseThrow(() -> new RuntimeException("Ingrediente no encontrado con id: " + recetaDTO.getIngredienteId()));
+        
+        receta.setIngrediente(ingrediente);
+        receta.setCantidad(recetaDTO.getCantidad());
+        
+        RecetaIngrediente updatedReceta = recetaIngredienteService.save(receta);
+        
+        RecetaIngredienteResponseDTO responseDTO = new RecetaIngredienteResponseDTO(
+            updatedReceta.getId(),
+            updatedReceta.getIngrediente().getId(),
+            updatedReceta.getIngrediente().getNombre(),
+            updatedReceta.getCantidad(),
+            updatedReceta.getIngrediente().getUnidad()
+        );
+        
+        return ResponseEntity.ok(responseDTO);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('GERENTE')")
     public ResponseEntity<Void> deleteReceta(@PathVariable Long id) {

@@ -13,7 +13,6 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
-  Fade,
   Divider,
   Badge,
   AppBar,
@@ -175,82 +174,80 @@ const KitchenViewPage: React.FC = () => {
     const tiempoEstimado = getTiempoEstimado(comanda);
 
     return (
-      <Fade in={true} timeout={300}>
-        <ModernCard
-          key={comanda.id}
-          title={`Mesa ${comanda.numeroMesa}`}
-          subtitle={`${comanda.items.length} items • ${tiempoEstimado} min estimados`}
-          chips={[getPrioridadText(prioridad)]}
-          variant="elevated"
-          hover={true}
-          actions={
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Chip
-                label={getPrioridadText(prioridad)}
-                color={getPrioridadColor(prioridad) as any}
-                size="small"
-                icon={<PriorityHigh />}
-              />
-              <Chip
-                label={`${tiempoEstimado} min`}
-                color="info"
-                size="small"
-                variant="outlined"
-                icon={<Timer />}
-              />
-            </Box>
-          }
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Kitchen color="primary" />
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Mesa {comanda.numeroMesa}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {comanda.items.length} productos • ${comanda.total.toFixed(2)}
-              </Typography>
-            </Box>
+      <ModernCard
+        key={comanda.id}
+        title={`Mesa ${comanda.numeroMesa}`}
+        subtitle={`${comanda.items.length} items • ${tiempoEstimado} min estimados`}
+        chips={[getPrioridadText(prioridad)]}
+        variant="elevated"
+        hover={true}
+        actions={
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Chip
+              label={getPrioridadText(prioridad)}
+              color={getPrioridadColor(prioridad) as any}
+              size="small"
+              icon={<PriorityHigh />}
+            />
+            <Chip
+              label={`${tiempoEstimado} min`}
+              color="info"
+              size="small"
+              variant="outlined"
+              icon={<Timer />}
+            />
           </Box>
-
-          {/* Lista de items */}
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              Productos a preparar:
-            </Typography>
-            <Box sx={{ maxHeight: 120, overflow: 'auto' }}>
-              {comanda.items.map((item, index) => (
-                <Box key={index} sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  mb: 0.5,
-                  p: 0.5,
-                  borderRadius: 1,
-                  bgcolor: 'background.light'
-                }}>
-                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {item.cantidad}x {item.productoNombre}
-                  </Typography>
-                  <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                    ${(item.cantidad * item.precioUnitario).toFixed(2)}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          </Box>
-
-          <Divider sx={{ my: 2 }} />
-
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
-              ${comanda.total.toFixed(2)}
+        }
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+          <Kitchen color="primary" />
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Mesa {comanda.numeroMesa}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Tiempo: {tiempoEstimado} min
+              {comanda.items.length} productos • ${comanda.total.toFixed(2)}
             </Typography>
           </Box>
-        </ModernCard>
-      </Fade>
+        </Box>
+
+        {/* Lista de items */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Productos a preparar:
+          </Typography>
+          <Box sx={{ maxHeight: 120, overflow: 'auto' }}>
+            {comanda.items.map((item, index) => (
+              <Box key={index} sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                mb: 0.5,
+                p: 0.5,
+                borderRadius: 1,
+                bgcolor: 'background.light'
+              }}>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                  {item.cantidad}x {item.productoNombre}
+                </Typography>
+                <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                  ${(item.cantidad * item.precioUnitario).toFixed(2)}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" color="primary" sx={{ fontWeight: 700 }}>
+            ${comanda.total.toFixed(2)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Tiempo: {tiempoEstimado} min
+          </Typography>
+        </Box>
+      </ModernCard>
     );
   };
 
