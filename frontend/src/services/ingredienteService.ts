@@ -35,4 +35,8 @@ export const deleteIngrediente = async (id: number): Promise<void> => {
 export const getStockIngrediente = async (id: number): Promise<number> => {
     const response = await api.get(`/ingredientes/${id}/stock`);
     return response.data;
+};
+
+export const ingresarStockIngrediente = async (ingredienteId: number, cantidad: number): Promise<void> => {
+    await api.post(`/ingredientes/${ingredienteId}/ingresar-stock`, { cantidad });
 }; 

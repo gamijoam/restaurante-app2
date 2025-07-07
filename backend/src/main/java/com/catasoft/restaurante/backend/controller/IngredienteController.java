@@ -1,5 +1,6 @@
 package com.catasoft.restaurante.backend.controller;
 
+import com.catasoft.restaurante.backend.exception.ResourceNotFoundException;
 import com.catasoft.restaurante.backend.model.Ingrediente;
 import com.catasoft.restaurante.backend.service.IngredienteService;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -73,5 +75,25 @@ public class IngredienteController {
         }
         ingredienteService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // Endpoint para ingresar stock a un ingrediente
+    @PostMapping("/{id}/ingresar-stock")
+    @PreAuthorize("hasRole('GERENTE')")
+    public ResponseEntity<Ingrediente> ingresarStock(@PathVariable Long id, @RequestBody Map<String, Object> payload) {
+        Ingrediente ingrediente = ingredienteService.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Ingrediente no encontrado con id: " + id));
+        Double cantidad = null;
+        if (payload.get("cantidad") instanceof Number) {
+            cantidad = ((Number) payload.get("cantidad")).doubleValue();
+        } else if (payload.get("cantidad") instanceof String) {
+            cantidad = Double.parseDouble((String) payload.get("cantidad"));
+        }
+        if (cantidad == null || cantidad <= 0) {
+            return ResponseEntity.badRequest().build();
+        }
+        ingrediente.setStock(ingrediente.getStock() + cantidad);
+        ingredienteService.save(ingrediente);
+        return ResponseEntity.ok(ingrediente);
     }
 }

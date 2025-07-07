@@ -44,6 +44,7 @@ import {
     Badge,
     LinearProgress,
     Slider,
+    InputAdornment,
 } from '@mui/material';
 import {
     Restaurant as RestaurantIcon,
@@ -73,7 +74,7 @@ import {
     Schedule as ScheduleIcon,
     AttachMoney as MoneyIcon,
 } from '@mui/icons-material';
-import { getIngredientes, createIngrediente, updateIngrediente, deleteIngrediente, type Ingrediente } from '../services/ingredienteService';
+import { getIngredientes, createIngrediente, updateIngrediente, deleteIngrediente, type Ingrediente, ingresarStockIngrediente } from '../services/ingredienteService';
 import { useAuth } from '../context/AuthContext';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
@@ -104,6 +105,8 @@ const IngredientesPage = () => {
         descripcion: '',
         precioUnitario: 0
     });
+    const [openStockDialog, setOpenStockDialog] = useState(false);
+    const [stockForm, setStockForm] = useState<{ ingredienteId: number; cantidad: number }>({ ingredienteId: 0, cantidad: 0 });
 
     useEffect(() => {
         loadIngredientes();
@@ -224,6 +227,8 @@ const IngredientesPage = () => {
             </Container>
         );
     }
+
+    const selectedUnidad = ingredientes.find(i => i.id === stockForm.ingredienteId)?.unidad || '';
 
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -373,6 +378,18 @@ const IngredientesPage = () => {
                             Nuevo
                         </ModernButton>
                     </Grid>
+                    {isGerente && (
+                        <Grid item xs={12} sm={6} md={2}>
+                            <ModernButton
+                                variant="primary"
+                                startIcon={<InventoryIcon />}
+                                onClick={() => setOpenStockDialog(true)}
+                                fullWidth
+                            >
+                                Ingresar Stock
+                            </ModernButton>
+                        </Grid>
+                    )}
                 </Grid>
             </Box>
 
@@ -742,6 +759,52 @@ const IngredientesPage = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Modal de ingreso de stock */}
+            <ModernModal open={openStockDialog} onClose={() => setOpenStockDialog(false)} title="Ingresar Stock a Ingrediente">
+                <FormControl fullWidth margin="normal">
+                    <InputLabel>Ingrediente</InputLabel>
+                    <Select
+                        value={stockForm.ingredienteId}
+                        label="Ingrediente"
+                        onChange={e => setStockForm({ ...stockForm, ingredienteId: Number(e.target.value) })}
+                    >
+                        {ingredientes.map(ing => (
+                            <MenuItem key={ing.id} value={ing.id}>{ing.nombre}</MenuItem>
+                        ))}
+                    </Select>
+                </FormControl>
+                {/* Buscar la unidad del ingrediente seleccionado */}
+                <TextField
+                    label="Cantidad a ingresar"
+                    type="number"
+                    value={stockForm.cantidad}
+                    onChange={e => setStockForm({ ...stockForm, cantidad: parseFloat(e.target.value) })}
+                    fullWidth
+                    margin="normal"
+                    required
+                    inputProps={{ min: 0, step: 0.01 }}
+                    InputProps={{
+                        endAdornment: selectedUnidad ? (
+                          <InputAdornment position="end">{selectedUnidad}</InputAdornment>
+                        ) : null
+                      }}
+                />
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                    <ModernButton
+                        variant="primary"
+                        onClick={async () => {
+                            if (!stockForm.ingredienteId || stockForm.cantidad <= 0) return;
+                            await ingresarStockIngrediente(stockForm.ingredienteId, stockForm.cantidad);
+                            setOpenStockDialog(false);
+                            setStockForm({ ingredienteId: 0, cantidad: 0 });
+                            loadIngredientes();
+                        }}
+                    >
+                        Confirmar Ingreso
+                    </ModernButton>
+                </Box>
+            </ModernModal>
 
             {/* FAB para móviles */}
             {isGerente && isMobile && (
