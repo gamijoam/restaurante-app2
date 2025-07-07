@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <!-- Crear tabla de áreas -->
+    <changeSet id="007-01" author="system">
+        <createTable tableName="areas">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="area_id" type="VARCHAR(100)">
+                <constraints unique="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Crear tabla de plantillas de tickets -->
+    <changeSet id="007-02" author="system">
+        <createTable tableName="ticket_templates">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="area_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_default" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Crear tabla de bloques de tickets -->
+    <changeSet id="007-03" author="system">
+        <createTable tableName="ticket_blocks">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="block_id" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="TEXT"/>
+            <column name="align" type="VARCHAR(20)"/>
+            <column name="bold" type="BOOLEAN" defaultValueBoolean="false"/>
+            <column name="label" type="VARCHAR(255)"/>
+            <column name="field" type="VARCHAR(100)"/>
+            <column name="format" type="VARCHAR(100)"/>
+            <column name="position" type="INT"/>
+            <column name="columns_json" type="TEXT"/>
+            <column name="ticket_template_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Agregar foreign key para ticket_blocks -->
+    <changeSet id="007-04" author="system">
+        <addForeignKeyConstraint
+                baseTableName="ticket_blocks"
+                baseColumnNames="ticket_template_id"
+                referencedTableName="ticket_templates"
+                referencedColumnNames="id"
+                constraintName="fk_ticket_blocks_template"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- Insertar áreas por defecto -->
+    <changeSet id="007-05" author="system">
+        <insert tableName="areas">
+            <column name="area_id" value="caja"/>
+            <column name="name" value="Caja"/>
+            <column name="description" value="Tickets de venta rápida y facturación"/>
+        </insert>
+        <insert tableName="areas">
+            <column name="area_id" value="cocina"/>
+            <column name="name" value="Cocina"/>
+            <column name="description" value="Tickets para preparación de alimentos"/>
+        </insert>
+        <insert tableName="areas">
+            <column name="area_id" value="barra"/>
+            <column name="name" value="Barra"/>
+            <column name="description" value="Tickets para bebidas y cocteles"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog> 

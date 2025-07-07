@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/cocina/**").hasAuthority("VER_COCINA")
                 .requestMatchers("/api/v1/caja/**").hasAuthority("VER_CAJA")
                 .requestMatchers("/api/v1/impresoras/**").hasAuthority("CONFIGURAR_IMPRESORAS")
+                .requestMatchers("/api/v1/ticket-templates/**").hasRole("GERENTE")
                 
                 // Cualquier otra petición requiere autenticación
                 .anyRequest().authenticated()

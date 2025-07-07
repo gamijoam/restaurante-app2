@@ -19,17 +19,16 @@ if (!WEBSOCKET_URL) {
     process.exit(1);
 }
 
-// --- 3. FUNCIÓN DE IMPRESIÓN (VERSIÓN FINAL) ---
+// --- 3. FUNCIÓN DE IMPRESIÓN CON PLANTILLAS DINÁMICAS ---
 async function imprimirTicket(printJob) {
-    const { printerType, printerTarget, ticketType, ticketData } = printJob;
+    const { printerType, printerTarget, ticketType, ticketData, template } = printJob;
     console.log(`\n--- Nuevo trabajo de impresión recibido ---`);
     console.log(`Tipo: ${printerType}, Destino: ${printerTarget}, Ticket: ${ticketType}`);
 
     const printer = new ThermalPrinter({
         type: PrinterTypes.EPSON,
-        interface: printerTarget, // El destino se recibe del backend
+        interface: printerTarget,
         driver: require('node-printer'),
-        // CORRECCIÓN FINAL: Se especifica el juego de caracteres para español
         characterSet: 'PC850_MULTILINGUAL' 
     });
 
@@ -47,10 +46,16 @@ async function imprimirTicket(printJob) {
             return;
         }
         
-        if (ticketType === "COCINA") {
-            await imprimirTicketCocina(printer, ticketData);
+        // Usar plantilla dinámica si está disponible, sino usar formato por defecto
+        if (template && template.blocks && template.blocks.length > 0) {
+            await imprimirConPlantilla(printer, ticketData, template);
         } else {
-            await imprimirTicketCaja(printer, ticketData);
+            // Fallback a formato por defecto
+            if (ticketType === "COCINA") {
+                await imprimirTicketCocina(printer, ticketData);
+            } else {
+                await imprimirTicketCaja(printer, ticketData);
+            }
         }
         
         await printer.execute();
@@ -58,6 +63,112 @@ async function imprimirTicket(printJob) {
 
     } catch (error) {
         console.error(`❌ Error durante la impresión en "${printerTarget}":`, error);
+    }
+}
+
+// --- FUNCIÓN PARA IMPRIMIR CON PLANTILLA DINÁMICA ---
+async function imprimirConPlantilla(printer, ticketData, template) {
+    console.log("🎨 Usando plantilla personalizada:", template.name);
+    
+    for (const block of template.blocks) {
+        await procesarBloque(printer, block, ticketData);
+    }
+    
+    printer.cut();
+}
+
+// --- FUNCIÓN PARA PROCESAR CADA BLOQUE DE LA PLANTILLA ---
+async function procesarBloque(printer, block, ticketData) {
+    switch (block.type) {
+        case 'text':
+            if (block.align === 'center') {
+                printer.alignCenter();
+            } else if (block.align === 'right') {
+                printer.alignRight();
+            } else {
+                printer.alignLeft();
+            }
+            
+            if (block.bold) {
+                printer.bold(true);
+            }
+            
+            printer.println(block.value || '');
+            
+            if (block.bold) {
+                printer.bold(false);
+            }
+            break;
+            
+        case 'line':
+            printer.println('--------------------------------');
+            break;
+            
+        case 'datetime':
+            const now = new Date();
+            let format = block.format || 'DD/MM/YYYY HH:mm';
+            
+            // Aplicar formato personalizado
+            let dateStr = now.toLocaleString('es-ES');
+            if (format.includes('DD/MM/YYYY')) {
+                dateStr = now.toLocaleDateString('es-ES');
+            } else if (format.includes('HH:mm')) {
+                dateStr = now.toLocaleTimeString('es-ES', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            }
+            
+            printer.println(dateStr);
+            break;
+            
+        case 'table':
+            // Imprimir encabezado de tabla
+            if (block.columns && block.columns.length > 0) {
+                const header = block.columns.join(' | ');
+                printer.println(header);
+                printer.println('--------------------------------');
+            }
+            
+            // Imprimir items
+            ticketData.items.forEach((item, index) => {
+                try {
+                    const cantidad = (item.cantidad || 0).toString().padStart(3);
+                    const producto = (item.nombreProducto || "Producto desconocido").substring(0, 20).padEnd(20);
+                    const precioTotal = item.precioTotal || 0;
+                    const total = `$${precioTotal.toFixed(2)}`.padStart(8);
+                    printer.println(`${cantidad} | ${producto} | ${total}`);
+                } catch (e) {
+                    console.error(`❌ Error procesando item ${index}:`, e);
+                    printer.println(`ERR | Error en item ${index} | $0.00`);
+                }
+            });
+            break;
+            
+        case 'total':
+            const total = ticketData.total || 0;
+            printer.alignRight();
+            printer.println(`${block.label || 'Total'}: $${total.toFixed(2)}`);
+            printer.alignLeft();
+            break;
+            
+        case 'qr':
+            if (block.value) {
+                printer.alignCenter();
+                printer.printQR(block.value);
+                printer.alignLeft();
+            }
+            break;
+            
+        case 'logo':
+            printer.alignCenter();
+            printer.println('[LOGO]');
+            printer.alignLeft();
+            break;
+            
+        default:
+            console.warn(`⚠️ Tipo de bloque no reconocido: ${block.type}`);
+            break;
     }
 }
 
@@ -176,7 +287,7 @@ async function imprimirTicketCaja(printer, ticketData) {
     printer.cut();
 }
 
-// --- 4. LÓGICA DE CONEXIÓN CON STOMP (Sin cambios) ---
+// --- 4. LÓGICA DE CONEXIÓN CON STOMP ---
 const stompClient = new Client({
     brokerURL: WEBSOCKET_URL,
     reconnectDelay: 5000,
@@ -200,9 +311,30 @@ stompClient.onConnect = (frame) => {
 };
 
 stompClient.onStompError = (frame) => {
-    console.error('Error en el broker STOMP: ' + frame.headers['message']);
+    console.error('Error STOMP:', frame);
 };
 
-// --- 5. INICIAR EL CLIENTE ---
-console.log(`Intentando conectar a: ${WEBSOCKET_URL}`);
+stompClient.onWebSocketError = (error) => {
+    console.error('Error WebSocket:', error);
+};
+
+stompClient.onWebSocketClose = () => {
+    console.log('Conexión WebSocket cerrada');
+};
+
+// --- 5. INICIALIZACIÓN ---
+console.log('🔄 Conectando al broker STOMP...');
 stompClient.activate();
+
+// Manejo de señales para cierre limpio
+process.on('SIGINT', () => {
+    console.log('\n🛑 Cerrando conexión STOMP...');
+    stompClient.deactivate();
+    process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+    console.log('\n🛑 Cerrando conexión STOMP...');
+    stompClient.deactivate();
+    process.exit(0);
+});

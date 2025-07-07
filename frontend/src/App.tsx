@@ -20,7 +20,9 @@ import RecetasPage from './pages/RecetasPage';
 import InventarioHelpPage from './pages/InventarioHelpPage';
 import RolesPermisosPage from './pages/RolesPermisosPage';
 import PrinterSettingsPage from './pages/PrinterSettingsPage.tsx';
-import ConfiguracionPage from './pages/ConfiguracionPage';
+import ConfiguracionGeneralPage from './pages/ConfiguracionGeneralPage';
+import TicketEditorPage from './pages/TicketEditorPage';
+import TicketTemplatesPage from './pages/TicketTemplatesPage';
 
 function App() {
   return (
@@ -134,18 +136,18 @@ function App() {
               } 
             />
             <Route 
-              path="configuracion/impresoras" 
+              path="configuracion" 
               element={
-                <ProtectedRoute allowedPermissions={['CONFIGURAR_IMPRESORAS']}>
-                  <PrinterSettingsPage />
+                <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                  <ConfiguracionGeneralPage />
                 </ProtectedRoute>
               } 
             />
             <Route 
-              path="configuracion/sistema" 
+              path="ticket-templates" 
               element={
                 <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
-                  <ConfiguracionPage />
+                  <TicketTemplatesPage />
                 </ProtectedRoute>
               } 
             />

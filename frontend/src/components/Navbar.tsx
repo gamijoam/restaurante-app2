@@ -38,6 +38,8 @@ import {
   Notifications,
   Help,
 } from '@mui/icons-material';
+import ReceiptIcon from '@mui/icons-material/Receipt';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -141,20 +143,14 @@ const Navbar: React.FC = () => {
       path: '/roles-permisos',
       permission: 'GESTIONAR_ROLES',
     },
-    {
-      text: 'Configuración',
-      icon: <Settings />,
-      path: '/configuracion/impresoras',
-      permission: 'CONFIGURAR_IMPRESORAS',
-    },
   ];
 
-  // Agregar Configuración del Sistema solo para GERENTE
+  // Solo una opción de configuración para GERENTE
   if (roles && roles.includes('ROLE_GERENTE')) {
     menuItems.push({
-      text: 'Config. Sistema',
-      icon: <Settings />,
-      path: '/configuracion/sistema',
+      text: 'Configuración',
+      icon: <SettingsIcon />,
+      path: '/configuracion',
       permission: '',
     });
   }
