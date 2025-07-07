@@ -10,9 +10,10 @@ import { getStockDisponibleProducto } from '../services/productoService';
 
 interface ProductCardProps {
     producto: Producto;
+    hideActions?: boolean;
 }
 
-const ProductCard = ({ producto }: ProductCardProps) => {
+const ProductCard = ({ producto, hideActions }: ProductCardProps) => {
     // 2. Obtenemos la función para añadir productos desde el contexto
     const { addProductToOrder } = useOrder();
     const [stockReal, setStockReal] = useState<number | null>(null);
@@ -42,12 +43,14 @@ const ProductCard = ({ producto }: ProductCardProps) => {
                     Stock: {stockReal !== null ? stockReal : '...'}
                 </Typography>
             </CardContent>
-            <CardActions>
-                {/* 3. Le damos la funcionalidad al botón */}
-                <Button size="small" onClick={() => addProductToOrder(producto)} disabled={stockReal === 0}>
-                    Añadir a Comanda
-                </Button>
-            </CardActions>
+            {!hideActions && (
+                <CardActions>
+                    {/* 3. Le damos la funcionalidad al botón */}
+                    <Button size="small" onClick={() => addProductToOrder(producto)} disabled={stockReal === 0}>
+                        Añadir a Comanda
+                    </Button>
+                </CardActions>
+            )}
         </Card>
     );
 };

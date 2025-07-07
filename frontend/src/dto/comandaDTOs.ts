@@ -8,7 +8,7 @@ export interface ItemRequestDTO {
 
 // Define la forma de la petición completa para crear una comanda
 export interface ComandaRequestDTO {
-    mesaId: number;
+    mesaId: number | null;
     items: ItemRequestDTO[];
 }
 

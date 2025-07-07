@@ -76,3 +76,7 @@ INSERT INTO receta_ingredientes (producto_id, ingrediente_id, cantidad, unidad) 
 (4, 9, 0.200, 'kg'), -- Pasta
 (4, 10, 0.050, 'kg'), -- Panceta
 (4, 11, 0.020, 'kg'); -- Parmesano 
+
+-- Mesa especial para ventas rápidas
+INSERT INTO mesas (id, numero, capacidad, estado, posicion_x, posicion_y, nombre, activo)
+VALUES (9999, 9999, 2, 'LIBRE', 114, 300, 'VENTA RÁPIDA', true); 

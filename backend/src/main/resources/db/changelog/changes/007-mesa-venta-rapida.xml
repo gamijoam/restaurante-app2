@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="007-insert-mesa-venta-rapida" author="ai">
+        <insert tableName="mesas">
+            <column name="id" valueNumeric="9999"/>
+            <column name="numero" valueNumeric="9999"/>
+            <column name="capacidad" valueNumeric="2"/>
+            <column name="estado" value="LIBRE"/>
+            <column name="posicion_x" valueNumeric="114"/>
+            <column name="posicion_y" valueNumeric="300"/>
+            <column name="nombre" value="VENTA RÁPIDA"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog> 
