@@ -13,7 +13,9 @@ backend/target/
 build/
 dist/
 .next/
-
+.db
+license-db.mv.db
+license-db.trace.db
 # Archivos de IDEs y editores
 .idea/
 .vscode/

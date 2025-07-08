@@ -9,7 +9,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://192.168.1.102:8080', // IP correcta
+        target: 'http://localhost:8080', // IP correcta
         changeOrigin: true,
         secure: false,
         // Elimina el bloque configure

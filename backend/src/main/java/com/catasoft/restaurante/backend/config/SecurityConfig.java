@@ -34,7 +34,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Permitimos auth, websockets Y NUESTRO PING DE PRUEBA
                 .requestMatchers("/api/auth/**", "/ws/**", "/ping", "/test/**").permitAll()
-                
+                .requestMatchers("/api/license/**").permitAll()
                 // Endpoints que requieren permisos específicos
                 .requestMatchers("/api/v1/reportes/**").hasAuthority("VER_REPORTES")
                 .requestMatchers("/api/v1/productos/**").hasAuthority("GESTIONAR_INGREDIENTES")

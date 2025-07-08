@@ -10,7 +10,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**") // Aplica a toda tu API
-                .allowedOrigins(
+                .allowedOriginPatterns(
                     "http://localhost:5173",       // Para desarrollo local
                     "http://localhost:3000",       // Para desarrollo local (Vite)
                     "http://192.168.1.102:5173",  // Para tu IP específica
