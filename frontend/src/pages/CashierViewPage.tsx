@@ -62,7 +62,7 @@ import {
   Remove,
 } from '@mui/icons-material';
 import type { ComandaResponseDTO } from '../types';
-import { getComandasPorMultiplesEstados, updateComandaEstado } from '../services/comandaService';
+import { getComandasPorMultiplesEstados, updateComandaEstado, getComandaAreasStatus } from '../services/comandaService';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useNotification } from '../hooks/useNotification';
 import ModernCard from '../components/ModernCard';
@@ -70,6 +70,7 @@ import ModernButton from '../components/ModernButton';
 import ModernModal from '../components/ModernModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SkeletonLoader from '../components/SkeletonLoader';
+import OrderSummary from '../components/OrderSummary';
 import { imprimirTicketCaja } from '../services/impresionService';
 import ProductCard from '../components/ProductCard';
 import { getProductos } from '../services/productoService';
@@ -216,6 +217,8 @@ const ProductSelectorWizardModal: React.FC<ProductSelectorWizardModalProps> = ({
 const CashierViewPage: React.FC = () => {
     const [comandas, setComandas] = useState<ComandaResponseDTO[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [comandasAreasStatus, setComandasAreasStatus] = useState<{ [comandaId: number]: any[] }>({});
     const [error, setError] = useState<string | null>(null);
     const [submittingId, setSubmittingId] = useState<number | null>(null);
     const [printingId, setPrintingId] = useState<number | null>(null);
@@ -244,9 +247,22 @@ const CashierViewPage: React.FC = () => {
         try {
             const data = await getComandasPorMultiplesEstados(['LISTA', 'ENTREGADA']);
             setComandas(Array.isArray(data) ? data : []);
+            
+            // Cargar estado de áreas para cada comanda
+            const areasStatus: { [comandaId: number]: any[] } = {};
+            for (const comanda of Array.isArray(data) ? data : []) {
+                try {
+                    const areas = await getComandaAreasStatus(comanda.id);
+                    areasStatus[comanda.id] = areas;
+                } catch (error) {
+                    console.error(`Error cargando áreas para comanda ${comanda.id}:`, error);
+                    areasStatus[comanda.id] = [];
+                }
+            }
+            setComandasAreasStatus(areasStatus);
         } catch (err) {
             setError('Error al cargar las comandas a cobrar.');
-      showError('Error al cargar comandas', 'No se pudieron cargar las comandas pendientes');
+            showError('Error al cargar comandas', 'No se pudieron cargar las comandas pendientes');
         } finally {
             setLoading(false);
         }
@@ -400,8 +416,8 @@ const CashierViewPage: React.FC = () => {
     }
     setCreatingQuickSale(true);
     try {
-      // Crear comanda sin mesa (mesaId: null)
-      const response = await crearComandaAPI({ mesaId: null, items });
+      // Usar mesaId: 9999 para venta rápida
+      const response = await crearComandaAPI({ mesaId: 9999, items });
       setComandas(prev => [response, ...prev]);
       showSuccess('Venta rápida creada', 'Comanda rápida creada correctamente');
       setQuickSaleModalOpen(false);
@@ -435,93 +451,22 @@ const CashierViewPage: React.FC = () => {
     }
   };
 
-  const renderComandaCard = (comanda: ComandaResponseDTO) => (
-    <Paper
-      key={comanda.id}
-      sx={{
-        p: 2,
-        mb: 1,
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-        <Restaurant color="primary" />
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            {comanda.numeroMesa == null ? 'Venta rápida' : `Mesa ${comanda.numeroMesa}`}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {comanda.items.length} productos • {comanda.total.toFixed(2)} items
-          </Typography>
-        </Box>
-      </Box>
-
-      {/* Lista de items */}
-      <Box sx={{ mb: 2 }}>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          Productos:
-        </Typography>
-        <Box sx={{ maxHeight: 120, overflow: 'auto' }}>
-          {comanda.items.slice(0, 3).map((item, index) => (
-            <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-              <Typography variant="body2">
-                {item.cantidad}x {item.productoNombre}
-              </Typography>
-              <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                ${(item.cantidad * item.precioUnitario).toFixed(2)}
-              </Typography>
-            </Box>
-          ))}
-          {comanda.items.length > 3 && (
-            <Typography variant="body2" color="text.secondary">
-              +{comanda.items.length - 3} más...
-            </Typography>
-          )}
-        </Box>
-      </Box>
-
-      <Divider sx={{ my: 2 }} />
-
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
-          ${comanda.total.toFixed(2)}
-        </Typography>
-      </Box>
-      <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 1 }}>
-        <ModernButton
-          variant="outlined"
-          size="small"
-          icon="add"
-          onClick={() => handleOpenAddProducts(comanda)}
-        >
-          Agregar productos
-        </ModernButton>
-        <ModernButton
-          variant="outlined"
-          size="small"
-          icon="print"
-          loading={printingId === comanda.id}
-          onClick={() => handlePrintClick(comanda)}
-        >
-          Imprimir
-        </ModernButton>
-        <ModernButton
-          variant="primary"
-          size="small"
-          icon="save"
-          loading={submittingId === comanda.id}
-          onClick={() => {
-            setSelectedComanda(comanda);
-            setConfirmModalOpen(true);
-          }}
-        >
-          Cobrar
-        </ModernButton>
-      </Box>
-    </Paper>
-  );
+  const renderComandaCard = (comanda: ComandaResponseDTO) => {
+    const areaStatuses = comandasAreasStatus[comanda.id] || [];
+    
+    return (
+      <OrderSummary 
+        key={comanda.id}
+        comanda={comanda}
+        areaStatuses={areaStatuses.map((area: any) => ({
+          areaId: area.areaId,
+          areaName: area.areaNombre,
+          status: area.estado,
+          type: area.areaNombre.toLowerCase().includes('cocina') ? 'KITCHEN' : 'BAR'
+        }))}
+      />
+    );
+  };
 
   const renderComandaListItem = (comanda: ComandaResponseDTO) => (
     <Paper

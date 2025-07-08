@@ -57,6 +57,9 @@ public interface ComandaAreaRepository extends JpaRepository<ComandaArea, Long> 
     // Buscar comandas por área que no están entregadas
     List<ComandaArea> findByAreaIdAndStatusNot(String areaId, ComandaArea.EstadoComandaArea status);
     
+    // Buscar comandas por área que no están en ciertos estados
+    List<ComandaArea> findByAreaIdAndStatusNotIn(String areaId, List<ComandaArea.EstadoComandaArea> statuses);
+    
     // Verificar si existe comanda para comanda y área
     boolean existsByComandaIdAndAreaId(Long comandaId, String areaId);
     

@@ -76,3 +76,30 @@ export interface FacturaResponseDTO {
     fechaEmision: string; // Las fechas se reciben como strings
     estado: string;
 }
+
+export interface PreparationArea {
+  id: number;
+  name: string;
+  areaId: string;
+  type: string;
+  description?: string;
+  active: boolean;
+  orderIndex: number;
+}
+
+export interface ComandaAreaResponseDTO {
+  id: number;
+  comandaId: number;
+  areaId: number;
+  areaNombre: string;
+  mesaId: number;
+  estado: string;
+  fechaCreacion: string;
+  items: Array<{
+    id: number;
+    productoId: number;
+    productoNombre: string;
+    cantidad: number;
+    observaciones?: string;
+  }>;
+}

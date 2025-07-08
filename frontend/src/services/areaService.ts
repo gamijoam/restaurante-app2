@@ -49,23 +49,18 @@ export interface ComandaAreaItem {
 
 // PreparationArea endpoints
 export const areaService = {
-  // Obtener todas las áreas
-  getAll: () => api.get<PreparationArea[]>('/areas'),
-  
-  // Obtener áreas activas
-  getActive: () => api.get<PreparationArea[]>('/areas/active'),
-  
-  // Obtener área por ID
-  getById: (id: number) => api.get<PreparationArea>(`/areas/${id}`),
-  
-  // Crear área
-  create: (area: PreparationArea) => api.post<PreparationArea>('/areas', area),
-  
-  // Actualizar área
-  update: (id: number, area: PreparationArea) => api.put<PreparationArea>(`/areas/${id}`, area),
-  
-  // Eliminar área
-  delete: (id: number) => api.delete(`/areas/${id}`),
+    // Preparation Areas
+    getAll: () => api.get<PreparationArea[]>('/preparation-areas'),
+    
+    getActive: () => api.get<PreparationArea[]>('/preparation-areas/active'),
+    
+    getById: (id: number) => api.get<PreparationArea>(`/preparation-areas/${id}`),
+    
+    create: (area: PreparationArea) => api.post<PreparationArea>('/preparation-areas', area),
+    
+    update: (id: number, area: PreparationArea) => api.put<PreparationArea>(`/preparation-areas/${id}`, area),
+    
+    delete: (id: number) => api.delete(`/preparation-areas/${id}`),
 };
 
 // ProductArea endpoints

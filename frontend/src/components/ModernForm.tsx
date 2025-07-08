@@ -150,6 +150,9 @@ const ModernForm: React.FC<ModernFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('ModernForm handleSubmit called');
+    console.log('Form data:', formData);
+    console.log('Errors:', errors);
     
     // Validate all fields
     const newErrors: Record<string, string> = {};
@@ -171,7 +174,10 @@ const ModernForm: React.FC<ModernFormProps> = ({
 
     // If no errors, submit
     if (Object.keys(newErrors).length === 0) {
+      console.log('No errors, calling onSubmit with:', formData);
       onSubmit(formData);
+    } else {
+      console.log('Validation errors found:', newErrors);
     }
   };
 
@@ -418,6 +424,7 @@ const ModernForm: React.FC<ModernFormProps> = ({
           disabled={loading}
           startIcon={loading ? <CircularProgress size={16} /> : null}
           sx={{ minWidth: 120 }}
+          onClick={() => console.log('Submit button clicked')}
         >
           {submitText}
         </Button>

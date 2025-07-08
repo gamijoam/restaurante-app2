@@ -50,7 +50,7 @@ import ModernModal from '../components/ModernModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import SkeletonLoader from '../components/SkeletonLoader';
 import { getProductos } from '../services/productoService';
-import { crearComandaAPI } from '../services/comandaService';
+import { crearComandaAPI, crearComandaConDivisionPorAreasAPI } from '../services/comandaService';
 import { getComandaActivaPorMesa } from '../services/mesaService';
 import type { Producto } from '../types';
 import type { ComandaResponseDTO, ComandaItemResponseDTO } from '../types';
@@ -84,7 +84,7 @@ const OrderPage: React.FC = () => {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [comandaActiva, setComandaActiva] = useState<ComandaResponseDTO | null>(null);
-  const [cantidades, setCantidades] = React.useState<{ [productoId: number]: string }>({});
+  const [cantidades, setCantidades] = React.useState<{ [productoId: number]: number }>({});
 
     useEffect(() => {
         loadProductos();
@@ -160,7 +160,7 @@ const OrderPage: React.FC = () => {
         })),
       };
 
-      await crearComandaAPI(comandaData);
+      await crearComandaConDivisionPorAreasAPI(comandaData);
       showSuccess('Pedido guardado', 'El pedido se ha guardado exitosamente');
             clearOrder();
       navigate('/');
@@ -210,23 +210,12 @@ const OrderPage: React.FC = () => {
             <TextField
               type="number"
               size="small"
-              value={cantidades[item.productoId] !== undefined ? cantidades[item.productoId] : String(item.cantidad)}
+              value={cantidades[item.productoId] || item.cantidad}
               onChange={e => {
-                const val = e.target.value;
-                if (val === "") {
-                  setCantidades(prev => ({ ...prev, [item.productoId]: "" }));
-                } else {
+                const val = parseInt(e.target.value);
+                if (!isNaN(val) && val >= 1) {
                   setCantidades(prev => ({ ...prev, [item.productoId]: val }));
-                  const parsed = parseInt(val);
-                  if (!isNaN(parsed) && parsed >= 1) {
-                    updateItemQuantity(item.productoId, parsed, item.itemPrincipalId);
-                  }
-                }
-              }}
-              onBlur={e => {
-                let val = cantidades[item.productoId];
-                if (val === "" || val === undefined) {
-                  setCantidades(prev => ({ ...prev, [item.productoId]: String(item.cantidad) }));
+                  updateItemQuantity(item.productoId, val, item.itemPrincipalId);
                 }
               }}
               inputProps={{ min: 1, style: { width: 60 } }}
@@ -549,8 +538,13 @@ const OrderPage: React.FC = () => {
                         type="number"
                         label="Cantidad"
                         size="small"
-                        value={cantidades[producto.id] ?? 1}
-                        onChange={e => setCantidades(prev => ({ ...prev, [producto.id]: Math.max(1, parseInt(e.target.value) || 1) }))}
+                        value={cantidades[producto.id] || 1}
+                        onChange={e => {
+                          const val = parseInt(e.target.value);
+                          if (!isNaN(val) && val >= 1) {
+                            setCantidades(prev => ({ ...prev, [producto.id]: val }));
+                          }
+                        }}
                         inputProps={{ min: 1, style: { width: 60 } }}
                       />
                       <ModernButton
@@ -558,7 +552,7 @@ const OrderPage: React.FC = () => {
                         size="small"
                         icon="add"
                         onClick={() => {
-                          const cantidad = cantidades[producto.id] ?? 1;
+                          const cantidad = cantidades[producto.id] || 1;
                           addProductToOrder(producto, undefined, cantidad);
                           showSuccess('Adicional agregado', `${producto.nombre} x${cantidad} agregado a la comanda`);
                           setSelectedAdicional(null);

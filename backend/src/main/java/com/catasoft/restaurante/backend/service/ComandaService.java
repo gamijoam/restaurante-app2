@@ -48,6 +48,9 @@ public class ComandaService {
     private final PrinterConfigurationService printerConfigService;
     private final UsuarioRepository usuarioRepository;
     private final SystemConfigService systemConfigService;
+    private final ProductAreaRepository productAreaRepository;
+    private final ComandaAreaRepository comandaAreaRepository;
+    private final ComandaAreaItemRepository comandaAreaItemRepository;
 
     @Autowired
     public ComandaService(
@@ -60,7 +63,10 @@ public class ComandaService {
             WebSocketService webSocketService,
             PrinterConfigurationService printerConfigService,
             UsuarioRepository usuarioRepository,
-            SystemConfigService systemConfigService) {
+            SystemConfigService systemConfigService,
+            ProductAreaRepository productAreaRepository,
+            ComandaAreaRepository comandaAreaRepository,
+            ComandaAreaItemRepository comandaAreaItemRepository) {
         this.comandaRepository = comandaRepository;
         this.mesaRepository = mesaRepository;
         this.productoRepository = productoRepository;
@@ -71,6 +77,9 @@ public class ComandaService {
         this.printerConfigService = printerConfigService;
         this.usuarioRepository = usuarioRepository;
         this.systemConfigService = systemConfigService;
+        this.productAreaRepository = productAreaRepository;
+        this.comandaAreaRepository = comandaAreaRepository;
+        this.comandaAreaItemRepository = comandaAreaItemRepository;
     }
 
     // --- MÉTODO MAPPER RESTAURADO A SU FORMA ORIGINAL Y CORRECTA ---
@@ -154,26 +163,125 @@ public class ComandaService {
         mesaRepository.save(mesa);
         messagingTemplate.convertAndSend("/topic/mesas", mesa);
 
-        try {
-            Optional<PrinterConfiguration> configOpt = printerConfigService.getConfigurationByRole("COCINA");
-            if (configOpt.isPresent()) {
-                CocinaTicketDTO cocinaTicketData = getCocinaTicketData(comandaGuardada.getId());
-                PrintJobDTO printJob = new PrintJobDTO(configOpt.get(), cocinaTicketData);
-                webSocketService.sendPrintJob(printJob);
-            } else {
-                logger.warn("No se encontró una configuración de impresora para el rol 'COCINA'. Saltando impresión automática.");
+        // Solo enviar a cocina si no es una venta rápida
+        if (request.getMesaId() == null || request.getMesaId() != 9999) {
+            try {
+                Optional<PrinterConfiguration> configOpt = printerConfigService.getConfigurationByRole("COCINA");
+                if (configOpt.isPresent()) {
+                    CocinaTicketDTO cocinaTicketData = getCocinaTicketData(comandaGuardada.getId());
+                    PrintJobDTO printJob = new PrintJobDTO(configOpt.get(), cocinaTicketData);
+                    webSocketService.sendPrintJob(printJob);
+                } else {
+                    logger.warn("No se encontró una configuración de impresora para el rol 'COCINA'. Saltando impresión automática.");
+                }
+            } catch (Exception e) {
+                logger.error("Fallo en el proceso de impresión automática para la comanda ID: {}", comandaGuardada.getId(), e);
             }
-        } catch (Exception e) {
-            logger.error("Fallo en el proceso de impresión automática para la comanda ID: {}", comandaGuardada.getId(), e);
-        }
 
-        ComandaResponseDTO dto = mapToComandaResponseDTO(comandaGuardada);
-        logger.info("Enviando notificación a /topic/cocina para nueva comanda ID: {}", dto.getId());
-        messagingTemplate.convertAndSend("/topic/cocina", dto);
+            logger.info("Enviando notificación a /topic/cocina para nueva comanda ID: {}", comandaGuardada.getId());
+            messagingTemplate.convertAndSend("/topic/cocina", mapToComandaResponseDTO(comandaGuardada));
+        } else {
+            logger.info("Venta rápida detectada, saltando notificaciones a cocina");
+        }
+        
         logger.info("Enviando notificación a /topic/mesas para actualizar estado de mesa: {}", mesa.getNumero());
         messagingTemplate.convertAndSend("/topic/mesas", "Mesa " + mesa.getNumero() + " actualizada a OCUPADA");
 
-        return dto;
+        return mapToComandaResponseDTO(comandaGuardada);
+    }
+
+    /**
+     * Divide una comanda por áreas de preparación y crea comandas específicas por área
+     */
+    @Transactional
+    public void dividirComandaPorAreas(Long comandaId) {
+        Comanda comanda = comandaRepository.findById(comandaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Comanda no encontrada con id: " + comandaId));
+
+        logger.info("Iniciando división de comanda ID: {} con {} items", comandaId, comanda.getItems().size());
+
+        // Agrupar items por área de preparación
+        Map<String, List<ComandaItem>> itemsPorArea = comanda.getItems().stream()
+                .collect(Collectors.groupingBy(item -> {
+                    // Buscar la asignación producto-área
+                    List<ProductArea> asignaciones = productAreaRepository.findByProductoId(item.getProducto().getId());
+                    logger.info("Producto ID: {}, Nombre: {}, Categoría: {}, Asignaciones encontradas: {}", 
+                            item.getProducto().getId(), 
+                            item.getProducto().getNombre(), 
+                            item.getProducto().getCategoria(),
+                            asignaciones.size());
+                    
+                    String areaId = asignaciones.stream()
+                            .findFirst()
+                            .map(productArea -> productArea.getAreaId())
+                            .orElse("sin-asignar");
+                    
+                    logger.info("Producto {} asignado a área: {}", item.getProducto().getNombre(), areaId);
+                    return areaId;
+                }));
+
+        logger.info("Items agrupados por área: {}", itemsPorArea.keySet());
+
+        // Crear comandas por área
+        for (Map.Entry<String, List<ComandaItem>> entry : itemsPorArea.entrySet()) {
+            String areaId = entry.getKey();
+            List<ComandaItem> items = entry.getValue();
+
+            if ("sin-asignar".equals(areaId)) {
+                logger.warn("Items sin asignación de área encontrados para comanda ID: {}", comandaId);
+                continue;
+            }
+
+            logger.info("Creando comanda por área: Área: {}, Items: {}", areaId, items.size());
+
+            // Crear comanda por área
+            ComandaArea comandaArea = new ComandaArea();
+            comandaArea.setComanda(comanda);
+            comandaArea.setAreaId(areaId);
+            comandaArea.setStatus(ComandaArea.EstadoComandaArea.PENDING);
+            comandaArea.setCreatedAt(LocalDateTime.now());
+            comandaArea.setUpdatedAt(LocalDateTime.now());
+
+            ComandaArea comandaAreaGuardada = comandaAreaRepository.save(comandaArea);
+            logger.info("Comanda por área creada con ID: {}", comandaAreaGuardada.getId());
+
+            // Crear items de comanda por área
+            for (ComandaItem item : items) {
+                ComandaAreaItem areaItem = new ComandaAreaItem();
+                areaItem.setComandaArea(comandaAreaGuardada);
+                areaItem.setProducto(item.getProducto());
+                areaItem.setQuantity(item.getCantidad());
+                areaItem.setUnitPrice(item.getPrecioUnitario());
+                areaItem.setStatus(ComandaAreaItem.EstadoItem.PENDING);
+                areaItem.setCreatedAt(LocalDateTime.now());
+                areaItem.setUpdatedAt(LocalDateTime.now());
+
+                ComandaAreaItem itemGuardado = comandaAreaItemRepository.save(areaItem);
+                logger.info("Item de comanda por área creado: Producto: {}, Cantidad: {}, ID: {}", 
+                        item.getProducto().getNombre(), item.getCantidad(), itemGuardado.getId());
+            }
+
+            logger.info("Comanda por área completada: Comanda ID: {}, Área: {}, Items: {}", 
+                    comandaId, areaId, items.size());
+        }
+    }
+
+    /**
+     * Crea comanda y automáticamente la divide por áreas
+     */
+    @Transactional
+    public ComandaResponseDTO crearComandaConDivisionPorAreas(ComandaRequestDTO request) {
+        // Crear la comanda principal
+        ComandaResponseDTO comandaResponse = crearComanda(request);
+        
+        // Solo dividir por áreas si no es una venta rápida (mesa fantasma)
+        if (request.getMesaId() != null && request.getMesaId() != 9999) {
+            dividirComandaPorAreas(comandaResponse.getId());
+        } else {
+            logger.info("Venta rápida detectada (mesaId: {}), saltando división por áreas", request.getMesaId());
+        }
+        
+        return comandaResponse;
     }
 
     @Transactional

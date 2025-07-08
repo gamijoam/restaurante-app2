@@ -47,7 +47,14 @@ public ResponseEntity<ComandaResponseDTO> agregarItemsAComanda(
     @PostMapping
     @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
     public ResponseEntity<ComandaResponseDTO> createComanda(@RequestBody ComandaRequestDTO request) {
-        ComandaResponseDTO nuevaComanda = comandaService.crearComanda(request);
+        ComandaResponseDTO nuevaComanda = comandaService.crearComandaConDivisionPorAreas(request);
+        return new ResponseEntity<>(nuevaComanda, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/con-division-areas")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
+    public ResponseEntity<ComandaResponseDTO> createComandaConDivisionPorAreas(@RequestBody ComandaRequestDTO request) {
+        ComandaResponseDTO nuevaComanda = comandaService.crearComandaConDivisionPorAreas(request);
         return new ResponseEntity<>(nuevaComanda, HttpStatus.CREATED);
     }
 
@@ -103,5 +110,17 @@ public ResponseEntity<ComandaResponseDTO> agregarItemsAComanda(
         response.put("puedeCancelar", comanda.getEstado() != EstadoComanda.CANCELADA && comanda.getEstado() != EstadoComanda.PAGADA);
         response.put("puedePagar", comanda.getEstado() != EstadoComanda.PAGADA && comanda.getEstado() != EstadoComanda.CANCELADA);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{id}/dividir-por-areas")
+    @PreAuthorize("hasAnyRole('GERENTE', 'CAMARERO', 'COCINERO')")
+    public ResponseEntity<String> dividirComandaPorAreas(@PathVariable Long id) {
+        try {
+            comandaService.dividirComandaPorAreas(id);
+            return ResponseEntity.ok("Comanda dividida por áreas exitosamente");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al dividir comanda: " + e.getMessage());
+        }
     }
 }

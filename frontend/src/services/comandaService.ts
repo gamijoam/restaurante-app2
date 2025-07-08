@@ -10,6 +10,11 @@ export const crearComandaAPI = async (comandaData: ComandaRequestDTO): Promise<C
     return response.data;
 };
 
+export const crearComandaConDivisionPorAreasAPI = async (comandaData: ComandaRequestDTO): Promise<ComandaResponseDTO> => {
+    const response = await api.post(`${API_URL_COMANDAS}/con-division-areas`, comandaData);
+    return response.data;
+};
+
 export const getComandasPorMultiplesEstados = async (estados: string[]): Promise<ComandaResponseDTO[]> => {
     const estadosQuery = estados.join(',');
     const response = await api.get(`${API_URL_COMANDAS}?estados=${estadosQuery}`);
@@ -27,6 +32,26 @@ export async function agregarItemsAComanda(comandaId: number, items: ItemRequest
 
 export const limpiarItemsComandaAPI = async (comandaId: number): Promise<void> => {
     await api.delete(`${API_URL_COMANDAS}/${comandaId}/items`);
+};
+
+export const getComandasPorArea = async (areaId: number): Promise<any[]> => {
+  const response = await api.get(`/comanda-areas/area/${areaId}`);
+  return response.data;
+};
+
+export const startPreparation = async (comandaAreaId: number): Promise<any> => {
+  const response = await api.put(`/comanda-areas/${comandaAreaId}/start-preparation`);
+  return response.data;
+};
+
+export const markAsReady = async (comandaAreaId: number): Promise<any> => {
+  const response = await api.put(`/comanda-areas/${comandaAreaId}/mark-ready`);
+  return response.data;
+};
+
+export const markAsDelivered = async (comandaAreaId: number): Promise<any> => {
+  const response = await api.put(`/comanda-areas/${comandaAreaId}/mark-delivered`);
+  return response.data;
 };
 
 // --- Tipos para el Ticket (esto estaba bien) ---
@@ -51,4 +76,10 @@ export const getTicketData = async (comandaId: number): Promise<TicketData> => {
     // 3. La URL ya no tiene el '/api/v1' duplicado
     const response = await api.get<TicketData>(`${API_URL_COMANDAS}/${comandaId}/ticket`);
     return response.data;
+};
+
+// Obtener estado de áreas por comanda
+export const getComandaAreasStatus = async (comandaId: number): Promise<any[]> => {
+  const response = await api.get(`/comanda-areas/comanda/${comandaId}`);
+  return response.data;
 };

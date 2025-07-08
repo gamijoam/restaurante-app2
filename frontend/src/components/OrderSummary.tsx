@@ -1,115 +1,178 @@
-import { useOrder } from '../hooks/useOrder';
-import { Typography, List, ListItem, ListItemText, Divider, Button, Paper, CircularProgress, Box } from '@mui/material';
-import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import {
+  Box,
+  Typography,
+  Chip,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Paper,
+} from '@mui/material';
+import {
+  CheckCircle,
+  Timer,
+  PriorityHigh,
+  Restaurant,
+  LocalBar,
+} from '@mui/icons-material';
 
-// 1. AQUÍ DEFINIMOS LAS "PROPS" QUE ESTE COMPONENTE RECIBIRÁ.
-// Esto le dice a TypeScript que OrderSummary ACEPTA un 'mesaId' que es un número.
-interface OrderSummaryProps {
-    mesaId: number;
+interface AreaStatus {
+  areaId: string;
+  areaName: string;
+  status: string;
+  type: string;
 }
 
-// 2. AQUÍ LE DECIMOS AL COMPONENTE QUE USE ESA DEFINICIÓN DE PROPS.
-const OrderSummary = ({ mesaId }: OrderSummaryProps) => {
-    const { orderItems, submitNewOrder, cancelOrder, activeComandaId, limpiarComanda, clearOrder } = useOrder();
-    const navigate = useNavigate();
-    // Importamos el contexto de autenticación para posibles redirecciones futuras por rol
-    // import { useAuth } from '../context/AuthContext';
-    // const { roles } = useAuth();
-    const [isSubmitting, setIsSubmitting] = useState(false);
+interface OrderSummaryProps {
+  comanda: any;
+  areaStatuses?: AreaStatus[];
+}
 
-    const total = useMemo(() => {
-        return orderItems.reduce((sum, item) => sum + (item.precioUnitario * item.cantidad), 0);
-    }, [orderItems]);
+const OrderSummary: React.FC<OrderSummaryProps> = ({ comanda, areaStatuses = [] }) => {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'READY':
+        return 'success';
+      case 'IN_PROGRESS':
+        return 'info';
+      case 'PENDING':
+        return 'warning';
+      case 'DELIVERED':
+        return 'default';
+      default:
+        return 'default';
+    }
+  };
 
-    const handleSubmit = async () => {
-        setIsSubmitting(true);
-        if (!activeComandaId) {
-            await submitNewOrder(mesaId);
-            // Redirigimos al inicio después de crear la comanda
-            navigate('/');
-            // Si en el futuro quieres redirigir según rol:
-            // if (roles.includes('COCINERO')) navigate('/cocina'); else navigate('/');
-        }
-        setIsSubmitting(false);
-    };
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'READY':
+        return <CheckCircle color="success" />;
+      case 'IN_PROGRESS':
+        return <PriorityHigh color="info" />;
+      case 'PENDING':
+        return <Timer color="warning" />;
+      case 'DELIVERED':
+        return <CheckCircle color="disabled" />;
+      default:
+        return <Timer />;
+    }
+  };
 
-    const handleCancel = async () => {
-        if (activeComandaId && window.confirm("¿Estás seguro de que quieres cancelar esta comanda? Esta acción no se puede deshacer.")) {
-            await cancelOrder(activeComandaId);
-            navigate('/'); // Redirigimos al inicio después de cancelar
-        }
-    };
+  const getAreaIcon = (type: string) => {
+    switch (type) {
+      case 'KITCHEN':
+        return <Restaurant />;
+      case 'BAR':
+        return <LocalBar />;
+      default:
+        return <Restaurant />;
+    }
+  };
 
-    return (
-        <Paper elevation={3} sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="h5" gutterBottom>Comanda Actual</Typography>
-                <Divider sx={{ mb: 2 }} />
-                {orderItems.length === 0 ? (
-                    <Typography color="text.secondary">No hay productos en la comanda.</Typography>
-                ) : (
-                    <List>
-                        {orderItems.map((item, index) => (
-                            <ListItem key={`${item.productoId}-${index}`} disableGutters>
-                                <ListItemText
-                                    primary={`${item.productoNombre} (x${item.cantidad})`}
-                                    secondary={`Subtotal: $${(item.precioUnitario * item.cantidad).toFixed(2)}`}
-                                />
-                            </ListItem>
-                        ))}
-                    </List>
-                )}
-            </Box>
-            <Box>
-                <Divider sx={{ my: 2 }} />
-                <Typography variant="h6" align="right">Total: ${total.toFixed(2)}</Typography>
-                
-                {activeComandaId ? (
-                    <>
-                        <Button variant="outlined" color="error" fullWidth sx={{ mt: 2 }} onClick={handleCancel}>
-                            Cancelar Comanda
-                        </Button>
-                        {orderItems.length > 0 && (
-                            <Button
-                                variant="outlined"
-                                color="warning"
-                                fullWidth
-                                sx={{ mt: 1 }}
-                                onClick={limpiarComanda}
-                            >
-                                Limpiar Comanda
-                            </Button>
-                        )}
-                    </>
-                ) : (
-                    <>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            fullWidth
-                            sx={{ mt: 2 }}
-                            disabled={orderItems.length === 0 || isSubmitting}
-                            onClick={handleSubmit}
-                        >
-                            {isSubmitting ? <CircularProgress size={24} /> : 'Crear Comanda'}
-                        </Button>
-                        {orderItems.length > 0 && (
-                            <Button
-                                variant="outlined"
-                                color="warning"
-                                fullWidth
-                                sx={{ mt: 1 }}
-                                onClick={clearOrder}
-                            >
-                                Limpiar selección
-                            </Button>
-                        )}
-                    </>
-                )}
-            </Box>
-        </Paper>
-    );
+  const isAllAreasReady = () => {
+    return areaStatuses.length > 0 && areaStatuses.every(area => area.status === 'READY');
+  };
+
+  return (
+    <Paper elevation={2} sx={{ p: 2, mb: 2 }}>
+      <Typography variant="h6" gutterBottom>
+        Comanda #{comanda.id} - Mesa {comanda.numeroMesa}
+      </Typography>
+      
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+        <Chip
+          label={comanda.estado}
+          color={isAllAreasReady() ? 'success' : 'warning'}
+          size="small"
+        />
+        {isAllAreasReady() && (
+          <Chip
+            label="Lista para cobrar"
+            color="success"
+            size="small"
+            icon={<CheckCircle />}
+          />
+        )}
+      </Box>
+
+      {/* Estado por áreas */}
+      {areaStatuses.length > 0 && (
+        <>
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="subtitle2" gutterBottom>
+            Estado por áreas de preparación:
+          </Typography>
+          <List dense>
+            {areaStatuses.map((area, index) => (
+              <ListItem key={index} sx={{ px: 0 }}>
+                <ListItemText
+                  primary={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {getAreaIcon(area.type)}
+                      <Typography variant="body2" fontWeight={500}>
+                        {area.areaName}
+                      </Typography>
+                    </Box>
+                  }
+                  secondary={
+                    <Typography variant="caption" color="text.secondary">
+                      {area.type === 'KITCHEN' ? 'Cocina' : 'Barra'}
+                    </Typography>
+                  }
+                />
+                <ListItemSecondaryAction>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {getStatusIcon(area.status)}
+                    <Chip
+                      label={area.status === 'READY' ? 'Listo' : 
+                             area.status === 'IN_PROGRESS' ? 'En preparación' :
+                             area.status === 'PENDING' ? 'Pendiente' : 'Entregado'}
+                      color={getStatusColor(area.status) as any}
+                      size="small"
+                    />
+                  </Box>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
+
+      {/* Items de la comanda */}
+      <Divider sx={{ my: 2 }} />
+      <Typography variant="subtitle2" gutterBottom>
+        Items:
+      </Typography>
+      <List dense>
+        {comanda.items?.map((item: any, index: number) => (
+          <ListItem key={index} sx={{ px: 0 }}>
+            <ListItemText
+              primary={item.productoNombre}
+              secondary={`$${item.precioUnitario} x ${item.cantidad}`}
+            />
+            <ListItemSecondaryAction>
+              <Typography variant="body2" fontWeight={500}>
+                ${(item.precioUnitario * item.cantidad).toFixed(2)}
+              </Typography>
+            </ListItemSecondaryAction>
+          </ListItem>
+        ))}
+      </List>
+      
+      <Divider sx={{ my: 2 }} />
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h6" fontWeight={500}>
+          Total:
+        </Typography>
+        <Typography variant="h6" fontWeight={500}>
+          ${comanda.total?.toFixed(2) || '0.00'}
+        </Typography>
+      </Box>
+    </Paper>
+  );
 };
 
 export default OrderSummary;

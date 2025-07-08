@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import TableSelectionPage from './pages/TableSelectionPage';
 import OrderPage from './pages/OrderPage';
 import KitchenViewPage from './pages/KitchenViewPage';
+import KitchenDashboardPage from './pages/KitchenDashboardPage';
 import CashierViewPage from './pages/CashierViewPage';
 import MesaMapaPage from './pages/MesaMapaPage';
 import GestionMesasPage from './pages/GestionMesasPage';
@@ -26,6 +27,7 @@ import TicketTemplatesPage from './pages/TicketTemplatesPage';
 import PreparationAreasPage from './pages/PreparationAreasPage';
 import ProductAreaAssignmentPage from './pages/ProductAreaAssignmentPage';
 import ComandaAreaManagementPage from './pages/ComandaAreaManagementPage';
+import TestDivisionPage from './pages/TestDivisionPage';
 
 function App() {
   return (
@@ -33,6 +35,11 @@ function App() {
       <WebSocketProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/kitchen-view" element={
+            <ProtectedRoute requiredPermissions={['COCINA']}>
+              <KitchenViewPage />
+            </ProtectedRoute>
+          } />
           <Route path="/" element={<Layout />}>
             <Route 
               index
@@ -55,6 +62,14 @@ function App() {
               element={
                 <ProtectedRoute allowedPermissions={['VER_COCINA']}>
                   <KitchenViewPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="kitchen-dashboard" 
+              element={
+                <ProtectedRoute allowedPermissions={['VER_COCINA']}>
+                  <KitchenDashboardPage />
                 </ProtectedRoute>
               } 
             />
@@ -175,6 +190,14 @@ function App() {
               element={
                 <ProtectedRoute allowedRoles={['ROLE_GERENTE', 'ROLE_COCINERO']}>
                   <ComandaAreaManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="test-division" 
+              element={
+                <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                  <TestDivisionPage />
                 </ProtectedRoute>
               } 
             />

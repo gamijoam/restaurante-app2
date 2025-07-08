@@ -4,13 +4,14 @@ import com.catasoft.restaurante.backend.model.PreparationArea;
 import com.catasoft.restaurante.backend.service.PreparationAreaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/v1/areas")
+@RequestMapping("/api/v1/preparation-areas")
 public class PreparationAreaController {
     @Autowired
     private PreparationAreaService preparationAreaService;
@@ -59,5 +60,27 @@ public class PreparationAreaController {
         System.out.println("Área con ID " + id + " eliminada exitosamente");
         
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> testAreas() {
+        try {
+            List<PreparationArea> areas = preparationAreaService.findAll();
+            StringBuilder sb = new StringBuilder();
+            sb.append("Total áreas en BD: ").append(areas.size()).append("\n");
+            
+            for (PreparationArea area : areas) {
+                sb.append("ID: ").append(area.getId())
+                  .append(", AreaId: ").append(area.getAreaId())
+                  .append(", Name: ").append(area.getName())
+                  .append(", Type: ").append(area.getType())
+                  .append(", Active: ").append(area.getActive())
+                  .append("\n");
+            }
+            
+            return ResponseEntity.ok(sb.toString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
     }
 } 

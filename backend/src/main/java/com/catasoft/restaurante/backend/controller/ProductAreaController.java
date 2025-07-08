@@ -4,6 +4,8 @@ import com.catasoft.restaurante.backend.dto.area.ProductAreaDTO;
 import com.catasoft.restaurante.backend.dto.area.ProductAreaRequestDTO;
 import com.catasoft.restaurante.backend.model.ProductArea;
 import com.catasoft.restaurante.backend.model.Producto;
+import com.catasoft.restaurante.backend.repository.ProductoRepository;
+import com.catasoft.restaurante.backend.repository.ProductAreaRepository;
 import com.catasoft.restaurante.backend.service.ProductAreaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -12,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,6 +24,10 @@ import java.util.stream.Collectors;
 public class ProductAreaController {
     @Autowired
     private ProductAreaService productAreaService;
+    @Autowired
+    private ProductoRepository productoRepository;
+    @Autowired
+    private ProductAreaRepository productAreaRepository;
 
     @GetMapping
     public List<ProductAreaDTO> getAll() {
@@ -90,6 +98,59 @@ public class ProductAreaController {
         }
         productAreaService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/test/producto/{productoId}")
+    public ResponseEntity<Map<String, Object>> testProductoAsignacion(@PathVariable Long productoId) {
+        Map<String, Object> response = new HashMap<>();
+        
+        // Verificar si el producto existe
+        Optional<Producto> productoOpt = productoRepository.findById(productoId);
+        if (!productoOpt.isPresent()) {
+            response.put("error", "Producto no encontrado");
+            return ResponseEntity.badRequest().body(response);
+        }
+        
+        Producto producto = productoOpt.get();
+        response.put("producto", Map.of(
+            "id", producto.getId(),
+            "nombre", producto.getNombre(),
+            "categoria", producto.getCategoria()
+        ));
+        
+        // Verificar asignaciones
+        List<ProductArea> asignaciones = productAreaRepository.findByProductoId(productoId);
+        response.put("asignaciones", asignaciones.stream()
+            .map(pa -> Map.of(
+                "id", pa.getId(),
+                "areaId", pa.getAreaId(),
+                "preparationTime", pa.getPreparationTime()
+            ))
+            .collect(Collectors.toList()));
+        
+        response.put("totalAsignaciones", asignaciones.size());
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> testProductAreas() {
+        try {
+            List<ProductArea> asignaciones = productAreaService.findAll();
+            StringBuilder sb = new StringBuilder();
+            sb.append("Total asignaciones producto-área: ").append(asignaciones.size()).append("\n");
+            
+            for (ProductArea pa : asignaciones) {
+                sb.append("Producto ID: ").append(pa.getProducto().getId())
+                  .append(", Nombre: ").append(pa.getProducto().getNombre())
+                  .append(", Área ID: ").append(pa.getAreaId())
+                  .append("\n");
+            }
+            
+            return ResponseEntity.ok(sb.toString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
     }
 
     // Métodos de conversión

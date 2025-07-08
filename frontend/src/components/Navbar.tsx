@@ -111,7 +111,13 @@ const Navbar: React.FC = () => {
         {
           text: 'Cocina',
           icon: <Kitchen />,
-          path: '/cocina',
+          path: '/kitchen-view',
+          permission: 'VER_COCINA',
+        },
+        {
+          text: 'Dashboard Cocina',
+          icon: <Dashboard />,
+          path: '/kitchen-dashboard',
           permission: 'VER_COCINA',
         },
         {
@@ -212,6 +218,12 @@ const Navbar: React.FC = () => {
           text: 'Comandas por Área',
           icon: <Receipt />,
           path: '/comandas-areas',
+          permission: 'GESTIONAR_ROLES',
+        },
+        {
+          text: 'Prueba División',
+          icon: <Assessment />,
+          path: '/test-division',
           permission: 'GESTIONAR_ROLES',
         },
       ]
