@@ -37,7 +37,7 @@ const LicenseAdminPage: React.FC = () => {
   const [clientName, setClientName] = useState<string>('');
   const [duration, setDuration] = useState<number>(30);
   const [durationUnit, setDurationUnit] = useState<'days' | 'hours'>('days');
-  const [licenseType, setLicenseType] = useState<'DAILY' | 'MONTHLY' | 'ANNUAL' | 'PERPETUAL'>('DAILY');
+  const [licenseType, setLicenseType] = useState<'HOURLY' | 'DAILY' | 'MONTHLY' | 'ANNUAL' | 'PERPETUAL'>('DAILY');
   const [generatedLicense, setGeneratedLicense] = useState<GeneratedLicense | null>(null);
   const [loading, setLoading] = useState(false);
   
@@ -70,17 +70,21 @@ const LicenseAdminPage: React.FC = () => {
     setLoading(true);
     try {
       let response;
-      if (durationUnit === 'hours') {
+      if (licenseType === 'HOURLY') {
         response = await licenseService.generateLicenseByHours(fingerprint, clientName, duration);
       } else {
-        response = await licenseService.generateLicense(fingerprint, clientName, licenseType, duration);
+        if (licenseType === 'PERPETUAL') {
+          response = await licenseService.generateLicense(fingerprint, clientName, licenseType);
+        } else {
+          response = await licenseService.generateLicense(fingerprint, clientName, licenseType, duration);
+        }
       }
       
       const newLicense: GeneratedLicense = {
         licenseCode: response.licenseCode,
         fingerprint: fingerprint,
         clientName: clientName,
-        days: durationUnit === 'hours' ? Math.ceil(duration / 24) : duration
+        days: licenseType === 'HOURLY' ? Math.ceil(duration / 24) : duration
       };
       
       setGeneratedLicense(newLicense);
@@ -242,33 +246,28 @@ const LicenseAdminPage: React.FC = () => {
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                 <TextField
                   fullWidth
-                  label="Duración"
+                  label={
+                    licenseType === 'HOURLY' ? 'Horas' :
+                    licenseType === 'DAILY' ? 'Días' :
+                    licenseType === 'MONTHLY' ? 'Meses' :
+                    licenseType === 'ANNUAL' ? 'Años' :
+                    'Duración'
+                  }
                   type="number"
                   value={duration}
                   onChange={(e) => setDuration(Number(e.target.value))}
-                  helperText={`Duración: ${getDurationLabel(duration, durationUnit)}`}
-                />
-                <TextField
-                  select
-                  label="Unidad"
-                  value={durationUnit}
-                  onChange={(e) => setDurationUnit(e.target.value as 'days' | 'hours')}
+                  disabled={licenseType === 'PERPETUAL'}
                   sx={{ minWidth: 120 }}
-                >
-                  <MenuItem value="hours">Horas</MenuItem>
-                  <MenuItem value="days">Días</MenuItem>
-                </TextField>
-              </Box>
-              
-              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                />
                 <TextField
                   fullWidth
                   label="Tipo de Licencia"
                   select
                   value={licenseType}
-                  onChange={(e) => setLicenseType(e.target.value as 'DAILY' | 'MONTHLY' | 'ANNUAL' | 'PERPETUAL')}
+                  onChange={(e) => setLicenseType(e.target.value as any)}
                   sx={{ minWidth: 180 }}
                 >
+                  <MenuItem value="HOURLY">Por Horas</MenuItem>
                   <MenuItem value="DAILY">Diaria</MenuItem>
                   <MenuItem value="MONTHLY">Mensual</MenuItem>
                   <MenuItem value="ANNUAL">Anual</MenuItem>

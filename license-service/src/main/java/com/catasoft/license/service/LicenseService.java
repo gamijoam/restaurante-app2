@@ -42,14 +42,8 @@ public class LicenseService {
      */
     public LicenseResponseDTO generateLicense(LicenseRequestDTO request) {
         try {
-            // Desactivar activaciones previas para este fingerprint
-            java.util.List<Activation> prevActivations = activationRepository.findAllByFingerprint(request.getFingerprint());
-            if (prevActivations != null && !prevActivations.isEmpty()) {
-                for (Activation act : prevActivations) {
-                    act.setActive(false);
-                    activationRepository.save(act);
-                }
-            }
+            // Elimina la comprobación y desactivación de activaciones previas
+            // Permite siempre crear una nueva licencia y activación
             // Crear la licencia
             License license = new License();
             license.setLicenseCode(generateLicenseCode());
