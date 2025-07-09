@@ -42,11 +42,14 @@ public class LicenseService {
      */
     public LicenseResponseDTO generateLicense(LicenseRequestDTO request) {
         try {
-            // Validar que el fingerprint no esté ya activado
-            if (activationRepository.existsByFingerprint(request.getFingerprint())) {
-                throw new RuntimeException("Este equipo ya tiene una licencia activa");
+            // Desactivar activaciones previas para este fingerprint
+            java.util.List<Activation> prevActivations = activationRepository.findAllByFingerprint(request.getFingerprint());
+            if (prevActivations != null && !prevActivations.isEmpty()) {
+                for (Activation act : prevActivations) {
+                    act.setActive(false);
+                    activationRepository.save(act);
+                }
             }
-            
             // Crear la licencia
             License license = new License();
             license.setLicenseCode(generateLicenseCode());
@@ -54,32 +57,25 @@ public class LicenseService {
             license.setClientName(request.getClientName());
             license.setClientContact(request.getClientContact());
             license.setNotes(request.getNotes());
-            
             // Calcular fecha de expiración
             if (request.getLicenseType() == LicenseType.PERPETUAL) {
                 license.setExpiresAt(LocalDateTime.now().plusYears(100)); // Prácticamente perpetua
             } else {
-                // Usar duración personalizada si está disponible, sino usar la duración por defecto del tipo
                 int durationHours = request.getDuration() != null ? 
                     (request.getLicenseType() == LicenseType.HOURLY ? request.getDuration() : request.getDuration() * 24) :
                     request.getLicenseType().getHoursDuration();
-                
                 license.setExpiresAt(LocalDateTime.now().plusHours(durationHours));
             }
-            
             // Guardar licencia
             license = licenseRepository.save(license);
-            
             // Crear activación
             Activation activation = new Activation();
             activation.setLicense(license);
             activation.setFingerprint(request.getFingerprint());
             activation.setMachineInfo("Activado desde License Service");
             activationRepository.save(activation);
-            
             // Crear respuesta
             return createLicenseResponse(license, "Licencia generada exitosamente");
-            
         } catch (Exception e) {
             throw new RuntimeException("Error generando licencia: " + e.getMessage());
         }

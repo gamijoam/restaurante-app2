@@ -53,8 +53,10 @@ const LicenseActivationPage: React.FC = () => {
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatus | null>(null);
   const [systemInfo, setSystemInfo] = useState<string>('');
   const [showSystemInfo, setShowSystemInfo] = useState(false);
-  const [licenseType, setLicenseType] = useState<'DAILY' | 'MONTHLY' | 'ANNUAL' | 'PERPETUAL'>('DAILY');
-  const [duration, setDuration] = useState<number>(30);
+  // 1. Elimina los estados licenseType y duration
+  // 2. Elimina la función handleGenerateLicense
+  // 3. Elimina del JSX los campos y botones relacionados con la generación de licencia
+  // 4. Deja solo el fingerprint y el formulario para ingresar y validar el código de licencia
   
   const { showSuccess, showError } = useNotification();
   const { setLicense } = useLicense();
@@ -159,21 +161,20 @@ const LicenseActivationPage: React.FC = () => {
     showSuccess('Licencia eliminada', 'La licencia ha sido eliminada del equipo');
   };
 
-  // Cambia la función de generación de licencia para usar los valores seleccionados
+  // 1. Elimina los estados licenseType y duration
+  // 2. Elimina la función handleGenerateLicense
+  // 3. Elimina del JSX los campos y botones relacionados con la generación de licencia
+  // 4. Deja solo el fingerprint y el formulario para ingresar y validar el código de licencia
   let data;
   const handleGenerateLicense = async () => {
-    if (!fingerprint || !licenseType || (licenseType !== 'PERPETUAL' && !duration)) {
-      showError('Datos incompletos', 'Selecciona tipo y duración de licencia');
+    if (!fingerprint) {
+      showError('Datos incompletos', 'Genera un código de equipo primero');
       return;
     }
     setLoading(true);
     try {
       const clientName = 'Cliente'; // Puedes pedirlo en el formulario si lo deseas
-      if (licenseType === 'PERPETUAL') {
-        data = await licenseService.generateLicense(fingerprint, clientName, licenseType);
-      } else {
-        data = await licenseService.generateLicense(fingerprint, clientName, licenseType, duration);
-      }
+      data = await licenseService.generateLicense(fingerprint, clientName, 'PERPETUAL');
       if (data.valid) {
         showSuccess('Licencia generada', data.message || 'Licencia generada correctamente');
         setLicense(data);
@@ -294,34 +295,6 @@ const LicenseActivationPage: React.FC = () => {
                 Validar Licencia
               </ModernButton>
             </Box>
-
-            {/* Campos para tipo y duración de licencia */}
-            <Box sx={{ mb: 2 }}>
-              <Select value={licenseType} onChange={e => setLicenseType(e.target.value as any)} sx={{ mr: 2 }}>
-                <MenuItem value="DAILY">Diaria</MenuItem>
-                <MenuItem value="MONTHLY">Mensual</MenuItem>
-                <MenuItem value="ANNUAL">Anual</MenuItem>
-                <MenuItem value="PERPETUAL">Perpetua</MenuItem>
-              </Select>
-              <TextField
-                label={licenseType === 'DAILY' ? 'Días' : licenseType === 'MONTHLY' ? 'Meses' : licenseType === 'ANNUAL' ? 'Años' : 'Duración'}
-                type="number"
-                value={duration}
-                onChange={e => setDuration(Number(e.target.value))}
-                disabled={licenseType === 'PERPETUAL'}
-                sx={{ width: 120 }}
-              />
-            </Box>
-
-            <ModernButton
-              variant="primary"
-              icon="save"
-              onClick={handleGenerateLicense}
-              loading={loading}
-              fullWidth
-            >
-              Generar Licencia
-            </ModernButton>
 
             {licenseStatus && (
               <Box sx={{ mt: 2 }}>

@@ -37,6 +37,7 @@ const LicenseAdminPage: React.FC = () => {
   const [clientName, setClientName] = useState<string>('');
   const [duration, setDuration] = useState<number>(30);
   const [durationUnit, setDurationUnit] = useState<'days' | 'hours'>('days');
+  const [licenseType, setLicenseType] = useState<'DAILY' | 'MONTHLY' | 'ANNUAL' | 'PERPETUAL'>('DAILY');
   const [generatedLicense, setGeneratedLicense] = useState<GeneratedLicense | null>(null);
   const [loading, setLoading] = useState(false);
   
@@ -72,7 +73,7 @@ const LicenseAdminPage: React.FC = () => {
       if (durationUnit === 'hours') {
         response = await licenseService.generateLicenseByHours(fingerprint, clientName, duration);
       } else {
-        response = await licenseService.generateLicense(fingerprint, clientName, duration);
+        response = await licenseService.generateLicense(fingerprint, clientName, licenseType, duration);
       }
       
       const newLicense: GeneratedLicense = {
@@ -259,6 +260,22 @@ const LicenseAdminPage: React.FC = () => {
                 </TextField>
               </Box>
               
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <TextField
+                  fullWidth
+                  label="Tipo de Licencia"
+                  select
+                  value={licenseType}
+                  onChange={(e) => setLicenseType(e.target.value as 'DAILY' | 'MONTHLY' | 'ANNUAL' | 'PERPETUAL')}
+                  sx={{ minWidth: 180 }}
+                >
+                  <MenuItem value="DAILY">Diaria</MenuItem>
+                  <MenuItem value="MONTHLY">Mensual</MenuItem>
+                  <MenuItem value="ANNUAL">Anual</MenuItem>
+                  <MenuItem value="PERPETUAL">Perpetua</MenuItem>
+                </TextField>
+              </Box>
+
               <ModernButton
                 variant="primary"
                 icon="add"
