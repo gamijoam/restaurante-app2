@@ -87,6 +87,7 @@ public class ComandaAreaResponseDTO {
         private String productoNombre;
         private Integer cantidad;
         private String observaciones;
+        private Boolean esNuevo; // Campo para indicar si el item es nuevo
 
         // Constructor
         public ComandaAreaItemDTO() {}
@@ -130,6 +131,14 @@ public class ComandaAreaResponseDTO {
 
         public void setObservaciones(String observaciones) {
             this.observaciones = observaciones;
+        }
+
+        public Boolean getEsNuevo() {
+            return esNuevo;
+        }
+
+        public void setEsNuevo(Boolean esNuevo) {
+            this.esNuevo = esNuevo;
         }
     }
 } 

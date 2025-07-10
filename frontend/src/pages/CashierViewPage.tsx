@@ -200,8 +200,8 @@ const CashierViewPage: React.FC = () => {
   const [loadingProductos, setLoadingProductos] = useState(false);
   const [quickSaleModalOpen, setQuickSaleModalOpen] = useState(false);
   const [quickSaleProducts, setQuickSaleProducts] = useState<{ [productoId: number]: number }>({});
-  const [quickSaleLoading] = useState(false);
-  const [quickSaleProductos] = useState<Producto[]>([]);
+  const [quickSaleLoading, setQuickSaleLoading] = useState(false);
+  const [quickSaleProductos, setQuickSaleProductos] = useState<Producto[]>([]);
   const [creatingQuickSale, setCreatingQuickSale] = useState(false);
   
   const { stompClient, isConnected } = useWebSocket();
@@ -213,12 +213,20 @@ const CashierViewPage: React.FC = () => {
     const fetchInitialComandas = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await getComandasPorMultiplesEstados(['LISTA', 'ENTREGADA']);
-            setComandas(Array.isArray(data) ? data : []);
+            // Obtener comandas LISTA y ENTREGADA
+            const comandasNormales = await getComandasPorMultiplesEstados(['LISTA', 'ENTREGADA']);
+            
+            // Obtener ventas rápidas (EN_PROCESO con mesaId 9999)
+            const ventasRapidas = await getComandasPorMultiplesEstados(['EN_PROCESO']);
+            const ventasRapidasFiltradas = ventasRapidas.filter(comanda => comanda.numeroMesa === 9999);
+            
+            // Combinar ambas listas
+            const todasLasComandas = [...comandasNormales, ...ventasRapidasFiltradas];
+            setComandas(todasLasComandas);
             
             // Cargar estado de áreas para cada comanda
             const areasStatus: { [comandaId: number]: ComandaAreaResponseDTO[] } = {};
-            for (const comanda of Array.isArray(data) ? data : []) {
+            for (const comanda of todasLasComandas) {
                 try {
                     const areas = await getComandaAreasStatus(comanda.id);
                     areasStatus[comanda.id] = areas;
@@ -241,7 +249,10 @@ const CashierViewPage: React.FC = () => {
             fetchInitialComandas();
             const subscription = stompClient.subscribe('/topic/caja', (message) => {
                 const comandaActualizada: ComandaResponseDTO = JSON.parse(message.body);
-                if (comandaActualizada.estado === 'LISTA' || comandaActualizada.estado === 'ENTREGADA') {
+                // Incluir ventas rápidas (EN_PROCESO con mesaId 9999) y comandas LISTA/ENTREGADA
+                if (comandaActualizada.estado === 'LISTA' || 
+                    comandaActualizada.estado === 'ENTREGADA' ||
+                    (comandaActualizada.estado === 'EN_PROCESO' && comandaActualizada.numeroMesa === 9999)) {
                     setComandas(prevComandas => {
                         const comandaExistente = prevComandas.find(c => c.id === comandaActualizada.id);
                         if (comandaExistente) {
@@ -249,7 +260,13 @@ const CashierViewPage: React.FC = () => {
                         }
                         return [comandaActualizada, ...prevComandas];
                     });
-          showSuccess('Nueva comanda', `Mesa ${comandaActualizada.numeroMesa} lista para cobrar`);
+                    
+                    // Mostrar mensaje apropiado según el tipo de comanda
+                    if (comandaActualizada.numeroMesa === 9999) {
+                        showSuccess('Venta rápida creada', 'Nueva venta rápida lista para cobrar');
+                    } else {
+                        showSuccess('Nueva comanda', `Mesa ${comandaActualizada.numeroMesa} lista para cobrar`);
+                    }
                 }
             });
             return () => { subscription.unsubscribe(); };
@@ -322,6 +339,19 @@ const CashierViewPage: React.FC = () => {
     }
   };
 
+  const handleOpenQuickSale = async () => {
+    setQuickSaleModalOpen(true);
+    setQuickSaleLoading(true);
+    try {
+      const productos = await getProductos();
+      setQuickSaleProductos(productos);
+    } catch {
+      showError('Error al cargar productos', 'No se pudieron cargar los productos para la venta rápida');
+    } finally {
+      setQuickSaleLoading(false);
+    }
+  };
+
   // Removed unused handlers: handleSelectProduct, handleAddProductsToComanda, handleOpenQuickSale, handleSelectQuickSaleProduct, handleCreateQuickSale
 
   const getEstadoColor = (estado: string) => {
@@ -330,6 +360,8 @@ const CashierViewPage: React.FC = () => {
         return 'warning';
       case 'ENTREGADA':
         return 'info';
+      case 'EN_PROCESO':
+        return 'success'; // Para ventas rápidas
       default:
         return 'default';
     }
@@ -341,6 +373,8 @@ const CashierViewPage: React.FC = () => {
         return 'Lista para Cobrar';
       case 'ENTREGADA':
         return 'Entregada';
+      case 'EN_PROCESO':
+        return 'Venta Rápida'; // Para ventas rápidas
       default:
         return estado;
     }
@@ -359,6 +393,8 @@ const CashierViewPage: React.FC = () => {
           status: area.estado,
           type: area.areaNombre.toLowerCase().includes('cocina') ? 'KITCHEN' : 'BAR'
         }))}
+        showAddButton={true}
+        onAddProducts={() => handleOpenAddProducts(comanda)}
       />
     );
   };
@@ -460,10 +496,6 @@ const CashierViewPage: React.FC = () => {
           </Box>
           
           <Box sx={{ flexGrow: 1 }} />
-          
-          <IconButton onClick={fetchInitialComandas} disabled={loading}>
-            <RefreshIcon />
-          </IconButton>
         </Toolbar>
       </AppBar>
 
@@ -495,20 +527,7 @@ const CashierViewPage: React.FC = () => {
         )}
       </Box>
 
-      {/* Floating Action Button */}
-      <Fab
-        color="primary"
-        aria-label="refresh"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-        }}
-        onClick={fetchInitialComandas}
-        disabled={loading}
-      >
-        <RefreshIcon />
-      </Fab>
+
     </Box>
   );
 
@@ -526,15 +545,6 @@ const CashierViewPage: React.FC = () => {
         </Box>
 
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <ModernButton
-            variant="outlined"
-            icon="refresh"
-            onClick={fetchInitialComandas}
-            loading={loading}
-          >
-            Actualizar
-          </ModernButton>
-          
           <IconButton
             onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
             sx={{ border: '1px solid', borderColor: 'divider' }}
@@ -577,6 +587,14 @@ const CashierViewPage: React.FC = () => {
                 {renderComandaCard(comanda)}
                 {/* Action Buttons debajo de la tarjeta */}
                 <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 2 }}>
+                  <ModernButton
+                    variant="outlined"
+                    size="small"
+                    icon="add"
+                    onClick={() => handleOpenAddProducts(comanda)}
+                  >
+                    Agregar
+                  </ModernButton>
                   <ModernButton
                     variant="outlined"
                     size="small"
@@ -715,14 +733,14 @@ const CashierViewPage: React.FC = () => {
       setCreatingQuickSale(false);
     }
   }}
-  loading={quickSaleLoading}
+  loading={quickSaleLoading || creatingQuickSale}
   confirmText={creatingQuickSale ? 'Creando...' : 'Crear venta'}
 />
       <Fab
         color="secondary"
         aria-label="venta-rapida"
         sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        onClick={() => setQuickSaleModalOpen(true)}
+        onClick={handleOpenQuickSale}
       >
         <PointOfSale />
       </Fab>

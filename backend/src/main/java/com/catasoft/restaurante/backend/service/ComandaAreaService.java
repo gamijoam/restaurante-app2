@@ -173,6 +173,26 @@ public class ComandaAreaService {
         dto.setProductoNombre(item.getProducto().getNombre());
         dto.setCantidad(item.getQuantity());
         dto.setObservaciones(item.getNotes());
+        
+        // Marcar como nuevo si el item fue creado después de la fecha de creación de la comanda
+        Comanda comanda = item.getComandaArea().getComanda();
+        LocalDateTime fechaCreacionComanda = comanda.getFechaHoraCreacion();
+        
+        System.out.println("=== DEBUG ITEM NUEVO ===");
+        System.out.println("Item: " + item.getProducto().getNombre());
+        System.out.println("Fecha creación item: " + item.getCreatedAt());
+        System.out.println("Fecha creación comanda: " + fechaCreacionComanda);
+        
+        // Un item es nuevo si fue creado más de 1 minuto después de la creación de la comanda
+        if (item.getCreatedAt() != null && fechaCreacionComanda != null && 
+            item.getCreatedAt().isAfter(fechaCreacionComanda.plusMinutes(1))) {
+            dto.setEsNuevo(true);
+            System.out.println("Item marcado como NUEVO: " + item.getProducto().getNombre());
+        } else {
+            dto.setEsNuevo(false);
+            System.out.println("Item NO marcado como nuevo: " + item.getProducto().getNombre());
+        }
+        
         return dto;
     }
 

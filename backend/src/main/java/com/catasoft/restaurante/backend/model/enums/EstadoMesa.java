@@ -5,5 +5,6 @@ public enum EstadoMesa {
     OCUPADA,
     RESERVADA,
     MANTENIMIENTO,
-    LISTA_PARA_PAGAR
+    LISTA_PARA_PAGAR,
+    PAGADA
 }

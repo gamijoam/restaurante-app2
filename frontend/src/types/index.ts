@@ -100,5 +100,6 @@ export interface ComandaAreaResponseDTO {
     productoNombre: string;
     cantidad: number;
     observaciones?: string;
+    esNuevo?: boolean;
   }>;
 }

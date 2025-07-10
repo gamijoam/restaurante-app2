@@ -83,6 +83,17 @@ const KitchenViewPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areas]);
 
+  // Auto-refresh cada 10 segundos para detectar nuevos items
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (areas.length > 0) {
+        loadComandasForAllAreas();
+      }
+    }, 10000); // 10 segundos
+
+    return () => clearInterval(interval);
+  }, [areas]);
+
   const loadAreas = async () => {
     try {
       setLoading(true);
@@ -110,6 +121,15 @@ const KitchenViewPage: React.FC = () => {
           console.log(`Cargando comandas para área ${area.id} (${area.name})`);
           const comandas = await getComandasPorArea(area.id);
           console.log(`Comandas encontradas para área ${area.id}:`, comandas);
+          
+          // Log detallado de cada comanda y sus items
+          comandas.forEach((comanda: any) => {
+            console.log(`Comanda ${comanda.id} - Mesa ${comanda.mesaId}:`);
+            comanda.items.forEach((item: any) => {
+              console.log(`  - Item: ${item.productoNombre}, esNuevo: ${item.esNuevo}`);
+            });
+          });
+          
           comandasData[area.id] = comandas;
         } catch{
           console.error(`Error loading comandas for area ${area.id}:`);
@@ -170,9 +190,20 @@ const KitchenViewPage: React.FC = () => {
       <CardContent>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
           <Box>
-            <Typography variant="h6" component="div">
-              Mesa {comanda.mesaId}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+              <Typography variant="h6" component="div">
+                Mesa {comanda.mesaId}
+              </Typography>
+              {comanda.items.some(item => item.esNuevo) && (
+                <Chip
+                  label="NUEVOS ITEMS"
+                  size="small"
+                  color="success"
+                  variant="filled"
+                  sx={{ fontSize: '0.7rem', height: '24px' }}
+                />
+              )}
+            </Box>
             <Typography variant="body2" color="text.secondary">
               Comanda #{comanda.comandaId} - {comanda.areaNombre}
             </Typography>
@@ -193,14 +224,40 @@ const KitchenViewPage: React.FC = () => {
         <Divider sx={{ my: 2 }} />
 
         <List dense>
-          {comanda.items.map((item: { id: number; productoNombre: string; cantidad: number; observaciones?: string }) => (
-            <ListItem key={item.id} sx={{ px: 0 }}>
+          {comanda.items.map((item: { id: number; productoNombre: string; cantidad: number; observaciones?: string; esNuevo?: boolean }) => {
+            console.log('Item en cocina:', item.productoNombre, 'esNuevo:', item.esNuevo);
+            return (
+            <ListItem 
+              key={item.id} 
+              sx={{ 
+                px: 0,
+                backgroundColor: item.esNuevo ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
+                borderLeft: item.esNuevo ? '4px solid #4CAF50' : 'none',
+                borderRadius: item.esNuevo ? '4px' : '0',
+                mb: item.esNuevo ? 1 : 0
+              }}
+            >
               <ListItemText
                 primary={
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body1" fontWeight={500}>
-                      {item.productoNombre}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography 
+                        variant="body1" 
+                        fontWeight={item.esNuevo ? 600 : 500}
+                        color={item.esNuevo ? 'primary.main' : 'inherit'}
+                      >
+                        {item.productoNombre}
+                      </Typography>
+                      {item.esNuevo && (
+                        <Chip
+                          label="NUEVO"
+                          size="small"
+                          color="success"
+                          variant="filled"
+                          sx={{ fontSize: '0.7rem', height: '20px' }}
+                        />
+                      )}
+                    </Box>
                     <Typography variant="body2" color="text.secondary">
                       x{item.cantidad}
                     </Typography>
@@ -215,7 +272,8 @@ const KitchenViewPage: React.FC = () => {
                 }
               />
             </ListItem>
-          ))}
+          );
+          })}
         </List>
       </CardContent>
       

@@ -17,6 +17,7 @@ import {
   Restaurant,
   LocalBar,
 } from '@mui/icons-material';
+import ModernButton from './ModernButton';
 
 interface AreaStatus {
   areaId: string;
@@ -28,9 +29,11 @@ interface AreaStatus {
 interface OrderSummaryProps {
   comanda: any;
   areaStatuses?: AreaStatus[];
+  onAddProducts?: () => void;
+  showAddButton?: boolean;
 }
 
-const OrderSummary: React.FC<OrderSummaryProps> = ({ comanda, areaStatuses = [] }) => {
+const OrderSummary: React.FC<OrderSummaryProps> = ({ comanda, areaStatuses = [], onAddProducts, showAddButton = false }) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'READY':
@@ -78,9 +81,20 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ comanda, areaStatuses = [] 
 
   return (
     <Paper elevation={2} sx={{ p: 2, mb: 2 }}>
-      <Typography variant="h6" gutterBottom>
-        Comanda #{comanda.id} - Mesa {comanda.numeroMesa}
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography variant="h6">
+          Comanda #{comanda.id} - Mesa {comanda.numeroMesa}
+        </Typography>
+        {comanda.items?.some((item: any) => item.esNuevo) && (
+          <Chip
+            label="NUEVOS ITEMS"
+            size="small"
+            color="success"
+            variant="filled"
+            sx={{ fontSize: '0.7rem', height: '24px' }}
+          />
+        )}
+      </Box>
       
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
         <Chip
@@ -148,9 +162,37 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ comanda, areaStatuses = [] 
       </Typography>
       <List dense>
         {comanda.items?.map((item: any, index: number) => (
-          <ListItem key={index} sx={{ px: 0 }}>
+          <ListItem 
+            key={index} 
+            sx={{ 
+              px: 0,
+              backgroundColor: item.esNuevo ? 'rgba(76, 175, 80, 0.1)' : 'transparent',
+              borderLeft: item.esNuevo ? '4px solid #4CAF50' : 'none',
+              borderRadius: item.esNuevo ? '4px' : '0',
+              mb: item.esNuevo ? 1 : 0
+            }}
+          >
             <ListItemText
-              primary={item.productoNombre}
+              primary={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography 
+                    variant="body2" 
+                    fontWeight={item.esNuevo ? 600 : 400}
+                    color={item.esNuevo ? 'primary.main' : 'inherit'}
+                  >
+                    {item.productoNombre}
+                  </Typography>
+                  {item.esNuevo && (
+                    <Chip
+                      label="NUEVO"
+                      size="small"
+                      color="success"
+                      variant="filled"
+                      sx={{ fontSize: '0.6rem', height: '18px' }}
+                    />
+                  )}
+                </Box>
+              }
               secondary={`$${item.precioUnitario} x ${item.cantidad}`}
             />
             <ListItemSecondaryAction>
@@ -171,6 +213,20 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ comanda, areaStatuses = [] 
           ${comanda.total?.toFixed(2) || '0.00'}
         </Typography>
       </Box>
+      
+      {/* Botón de agregar productos si está habilitado */}
+      {showAddButton && onAddProducts && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+          <ModernButton
+            variant="outlined"
+            size="small"
+            icon="add"
+            onClick={onAddProducts}
+          >
+            Agregar productos
+          </ModernButton>
+        </Box>
+      )}
     </Paper>
   );
 };

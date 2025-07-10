@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.Arrays;
+import java.util.ArrayList;
 
 @Service
 public class ComandaService {
@@ -161,10 +162,14 @@ public class ComandaService {
         }
         comanda.setTotal(totalComanda);
         Comanda comandaGuardada = comandaRepository.save(comanda);
-        // Al crear la comanda, actualizar y notificar la mesa
-        mesa.setEstado(EstadoMesa.OCUPADA);
-        mesaRepository.save(mesa);
-        messagingTemplate.convertAndSend("/topic/mesas", mesa);
+        // Al crear la comanda, actualizar y notificar la mesa (solo para mesas normales)
+        if (mesa.getId() != 9999) {
+            mesa.setEstado(EstadoMesa.OCUPADA);
+            mesaRepository.save(mesa);
+            messagingTemplate.convertAndSend("/topic/mesas", mesa);
+        } else {
+            logger.info("Venta rápida creada - manteniendo mesa 9999 en estado LIBRE");
+        }
 
         // --- ELIMINAR impresión automática de cocina aquí ---
         // Solo notificar a cocina si no es una venta rápida
@@ -429,9 +434,14 @@ public class ComandaService {
                 inventarioService.restaurarStockIngredientes(item.getProducto(), item.getCantidad());
             }
             Mesa mesa = comanda.getMesa();
-            mesa.setEstado(EstadoMesa.LIBRE);
-            mesaRepository.save(mesa);
-            messagingTemplate.convertAndSend("/topic/mesas", mesa);
+            // Solo cambiar el estado de la mesa si no es la mesa de venta rápida (9999)
+            if (mesa.getId() != 9999) {
+                mesa.setEstado(EstadoMesa.LIBRE);
+                mesaRepository.save(mesa);
+                messagingTemplate.convertAndSend("/topic/mesas", mesa);
+            } else {
+                logger.info("Venta rápida cancelada - manteniendo mesa 9999 en estado LIBRE");
+            }
         }
 
         if (nuevoEstado == EstadoComanda.PAGADA) {
@@ -440,9 +450,14 @@ public class ComandaService {
             }
 
             Mesa mesa = comanda.getMesa();
-            mesa.setEstado(EstadoMesa.LIBRE);
-            mesaRepository.save(mesa);
-            messagingTemplate.convertAndSend("/topic/mesas", mesa);
+            // Solo cambiar el estado de la mesa si no es la mesa de venta rápida (9999)
+            if (mesa.getId() != 9999) {
+                mesa.setEstado(EstadoMesa.LIBRE);
+                mesaRepository.save(mesa);
+                messagingTemplate.convertAndSend("/topic/mesas", mesa);
+            } else {
+                logger.info("Venta rápida pagada - manteniendo mesa 9999 en estado LIBRE");
+            }
 
             // Crear factura con todos los campos obligatorios
             Factura factura = new Factura();
@@ -502,12 +517,19 @@ public class ComandaService {
         // Si la comanda está LISTA o ENTREGADA, volver a EN_PROCESO
         if (comanda.getEstado() == EstadoComanda.LISTA || comanda.getEstado() == EstadoComanda.ENTREGADA) {
             comanda.setEstado(EstadoComanda.EN_PROCESO);
-            // También actualizar el estado de la mesa si es necesario
+            // También actualizar el estado de la mesa si es necesario (solo para mesas normales)
             Mesa mesa = comanda.getMesa();
-            mesa.setEstado(EstadoMesa.OCUPADA);
-            mesaRepository.save(mesa);
-            messagingTemplate.convertAndSend("/topic/mesas", mesa);
+            if (mesa.getId() != 9999) {
+                mesa.setEstado(EstadoMesa.OCUPADA);
+                mesaRepository.save(mesa);
+                messagingTemplate.convertAndSend("/topic/mesas", mesa);
+            } else {
+                logger.info("Agregando items a venta rápida - manteniendo mesa 9999 en estado LIBRE");
+            }
         }
+
+        // Lista para almacenar los nuevos items agregados
+        List<ComandaItem> nuevosItems = new ArrayList<>();
 
         for (ItemRequestDTO itemDTO : itemsRequest) {
             Producto producto = productoRepository.findById(itemDTO.getProductoId())
@@ -533,6 +555,7 @@ public class ComandaService {
                 comandaItem.setItemPrincipal(itemPrincipal);
             }
             comanda.getItems().add(comandaItem);
+            nuevosItems.add(comandaItem);
 
             comanda.setTotal(comanda.getTotal().add(subtotal));
         }
@@ -540,9 +563,121 @@ public class ComandaService {
         Comanda comandaActualizada = comandaRepository.save(comanda);
         ComandaResponseDTO dto = mapToComandaResponseDTO(comandaActualizada);
 
+        // --- NUEVO: Actualizar comandas por área con los nuevos items ---
+        try {
+            actualizarComandasPorAreaConNuevosItems(comandaActualizada, nuevosItems);
+        } catch (Exception e) {
+            logger.error("Error actualizando comandas por área para comanda {}: {}", comandaId, e.getMessage());
+            // No lanzar excepción para no afectar la operación principal
+        }
+
         messagingTemplate.convertAndSend("/topic/cocina", dto);
 
         return dto;
+    }
+
+    /**
+     * Actualiza las comandas por área con los nuevos items agregados
+     */
+    private void actualizarComandasPorAreaConNuevosItems(Comanda comanda, List<ComandaItem> nuevosItems) {
+        logger.info("Actualizando comandas por área para comanda {} con {} nuevos items", comanda.getId(), nuevosItems.size());
+
+        // Agrupar nuevos items por área de preparación
+        Map<String, List<ComandaItem>> nuevosItemsPorArea = nuevosItems.stream()
+                .collect(Collectors.groupingBy(item -> {
+                    // Buscar la asignación producto-área
+                    List<ProductArea> asignaciones = productAreaRepository.findByProductoId(item.getProducto().getId());
+                    String areaId = asignaciones.stream()
+                            .findFirst()
+                            .map(productArea -> productArea.getAreaId())
+                            .orElse("sin-asignar");
+                    
+                    logger.info("Nuevo item {} asignado a área: {}", item.getProducto().getNombre(), areaId);
+                    return areaId;
+                }));
+
+        // Actualizar o crear comandas por área para cada área que tenga nuevos items
+        for (Map.Entry<String, List<ComandaItem>> entry : nuevosItemsPorArea.entrySet()) {
+            String areaId = entry.getKey();
+            List<ComandaItem> items = entry.getValue();
+
+            if ("sin-asignar".equals(areaId)) {
+                logger.warn("Items sin asignación de área encontrados para comanda ID: {}", comanda.getId());
+                continue;
+            }
+
+            // Buscar si ya existe una comanda por área para esta comanda y área
+            Optional<ComandaArea> comandaAreaExistente = comandaAreaRepository.findByComandaIdAndAreaId(comanda.getId(), areaId);
+
+            if (comandaAreaExistente.isPresent()) {
+                // Actualizar comanda por área existente
+                ComandaArea comandaArea = comandaAreaExistente.get();
+                logger.info("Actualizando comanda por área existente ID: {} para área: {}", comandaArea.getId(), areaId);
+
+                // Agregar nuevos items a la comanda por área
+                for (ComandaItem item : items) {
+                    ComandaAreaItem areaItem = new ComandaAreaItem();
+                    areaItem.setComandaArea(comandaArea);
+                    areaItem.setProducto(item.getProducto());
+                    areaItem.setQuantity(item.getCantidad());
+                    areaItem.setUnitPrice(item.getPrecioUnitario());
+                    areaItem.setStatus(ComandaAreaItem.EstadoItem.PENDING);
+                    areaItem.setCreatedAt(LocalDateTime.now());
+                    areaItem.setUpdatedAt(LocalDateTime.now());
+
+                    ComandaAreaItem itemGuardado = comandaAreaItemRepository.save(areaItem);
+                    logger.info("Nuevo item agregado a comanda por área: Producto: {}, Cantidad: {}, ID: {}", 
+                            item.getProducto().getNombre(), item.getCantidad(), itemGuardado.getId());
+                }
+
+                // Imprimir ticket actualizado para esta área
+                try {
+                    comandaAreaService.imprimirComandaArea(comandaArea.getId());
+                    logger.info("Ticket actualizado impreso para área: {}", areaId);
+                } catch (Exception e) {
+                    logger.error("Error imprimiendo ticket actualizado para área {}: {}", areaId, e.getMessage());
+                }
+            } else {
+                // Crear nueva comanda por área
+                logger.info("Creando nueva comanda por área para comanda ID: {} y área: {}", comanda.getId(), areaId);
+
+                ComandaArea comandaArea = new ComandaArea();
+                comandaArea.setComanda(comanda);
+                comandaArea.setAreaId(areaId);
+                comandaArea.setStatus(ComandaArea.EstadoComandaArea.PENDING);
+                comandaArea.setCreatedAt(LocalDateTime.now());
+                comandaArea.setUpdatedAt(LocalDateTime.now());
+
+                ComandaArea comandaAreaGuardada = comandaAreaRepository.save(comandaArea);
+                logger.info("Nueva comanda por área creada con ID: {}", comandaAreaGuardada.getId());
+
+                // Crear items de comanda por área
+                for (ComandaItem item : items) {
+                    ComandaAreaItem areaItem = new ComandaAreaItem();
+                    areaItem.setComandaArea(comandaAreaGuardada);
+                    areaItem.setProducto(item.getProducto());
+                    areaItem.setQuantity(item.getCantidad());
+                    areaItem.setUnitPrice(item.getPrecioUnitario());
+                    areaItem.setStatus(ComandaAreaItem.EstadoItem.PENDING);
+                    areaItem.setCreatedAt(LocalDateTime.now());
+                    areaItem.setUpdatedAt(LocalDateTime.now());
+
+                    ComandaAreaItem itemGuardado = comandaAreaItemRepository.save(areaItem);
+                    logger.info("Item de comanda por área creado: Producto: {}, Cantidad: {}, ID: {}", 
+                            item.getProducto().getNombre(), item.getCantidad(), itemGuardado.getId());
+                }
+
+                // Imprimir ticket para la nueva área
+                try {
+                    comandaAreaService.imprimirComandaArea(comandaAreaGuardada.getId());
+                    logger.info("Ticket impreso para nueva área: {}", areaId);
+                } catch (Exception e) {
+                    logger.error("Error imprimiendo ticket para nueva área {}: {}", areaId, e.getMessage());
+                }
+            }
+        }
+
+        logger.info("Comandas por área actualizadas exitosamente para comanda ID: {}", comanda.getId());
     }
 
     @Transactional(readOnly = true)
