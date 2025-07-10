@@ -6,6 +6,7 @@ export interface Ingrediente {
     stock: number;
     unidad: string;
     descripcion?: string;
+    precio_unitario: number;
 }
 
 export const getIngredientes = async (): Promise<Ingrediente[]> => {

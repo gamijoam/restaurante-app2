@@ -31,7 +31,7 @@ import { useNotification } from '../hooks/useNotification';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { getComandasPorArea, startPreparation, markAsReady } from '../services/comandaService';
+import { getComandasPorArea, startPreparation, markAsReady, imprimirComandaArea } from '../services/comandaService';
 import { getAreasPreparacion } from '../services/preparationAreaService';
 import type { PreparationArea, ComandaAreaResponseDTO } from '../types';
 
@@ -232,6 +232,14 @@ const KitchenViewPage: React.FC = () => {
             variant="outlined"
             size="small"
             startIcon={<Print />}
+            onClick={async () => {
+              try {
+                await imprimirComandaArea(comanda.id);
+                showSuccess('Impresión enviada', 'La comanda se envió a imprimir correctamente');
+              } catch (error) {
+                showError('Error al imprimir la comanda');
+              }
+            }}
           >
             Imprimir
           </ModernButton>

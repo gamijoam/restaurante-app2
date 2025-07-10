@@ -64,6 +64,7 @@ import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import ModernModal from '../components/ModernModal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { getAreasPreparacion, type PreparationArea } from '../services/preparationAreaService';
 
 const PrinterSettingsPage = () => {
     const { roles } = useAuth();
@@ -79,7 +80,7 @@ const PrinterSettingsPage = () => {
     const [filterRole, setFilterRole] = useState<string>('TODOS');
     const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
     const [currentConfig, setCurrentConfig] = useState<Partial<PrinterConfig>>({
-        role: 'COCINA',
+        areaId: '',
         printerType: 'TCP',
         printerTarget: ''
     });
@@ -87,6 +88,7 @@ const PrinterSettingsPage = () => {
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedConfig, setSelectedConfig] = useState<PrinterConfig | null>(null);
     const [openDetailModal, setOpenDetailModal] = useState(false);
+    const [areas, setAreas] = useState<PreparationArea[]>([]);
 
     const fetchConfigs = useCallback(async () => {
         setLoading(true);
@@ -105,6 +107,18 @@ const PrinterSettingsPage = () => {
         fetchConfigs();
     }, [fetchConfigs]);
 
+    useEffect(() => {
+      getAreasPreparacion().then(setAreas);
+    }, []);
+
+    // Limpiar errores cuando se abre el diálogo
+    useEffect(() => {
+        if (openDialog) {
+            setError(null);
+            setSuccess(null);
+        }
+    }, [openDialog]);
+
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }> | SelectChangeEvent
     ) => {
@@ -114,12 +128,28 @@ const PrinterSettingsPage = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!currentConfig.role || !currentConfig.printerType || !currentConfig.printerTarget) {
-            setError('Todos los campos son obligatorios.');
+        
+        // Validación específica de cada campo
+        if (!currentConfig.areaId) {
+            setError('Debe seleccionar un área.');
             return;
         }
+        if (!currentConfig.printerType) {
+            setError('Debe seleccionar un tipo de conexión.');
+            return;
+        }
+        if (!currentConfig.printerTarget || currentConfig.printerTarget.trim() === '') {
+            setError('Debe especificar el destino de la impresora.');
+            return;
+        }
+        
         try {
-            await savePrinterConfig(currentConfig as PrinterConfig);
+            // Siempre enviar 'role' igual a 'areaId' para compatibilidad backend
+            const configToSave = {
+                ...currentConfig,
+                role: currentConfig.areaId
+            };
+            await savePrinterConfig(configToSave as PrinterConfig);
             setSuccess('Configuración guardada exitosamente.');
             fetchConfigs();
             resetForm();
@@ -150,15 +180,19 @@ const PrinterSettingsPage = () => {
     const resetForm = () => {
         setIsEditing(false);
         setCurrentConfig({
-            role: 'COCINA',
+            areaId: '',
             printerType: 'TCP',
             printerTarget: ''
         });
         setError(null);
+        setSuccess(null);
     };
 
-    const getRoleColor = (role: string) => {
-        switch (role) {
+    const getRoleColor = (areaId: string) => {
+        const area = areas.find(a => a.areaId === areaId);
+        if (!area) return 'default';
+        
+        switch (area.type?.toUpperCase()) {
             case 'COCINA':
                 return 'warning';
             case 'CAJA':
@@ -170,21 +204,16 @@ const PrinterSettingsPage = () => {
         }
     };
 
-    const getRoleText = (role: string) => {
-        switch (role) {
-            case 'COCINA':
-                return 'Cocina';
-            case 'CAJA':
-                return 'Caja';
-            case 'BARRA':
-                return 'Barra';
-            default:
-                return role;
-        }
+    const getRoleText = (areaId: string) => {
+        const area = areas.find(a => a.areaId === areaId);
+        return area?.name || areaId;
     };
 
-    const getRoleIcon = (role: string) => {
-        switch (role) {
+    const getRoleIcon = (areaId: string) => {
+        const area = areas.find(a => a.areaId === areaId);
+        if (!area) return <SettingsIcon />;
+        
+        switch (area.type?.toUpperCase()) {
             case 'COCINA':
                 return <KitchenIcon />;
             case 'CAJA':
@@ -242,11 +271,11 @@ const PrinterSettingsPage = () => {
     };
 
     const filteredConfigs = configs.filter(config => {
-        const matchesSearch = config.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch = config.areaId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             config.printerTarget.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             config.printerType.toLowerCase().includes(searchTerm.toLowerCase());
         
-        const matchesRole = filterRole === 'TODOS' || config.role === filterRole;
+        const matchesRole = filterRole === 'TODOS' || config.areaId === filterRole;
         
         return matchesSearch && matchesRole;
     });
@@ -458,10 +487,10 @@ const PrinterSettingsPage = () => {
                                     </TableCell>
                                     <TableCell>
                                         <Chip
-                                            label={getRoleText(config.role)}
-                                            color={getRoleColor(config.role) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
+                                            label={getRoleText(config.areaId || '')}
+                                            color={getRoleColor(config.areaId || '') as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                                             size="small"
-                                            icon={getRoleIcon(config.role)}
+                                            icon={getRoleIcon(config.areaId || '')}
                                         />
                                     </TableCell>
                                     <TableCell>
@@ -574,15 +603,18 @@ const PrinterSettingsPage = () => {
 
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                                         <Chip
-                                            label={getRoleText(config.role)}
-                                            color={getRoleColor(config.role) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
+                                            label={getRoleText(config.areaId || '')}
+                                            color={getRoleColor(config.areaId || '') as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                                             size="small"
-                                            icon={getRoleIcon(config.role)}
+                                            icon={getRoleIcon(config.areaId || '')}
                                         />
                                         <Typography variant="body2" color="text.secondary">
                                             Tipo: {config.printerType}
                                         </Typography>
                                     </Box>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Área: {areas.find(a => a.areaId === config.areaId)?.name || config.areaId || 'Sin área'}
+                                    </Typography>
                                 </CardContent>
 
                                 <CardActions sx={{ p: 2, pt: 0 }}>
@@ -729,20 +761,26 @@ const PrinterSettingsPage = () => {
                     </Box>
                 </DialogTitle>
                 <DialogContent>
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
                     <form onSubmit={handleSubmit}>
                         <Grid container spacing={2} sx={{ mt: 1 }}>
                     <Grid item xs={12} sm={6}>
                         <FormControl fullWidth>
-                            <InputLabel>Rol</InputLabel>
+                            <InputLabel>Área</InputLabel>
                             <Select
-                                name="role"
-                                value={currentConfig.role || 'COCINA'}
+                                name="areaId"
+                                value={currentConfig.areaId || ''}
                                 onChange={handleInputChange}
-                                label="Rol"
+                                label="Área"
+                                error={!currentConfig.areaId}
                             >
-                                <MenuItem value="COCINA">Cocina</MenuItem>
-                                <MenuItem value="CAJA">Caja</MenuItem>
-                                <MenuItem value="BARRA">Barra</MenuItem>
+                                {areas.map(area => (
+                                  <MenuItem key={area.areaId} value={area.areaId}>{area.name}</MenuItem>
+                                ))}
                             </Select>
                         </FormControl>
                     </Grid>

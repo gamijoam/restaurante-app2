@@ -13,7 +13,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/license")
-@CrossOrigin(origins = "*")
+@CrossOrigin(originPatterns = "*")
 public class LicenseController {
     
     @Autowired

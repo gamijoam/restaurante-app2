@@ -11,12 +11,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.http.HttpHeaders; // <-- NUEVA IMPORTACIÓN
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import com.catasoft.restaurante.backend.service.PdfService; // <-- NUEVA IMPORTACIÓN
-import org.springframework.core.io.InputStreamResource;
+import com.catasoft.restaurante.backend.service.PdfService;
 
-import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -48,9 +46,9 @@ public class FacturaController {
     }
     @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     @PreAuthorize("hasRole('GERENTE')")
-    public ResponseEntity<InputStreamResource> descargarFacturaPdf(@PathVariable Long id) {
+    public ResponseEntity<byte[]> descargarFacturaPdf(@PathVariable Long id) {
         Factura factura = facturaService.getFacturaEntityById(id);
-        ByteArrayInputStream pdf = pdfService.generarPdfFactura(factura);
+        byte[] pdfBytes = pdfService.generarPdfFactura(factura);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Content-Disposition", "inline; filename=factura-" + id + ".pdf");
@@ -59,7 +57,7 @@ public class FacturaController {
                 .ok()
                 .headers(headers)
                 .contentType(MediaType.APPLICATION_PDF)
-                .body(new InputStreamResource(pdf));
+                .body(pdfBytes);
     }
 
     @PutMapping("/{id}/estado")

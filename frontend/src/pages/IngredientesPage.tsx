@@ -123,6 +123,11 @@ const IngredientesPage = () => {
     };
 
     const handleSubmit = async () => {
+        // Validación de precio_unitario obligatorio
+        if (formData.precio_unitario === undefined || formData.precio_unitario === null || isNaN(formData.precio_unitario)) {
+            setError('El campo Precio unitario es obligatorio y debe ser un número.');
+            return;
+        }
         try {
             if (editingIngrediente) {
                 await updateIngrediente(editingIngrediente.id!, formData);
@@ -698,6 +703,16 @@ const IngredientesPage = () => {
                         onChange={(e) => setFormData({ ...formData, unidad: e.target.value })}
                         margin="normal"
                         required
+                    />
+                    <TextField
+                        fullWidth
+                        label="Precio unitario"
+                        type="number"
+                        value={formData.precio_unitario ?? ''}
+                        onChange={(e) => setFormData({ ...formData, precio_unitario: parseFloat(e.target.value) })}
+                        margin="normal"
+                        required
+                        inputProps={{ min: 0, step: 0.01 }}
                     />
                     <TextField
                         fullWidth

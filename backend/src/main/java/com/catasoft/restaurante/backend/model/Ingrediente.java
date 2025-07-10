@@ -1,5 +1,6 @@
 package com.catasoft.restaurante.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -23,12 +24,14 @@ public class Ingrediente {
 
     @NotBlank
     @Column(name = "unidad_medida", nullable = false, length = 20)
+    @JsonProperty("unidad")
     private String unidad;
 
     @Column(length = 255)
     private String descripcion;
 
     @Column(name = "precio_unitario", nullable = false)
+    @JsonProperty("precio_unitario")
     private Double precioUnitario;
 
     @Column(nullable = false)
@@ -41,11 +44,15 @@ public class Ingrediente {
     public void setNombre(String nombre) { this.nombre = nombre; }
     public Double getStock() { return stock; }
     public void setStock(Double stock) { this.stock = stock; }
+    @JsonProperty("unidad")
     public String getUnidad() { return unidad; }
+    @JsonProperty("unidad")
     public void setUnidad(String unidad) { this.unidad = unidad; }
     public String getDescripcion() { return descripcion; }
     public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
+    @JsonProperty("precio_unitario")
     public Double getPrecioUnitario() { return precioUnitario; }
+    @JsonProperty("precio_unitario")
     public void setPrecioUnitario(Double precioUnitario) { this.precioUnitario = precioUnitario; }
     public Boolean getActivo() { return activo; }
     public void setActivo(Boolean activo) { this.activo = activo; }

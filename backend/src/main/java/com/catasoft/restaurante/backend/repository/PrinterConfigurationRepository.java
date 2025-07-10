@@ -11,4 +11,5 @@ public interface PrinterConfigurationRepository extends JpaRepository<PrinterCon
 
     // Método personalizado para buscar una configuración por su rol
     Optional<PrinterConfiguration> findByRole(String role);
+    Optional<PrinterConfiguration> findByAreaId(String areaId);
 }

@@ -15,7 +15,7 @@ INSERT INTO permisos (nombre, descripcion, activo) VALUES
 
 -- Insertar usuario gerente por defecto (password: admin123)
 INSERT INTO usuarios (username, password, nombre, email, apellido, activo, fecha_creacion) VALUES
-('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVEFDa', 'Administrador', 'admin@restaurante.com', 'Sistema', TRUE, NOW());
+('admin', '$2a$10$Dbx466FXrb4UppgMXrJisu9np/ZOSOFEGC0k.PQjkp4E3rX/aPu.q', 'Administrador', 'admin@restaurante.com', 'Sistema', TRUE, NOW());
 
 -- Asignar rol de gerente al usuario admin
 INSERT INTO usuario_roles (usuario_id, rol) VALUES

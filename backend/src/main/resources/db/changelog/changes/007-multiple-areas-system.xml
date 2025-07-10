@@ -123,59 +123,50 @@
     <!-- Insertar áreas por defecto -->
     <changeSet id="007-05" author="system">
         <insert tableName="preparation_areas">
-            <column name="area_id" value="cocina-caliente"/>
-            <column name="name" value="Cocina Caliente"/>
+            <column name="area_id" value="COCINA"/>
+            <column name="name" value="Cocina"/>
             <column name="type" value="KITCHEN"/>
-            <column name="description" value="Área para preparación de platos calientes"/>
+            <column name="description" value="Área para preparación de platos"/>
             <column name="active" valueBoolean="true"/>
             <column name="order_index" valueNumeric="1"/>
         </insert>
         
         <insert tableName="preparation_areas">
-            <column name="area_id" value="cocina-fria"/>
-            <column name="name" value="Cocina Fría"/>
-            <column name="type" value="KITCHEN"/>
-            <column name="description" value="Área para preparación de platos fríos y ensaladas"/>
+            <column name="area_id" value="BARRA"/>
+            <column name="name" value="Barra"/>
+            <column name="type" value="BAR"/>
+            <column name="description" value="Área para preparación de bebidas y cócteles"/>
             <column name="active" valueBoolean="true"/>
             <column name="order_index" valueNumeric="2"/>
         </insert>
         
         <insert tableName="preparation_areas">
-            <column name="area_id" value="barra"/>
-            <column name="name" value="Barra"/>
-            <column name="type" value="BAR"/>
-            <column name="description" value="Área para preparación de bebidas y cócteles"/>
+            <column name="area_id" value="CAJA"/>
+            <column name="name" value="Caja"/>
+            <column name="type" value="CAJA"/>
+            <column name="description" value="Área de caja"/>
             <column name="active" valueBoolean="true"/>
-            <column name="order_index" valueNumeric="3"/>
+            <column name="order_index" valueNumeric="999"/>
         </insert>
     </changeSet>
 
     <!-- Asignar productos existentes a áreas por defecto -->
     <changeSet id="007-06" author="system">
-        <!-- Productos calientes van a cocina caliente -->
+        <!-- Productos de cocina van a COCINA -->
         <sql>
             INSERT INTO product_areas (product_id, area_id, preparation_time)
-            SELECT id, 'cocina-caliente', 15
+            SELECT id, 'COCINA', 15
             FROM productos 
-            WHERE categoria IN ('Platos Principales', 'Carnes', 'Pasta', 'Pizza')
+            WHERE categoria IN ('PLATO_PRINCIPAL')
             AND id NOT IN (SELECT product_id FROM product_areas);
         </sql>
         
-        <!-- Productos fríos van a cocina fría -->
+        <!-- Bebidas van a BARRA -->
         <sql>
             INSERT INTO product_areas (product_id, area_id, preparation_time)
-            SELECT id, 'cocina-fria', 10
+            SELECT id, 'BARRA', 3
             FROM productos 
-            WHERE categoria IN ('Ensaladas', 'Sándwiches', 'Entradas Frías')
-            AND id NOT IN (SELECT product_id FROM product_areas);
-        </sql>
-        
-        <!-- Bebidas van a barra -->
-        <sql>
-            INSERT INTO product_areas (product_id, area_id, preparation_time)
-            SELECT id, 'barra', 3
-            FROM productos 
-            WHERE categoria IN ('Bebidas', 'Cócteles', 'Cervezas')
+            WHERE categoria IN ('BEBIDA')
             AND id NOT IN (SELECT product_id FROM product_areas);
         </sql>
     </changeSet>

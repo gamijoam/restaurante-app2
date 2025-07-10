@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="010-add-area-id-to-printer-configurations" author="ai">
+        <comment>Agrega la columna area_id a printer_configurations para asociar impresoras a áreas</comment>
+        <addColumn tableName="printer_configurations">
+            <column name="area_id" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="010-add-fk-area-id-to-printer-configurations" author="ai">
+        <comment>Agrega la foreign key de area_id en printer_configurations hacia preparation_areas.area_id</comment>
+        <addForeignKeyConstraint 
+            baseTableName="printer_configurations"
+            baseColumnNames="area_id"
+            constraintName="fk_printer_config_area"
+            referencedTableName="preparation_areas"
+            referencedColumnNames="area_id"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="SET NULL"/>
+    </changeSet>
+
+</databaseChangeLog> 

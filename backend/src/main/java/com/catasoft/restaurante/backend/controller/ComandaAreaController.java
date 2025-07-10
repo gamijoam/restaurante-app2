@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import com.catasoft.restaurante.backend.dto.ComandaResponseDTO;
 import java.util.stream.Collectors;
 import com.catasoft.restaurante.backend.repository.ComandaAreaRepository;
+import com.catasoft.restaurante.backend.model.dto.PrintJobDTO;
+import com.catasoft.restaurante.backend.service.WebSocketService;
 
 @RestController
 @RequestMapping("/api/v1/comanda-areas")
@@ -41,6 +43,9 @@ public class ComandaAreaController {
 
     @Autowired
     private ComandaAreaRepository comandaAreaRepository;
+
+    @Autowired
+    private WebSocketService webSocketService;
 
     @GetMapping
     public List<ComandaArea> getAll() {
@@ -126,6 +131,17 @@ public class ComandaAreaController {
         }
         comandaAreaService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/imprimir")
+    public ResponseEntity<Void> imprimirComandaArea(@PathVariable Long id) {
+        try {
+            comandaAreaService.imprimirComandaArea(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Error al imprimir comanda de área: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     // --- Items ---

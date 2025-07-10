@@ -35,6 +35,7 @@ public class SecurityConfig {
                 // Permitimos auth, websockets Y NUESTRO PING DE PRUEBA
                 .requestMatchers("/api/auth/**", "/ws/**", "/ping", "/test/**").permitAll()
                 .requestMatchers("/api/license/**").permitAll()
+                .requestMatchers("/api/v1/business-config/**").permitAll() // Temporal para pruebas
                 // Endpoints que requieren permisos específicos
                 .requestMatchers("/api/v1/reportes/**").hasAuthority("VER_REPORTES")
                 .requestMatchers("/api/v1/productos/**").hasAuthority("GESTIONAR_INGREDIENTES")
@@ -52,6 +53,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/areas/**").hasRole("GERENTE")
                 .requestMatchers("/api/v1/product-areas/**").hasRole("GERENTE")
                 .requestMatchers("/api/v1/comanda-areas/**").hasRole("GERENTE")
+                .requestMatchers("/api/v1/business-config/**").hasRole("GERENTE")
                 
                 // Cualquier otra petición requiere autenticación
                 .anyRequest().authenticated()

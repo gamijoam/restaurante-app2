@@ -29,11 +29,26 @@ public class TicketTemplateService {
     private AreaRepository areaRepository;
     
     @Autowired
+    private com.catasoft.restaurante.backend.repository.PreparationAreaRepository preparationAreaRepository;
+    
+    @Autowired
     private ObjectMapper objectMapper;
     
     // Obtener todas las áreas
     public List<Area> getAllAreas() {
-        return areaRepository.findAll();
+        List<com.catasoft.restaurante.backend.model.PreparationArea> prepAreas = preparationAreaRepository.findAll();
+        List<Area> areas = new ArrayList<>();
+        
+        for (com.catasoft.restaurante.backend.model.PreparationArea prepArea : prepAreas) {
+            Area area = new Area();
+            area.setId(prepArea.getId());
+            area.setAreaId(prepArea.getAreaId());
+            area.setName(prepArea.getName());
+            area.setDescription(prepArea.getDescription());
+            areas.add(area);
+        }
+        
+        return areas;
     }
     
     // Crear nueva área
@@ -45,29 +60,85 @@ public class TicketTemplateService {
         }
         
         // Verificar que el areaId sea único
-        if (areaRepository.existsByAreaId(area.getAreaId())) {
+        if (preparationAreaRepository.existsByAreaId(area.getAreaId())) {
             throw new RuntimeException("El área con ID '" + area.getAreaId() + "' ya existe");
         }
         
-        return areaRepository.save(area);
+        // Crear en la tabla de áreas de preparación
+        com.catasoft.restaurante.backend.model.PreparationArea prepArea = new com.catasoft.restaurante.backend.model.PreparationArea();
+        prepArea.setAreaId(area.getAreaId());
+        prepArea.setName(area.getName());
+        prepArea.setDescription(area.getDescription());
+        prepArea.setType("CUSTOM");
+        prepArea.setActive(true);
+        prepArea.setOrderIndex(999);
+        
+        prepArea = preparationAreaRepository.save(prepArea);
+        
+        // Convertir de vuelta a Area
+        area.setId(prepArea.getId());
+        return area;
     }
     
     // Obtener plantilla por área
     public TicketTemplateDTO getTemplateByArea(String areaId) {
-        Optional<TicketTemplate> template = ticketTemplateRepository.findByAreaIdAndIsDefaultTrue(areaId);
+        // Mapear IDs de áreas de preparación a IDs de ticket templates
+        String templateAreaId = mapPreparationAreaToTemplateArea(areaId);
+        
+        Optional<TicketTemplate> template = ticketTemplateRepository.findByAreaIdAndIsDefaultTrue(templateAreaId);
         
         if (template.isPresent()) {
             return convertToDTO(template.get());
         }
         
         // Si no hay plantilla por defecto, buscar la más reciente
-        template = ticketTemplateRepository.findFirstByAreaIdOrderByCreatedAtDesc(areaId);
+        template = ticketTemplateRepository.findFirstByAreaIdOrderByCreatedAtDesc(templateAreaId);
         
         if (template.isPresent()) {
             return convertToDTO(template.get());
         }
         
         return null;
+    }
+    
+    // Método para mapear IDs de áreas de preparación a IDs de ticket templates
+    private String mapPreparationAreaToTemplateArea(String preparationAreaId) {
+        if (preparationAreaId == null) {
+            return null;
+        }
+        
+        // Mapear IDs de preparación (mayúsculas) a IDs de templates (minúsculas)
+        switch (preparationAreaId.toUpperCase()) {
+            case "COCINA":
+                return "cocina";
+            case "CAJA":
+                return "caja";
+            case "BARRA":
+                return "barra";
+            default:
+                // Si no hay mapeo específico, convertir a minúsculas
+                return preparationAreaId.toLowerCase();
+        }
+    }
+    
+    // Método para mapear IDs de ticket templates a IDs de áreas de preparación
+    private String mapTemplateAreaToPreparationArea(String templateAreaId) {
+        if (templateAreaId == null) {
+            return null;
+        }
+        
+        // Mapear IDs de templates (minúsculas) a IDs de preparación (mayúsculas)
+        switch (templateAreaId.toLowerCase()) {
+            case "cocina":
+                return "COCINA";
+            case "caja":
+                return "CAJA";
+            case "barra":
+                return "BARRA";
+            default:
+                // Si no hay mapeo específico, convertir a mayúsculas
+                return templateAreaId.toUpperCase();
+        }
     }
     
     // Obtener plantilla por ID
@@ -80,6 +151,10 @@ public class TicketTemplateService {
     @Transactional
     public TicketTemplateDTO saveTemplate(TicketTemplateDTO templateDTO) {
         TicketTemplate template;
+        boolean setAsDefault = templateDTO.getIsDefault() != null && templateDTO.getIsDefault();
+        
+        // Mapear el área ID para guardar en la tabla de templates
+        String templateAreaId = mapPreparationAreaToTemplateArea(templateDTO.getArea());
         
         if (templateDTO.getId() != null) {
             // Actualizar plantilla existente
@@ -87,7 +162,7 @@ public class TicketTemplateService {
             if (existingTemplate.isPresent()) {
                 template = existingTemplate.get();
                 template.setName(templateDTO.getName());
-                template.setAreaId(templateDTO.getArea());
+                template.setAreaId(templateAreaId);
                 template.setIsDefault(templateDTO.getIsDefault());
             } else {
                 throw new RuntimeException("Plantilla no encontrada con ID: " + templateDTO.getId());
@@ -96,18 +171,20 @@ public class TicketTemplateService {
             // Crear nueva plantilla
             template = new TicketTemplate();
             template.setName(templateDTO.getName());
-            template.setAreaId(templateDTO.getArea());
+            template.setAreaId(templateAreaId);
             template.setIsDefault(templateDTO.getIsDefault() != null ? templateDTO.getIsDefault() : false);
         }
-        
+        // Si se marca como por defecto, desmarcar las demás del área
+        if (setAsDefault && templateAreaId != null) {
+            ticketTemplateRepository.clearDefaultForArea(templateAreaId);
+            template.setIsDefault(true);
+        }
         // Guardar la plantilla
         template = ticketTemplateRepository.save(template);
-        
         // Guardar los bloques
         if (templateDTO.getBlocks() != null) {
             saveBlocks(template, templateDTO.getBlocks());
         }
-        
         return convertToDTO(template);
     }
     
@@ -139,7 +216,7 @@ public class TicketTemplateService {
         
         TicketTemplateDTO templateDTO = new TicketTemplateDTO();
         templateDTO.setName("Plantilla " + areaName);
-        templateDTO.setArea(areaId);
+        templateDTO.setArea(areaId); // El área ya viene en formato de preparación
         templateDTO.setIsDefault(true);
         templateDTO.setBlocks(defaultBlocks);
         
@@ -151,7 +228,8 @@ public class TicketTemplateService {
         TicketTemplateDTO dto = new TicketTemplateDTO();
         dto.setId(template.getId());
         dto.setName(template.getName());
-        dto.setArea(template.getAreaId());
+        // Mapear el área ID de templates a preparación para el frontend
+        dto.setArea(mapTemplateAreaToPreparationArea(template.getAreaId()));
         dto.setIsDefault(template.getIsDefault());
         dto.setCreatedAt(template.getCreatedAt());
         dto.setUpdatedAt(template.getUpdatedAt());

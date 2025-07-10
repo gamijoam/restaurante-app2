@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="017" author="catasoft">
+        <comment>Crear tabla de configuración del negocio</comment>
+        
+        <!-- Crear tabla business_config -->
+        <createTable tableName="business_config">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="business_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="tax_id" type="VARCHAR(50)"/>
+            <column name="address" type="TEXT"/>
+            <column name="phone" type="VARCHAR(50)"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="website" type="VARCHAR(255)"/>
+            <column name="logo_url" type="VARCHAR(500)"/>
+            <column name="description" type="TEXT"/>
+            <column name="tax_rate" type="DECIMAL(5,2)" defaultValue="16.0"/>
+            <column name="currency" type="VARCHAR(10)" defaultValue="USD"/>
+            <column name="is_active" type="BOOLEAN" defaultValue="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <!-- Insertar configuración por defecto -->
+        <insert tableName="business_config">
+            <column name="business_name" value="Mi Restaurante"/>
+            <column name="tax_id" value="J-12345678-9"/>
+            <column name="address" value="Calle Principal #123, Ciudad"/>
+            <column name="phone" value="(555) 123-4567"/>
+            <column name="email" value="info@mirestaurante.com"/>
+            <column name="website" value="www.mirestaurante.com"/>
+            <column name="description" value="Restaurante de comida tradicional"/>
+            <column name="tax_rate" value="16.0"/>
+            <column name="currency" value="USD"/>
+            <column name="is_active" value="1"/>
+        </insert>
+        
+    </changeSet>
+    
+</databaseChangeLog> 

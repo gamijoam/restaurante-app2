@@ -29,6 +29,7 @@ public class PrinterConfigurationController {
     @GetMapping
     public ResponseEntity<List<PrinterConfiguration>> getAllConfigurations() {
         List<PrinterConfiguration> configurations = service.getAllConfigurations();
+        // El campo areaId ya está expuesto en el modelo, no se requiere cambio extra
         return ResponseEntity.ok(configurations);
     }
 
@@ -40,6 +41,7 @@ public class PrinterConfigurationController {
      */
     @PostMapping
     public ResponseEntity<PrinterConfiguration> saveConfiguration(@RequestBody PrinterConfiguration configuration) {
+        // El campo areaId se recibe y se guarda correctamente
         PrinterConfiguration savedConfiguration = service.saveConfiguration(configuration);
         return new ResponseEntity<>(savedConfiguration, HttpStatus.CREATED);
     }

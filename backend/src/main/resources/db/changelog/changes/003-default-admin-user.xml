@@ -10,7 +10,7 @@
         <!-- Insertar usuario administrador por defecto -->
         <insert tableName="usuarios">
             <column name="username" value="admin"/>
-            <column name="password" value="$2a$10$.eEEkuhQ/laVPMULcP2oLuhPh1tCcXES22nTSQtYOC0EbcsgtxfeG"/>
+            <column name="password" value="$2a$10$Dbx466FXrb4UppgMXrJisu9np/ZOSOFEGC0k.PQjkp4E3rX/aPu.q"/>
             <column name="nombre" value="Administrador del Sistema"/>
             <column name="email" value="admin@restaurante.com"/>
             <column name="apellido" value=""/>

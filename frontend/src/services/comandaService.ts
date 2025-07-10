@@ -54,6 +54,10 @@ export const markAsDelivered = async (comandaAreaId: number): Promise<any> => {
   return response.data;
 };
 
+export const imprimirComandaArea = async (comandaAreaId: number): Promise<void> => {
+  await api.post(`/comanda-areas/${comandaAreaId}/imprimir`);
+};
+
 // --- Tipos para el Ticket (esto estaba bien) ---
 export interface TicketItem {
     cantidad: number;

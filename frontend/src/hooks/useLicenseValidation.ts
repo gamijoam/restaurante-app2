@@ -30,6 +30,8 @@ export const useLicenseValidation = (options: UseLicenseValidationOptions = {}) 
       
       if (!storedFingerprint) {
         console.log('[LicenseValidation] No se encontró fingerprint, saltando validación');
+        showError('Error de licencia', 'No se encontró el fingerprint del equipo. No se puede validar la licencia.');
+        // No eliminar la licencia, solo mostrar error
         return;
       }
       

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <!-- Agregar FK de ticket_templates.area_id a areas.area_id -->
+    <changeSet id="008-01" author="ai-redisenio">
+        <addForeignKeyConstraint
+            baseTableName="ticket_templates"
+            baseColumnNames="area_id"
+            referencedTableName="areas"
+            referencedColumnNames="area_id"
+            constraintName="fk_ticket_templates_area"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+    <!-- Agregar columna area_id a printer_configurations y FK a areas.area_id -->
+    <changeSet id="008-02" author="ai-redisenio">
+        <addColumn tableName="printer_configurations">
+            <column name="area_id" type="VARCHAR(100)"/>
+        </addColumn>
+        <addForeignKeyConstraint
+            baseTableName="printer_configurations"
+            baseColumnNames="area_id"
+            referencedTableName="areas"
+            referencedColumnNames="area_id"
+            constraintName="fk_printer_configurations_area"
+            onDelete="CASCADE"/>
+    </changeSet>
+
+</databaseChangeLog> 

@@ -10,9 +10,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../hooks/useNotification';
 import ModernButton from '../components/ModernButton';
+import { useLicense } from '../context/LicenseContext';
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
+  const { isLicenseValid } = useLicense();
   const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
   // const theme = useTheme();
@@ -25,6 +27,8 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Eliminar el useEffect que navega automáticamente si la licencia es válida
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -67,8 +71,11 @@ const LoginPage: React.FC = () => {
         password: formData.password,
       });
       
-      showSuccess('¡Inicio de sesión exitoso!', 'Bienvenido al sistema');
-      navigate('/');
+      // Solo navega si la licencia es válida
+      if (isLicenseValid) {
+        showSuccess('¡Inicio de sesión exitoso!', 'Bienvenido al sistema');
+        navigate('/');
+      }
     } catch {
       showError(
         'Error al iniciar sesión',

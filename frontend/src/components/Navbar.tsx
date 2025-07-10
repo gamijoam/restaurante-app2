@@ -41,6 +41,7 @@ import {
   ExpandLess,
   ExpandMore,
   AdminPanelSettings,
+  Business,
 } from '@mui/icons-material';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -108,7 +109,7 @@ const Navbar: React.FC = () => {
         {
           text: 'Cocina',
           icon: <Kitchen />,
-          path: '/kitchen-view',
+          path: '/cocina',
           permission: 'VER_COCINA',
         },
         {
@@ -211,18 +212,18 @@ const Navbar: React.FC = () => {
           path: '/asignacion-productos',
           permission: 'GESTIONAR_ROLES',
         },
-        {
-          text: 'Comandas por Área',
-          icon: <Receipt />,
-          path: '/comandas-areas',
-          permission: 'GESTIONAR_ROLES',
-        },
-        {
-          text: 'Prueba División',
-          icon: <Assessment />,
-          path: '/test-division',
-          permission: 'GESTIONAR_ROLES',
-        },
+        // {
+        //   text: 'Comandas por Área',
+        //   icon: <Receipt />,
+        //   path: '/comandas-areas',
+        //   permission: 'GESTIONAR_ROLES',
+        // },
+        // {
+        //   text: 'Prueba División',
+        //   icon: <Assessment />,
+        //   path: '/test-division',
+        //   permission: 'GESTIONAR_ROLES',
+        // },
       ]
     }
   ];
@@ -233,6 +234,12 @@ const Navbar: React.FC = () => {
       text: 'Configuración',
       icon: <SettingsIcon />,
       path: '/configuracion',
+      permission: '',
+    });
+    menuGroups.find(g => g.id === 'sistema')?.items.push({
+      text: 'Configuración del Negocio',
+      icon: <Business />,
+      path: '/business-config',
       permission: '',
     });
   }

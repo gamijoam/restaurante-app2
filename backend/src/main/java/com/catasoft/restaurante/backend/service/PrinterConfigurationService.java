@@ -30,6 +30,11 @@ public class PrinterConfigurationService {
         return repository.findByRole(role.toUpperCase());
     }
 
+    @Transactional(readOnly = true)
+    public Optional<PrinterConfiguration> getConfigurationByArea(String areaId) {
+        return repository.findByAreaId(areaId);
+    }
+
     /**
      * Guarda o actualiza una configuración.
      * Si la configuración tiene un ID, la actualiza.
@@ -54,6 +59,7 @@ public class PrinterConfigurationService {
             existingConfig.setRole(configuration.getRole());
             existingConfig.setPrinterType(configuration.getPrinterType());
             existingConfig.setPrinterTarget(configuration.getPrinterTarget());
+            existingConfig.setAreaId(configuration.getAreaId()); // NUEVO: actualizar área
             return repository.save(existingConfig);
 
         } else {

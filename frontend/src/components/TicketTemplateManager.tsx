@@ -28,7 +28,8 @@ import {
   getAllTemplates, 
   deleteTemplate, 
   generatePreview, 
-  getAreas 
+  getAreas, 
+  createArea 
 } from '../services/ticketTemplateService';
 import type { TicketTemplateDTO as TicketTemplate, Area } from '../services/ticketTemplateService';
 
@@ -48,6 +49,10 @@ const TicketTemplateManager: React.FC<TicketTemplateManagerProps> = ({ onEditTem
     message: '',
     severity: 'success'
   });
+  const [showNewAreaDialog, setShowNewAreaDialog] = useState(false);
+  const [newAreaName, setNewAreaName] = useState('');
+  const [newAreaDescription, setNewAreaDescription] = useState('');
+  const [creatingArea, setCreatingArea] = useState(false);
 
   useEffect(() => {
     loadTemplates();
@@ -94,6 +99,8 @@ const TicketTemplateManager: React.FC<TicketTemplateManagerProps> = ({ onEditTem
 
   const handleEditTemplate = (template: TicketTemplate) => {
     onEditTemplate(template);
+    // Cuando se edita una plantilla, recargar la lista tras guardar
+    setTimeout(() => loadTemplates(), 1000);
   };
 
   const handlePreviewTemplate = async (template: TicketTemplate) => {
@@ -125,6 +132,23 @@ const TicketTemplateManager: React.FC<TicketTemplateManagerProps> = ({ onEditTem
     }
   };
 
+  const handleCreateArea = async () => {
+    if (!newAreaName.trim()) return;
+    setCreatingArea(true);
+    try {
+      await createArea({ areaId: '', name: newAreaName, description: newAreaDescription });
+      setSnackbar({ open: true, message: 'Área creada exitosamente', severity: 'success' });
+      setShowNewAreaDialog(false);
+      setNewAreaName('');
+      setNewAreaDescription('');
+      await loadAreas();
+    } catch (error) {
+      setSnackbar({ open: true, message: 'Error al crear el área', severity: 'error' });
+    } finally {
+      setCreatingArea(false);
+    }
+  };
+
   const getAreaName = (areaId: string) => {
     return areas.find(a => a.areaId === areaId)?.name || areaId;
   };
@@ -145,6 +169,7 @@ const TicketTemplateManager: React.FC<TicketTemplateManagerProps> = ({ onEditTem
       <Paper sx={{ p: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Typography variant="h5">Plantillas de Tickets</Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -152,6 +177,13 @@ const TicketTemplateManager: React.FC<TicketTemplateManagerProps> = ({ onEditTem
           >
             Nueva Plantilla
           </Button>
+            <Button
+              variant="outlined"
+              onClick={() => setShowNewAreaDialog(true)}
+            >
+              Nueva Área
+            </Button>
+          </Box>
         </Box>
 
         {loading ? (
@@ -198,7 +230,7 @@ const TicketTemplateManager: React.FC<TicketTemplateManagerProps> = ({ onEditTem
                     </Box>
                   }
                   secondary={
-                    <Box>
+                    <>
                       <Typography variant="body2" color="text.secondary">
                         Área: {getAreaName(template.area)}
                       </Typography>
@@ -208,7 +240,7 @@ const TicketTemplateManager: React.FC<TicketTemplateManagerProps> = ({ onEditTem
                       <Typography variant="body2" color="text.secondary">
                         Última modificación: {formatDate(template.updatedAt)}
                       </Typography>
-                    </Box>
+                    </>
                   }
                 />
                 <ListItemSecondaryAction>
@@ -275,6 +307,35 @@ const TicketTemplateManager: React.FC<TicketTemplateManagerProps> = ({ onEditTem
           <Button onClick={() => setShowDeleteDialog(false)}>Cancelar</Button>
           <Button onClick={handleDeleteTemplate} color="error" variant="contained">
             Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Diálogo para crear nueva área */}
+      <Dialog open={showNewAreaDialog} onClose={() => setShowNewAreaDialog(false)}>
+        <DialogTitle>Nueva Área</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <input
+              type="text"
+              placeholder="Nombre del área"
+              value={newAreaName}
+              onChange={e => setNewAreaName(e.target.value)}
+              style={{ padding: 8, fontSize: 16 }}
+            />
+            <input
+              type="text"
+              placeholder="Descripción (opcional)"
+              value={newAreaDescription}
+              onChange={e => setNewAreaDescription(e.target.value)}
+              style={{ padding: 8, fontSize: 16 }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowNewAreaDialog(false)}>Cancelar</Button>
+          <Button onClick={handleCreateArea} variant="contained" disabled={creatingArea || !newAreaName.trim()}>
+            {creatingArea ? 'Creando...' : 'Crear'}
           </Button>
         </DialogActions>
       </Dialog>

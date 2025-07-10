@@ -21,6 +21,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import com.catasoft.restaurante.backend.dto.ComandaAreaResponseDTO;
 import com.catasoft.restaurante.backend.dto.ComandaItemResponseDTO;
+import com.catasoft.restaurante.backend.model.dto.PrintJobDTO;
+import com.catasoft.restaurante.backend.service.WebSocketService;
+
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Map;
+import com.catasoft.restaurante.backend.service.PrinterConfigurationService;
 
 @Service
 public class ComandaAreaService {
@@ -34,6 +41,10 @@ public class ComandaAreaService {
     private ComandaRepository comandaRepository;
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    private WebSocketService webSocketService;
+    @Autowired
+    private PrinterConfigurationService printerConfigService;
 
     public List<ComandaArea> findAll() {
         return comandaAreaRepository.findAll();
@@ -233,5 +244,49 @@ public class ComandaAreaService {
         }).collect(Collectors.toList()));
         
         return dto;
+    }
+
+    public void imprimirComandaArea(Long comandaAreaId) {
+        ComandaArea comandaArea = comandaAreaRepository.findById(comandaAreaId)
+            .orElseThrow(() -> new RuntimeException("Comanda de área no encontrada"));
+        PrintJobDTO printJob = construirPrintJobDesdeComandaArea(comandaArea);
+        webSocketService.sendPrintJob(printJob);
+    }
+
+    private PrintJobDTO construirPrintJobDesdeComandaArea(ComandaArea comandaArea) {
+        String area = comandaArea.getAreaId();
+        String printerType = "COCINA";
+        String printerTarget = "default";
+        if (area != null) {
+            Optional<com.catasoft.restaurante.backend.model.PrinterConfiguration> configOpt = printerConfigService.getConfigurationByArea(area);
+            if (configOpt.isPresent()) {
+                var config = configOpt.get();
+                printerType = config.getPrinterType();
+                printerTarget = config.getPrinterTarget();
+            }
+        }
+        String ticketType = "COCINA";
+        Map<String, Object> ticketData = new HashMap<>();
+        ticketData.put("comandaId", comandaArea.getComanda().getId());
+        ticketData.put("nombreMesa", comandaArea.getComanda().getMesa().getNumero());
+        ticketData.put("fechaHora", comandaArea.getComanda().getFechaHoraCreacion());
+        
+        // Cargar los items explícitamente usando el repositorio
+        List<ComandaAreaItem> items = comandaAreaItemRepository.findByComandaAreaId(comandaArea.getId());
+        System.out.println("Items encontrados para impresión en área " + area + ": " + items.size());
+        
+        List<Map<String, Object>> itemsList = new ArrayList<>();
+        for (ComandaAreaItem item : items) {
+            Map<String, Object> itemMap = new HashMap<>();
+            itemMap.put("cantidad", item.getQuantity());
+            itemMap.put("nombreProducto", item.getProducto().getNombre());
+            itemMap.put("notas", item.getNotes());
+            itemsList.add(itemMap);
+            System.out.println("Item agregado: " + item.getQuantity() + "x " + item.getProducto().getNombre());
+        }
+        ticketData.put("items", itemsList);
+        
+        System.out.println("Datos del ticket para impresión: " + ticketData);
+        return new PrintJobDTO(printerType, printerTarget, ticketType, ticketData, area, null);
     }
 } 

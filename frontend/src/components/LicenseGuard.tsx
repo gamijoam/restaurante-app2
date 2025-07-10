@@ -11,7 +11,13 @@ interface LicenseGuardProps {
   children: React.ReactNode;
 }
 
+const LICENSE_DISABLED = import.meta.env.VITE_DISABLE_LICENSE === 'true';
+
 const LicenseGuard: React.FC<LicenseGuardProps> = ({ children }) => {
+  if (LICENSE_DISABLED) {
+    return <>{children}</>;
+  }
+
   const { license, setLicense } = useLicense();
   const { isAuthenticated } = useAuth();
   const [isValidating, setIsValidating] = useState(false);
@@ -21,7 +27,8 @@ const LicenseGuard: React.FC<LicenseGuardProps> = ({ children }) => {
   const location = useLocation();
 
   useEffect(() => {
-    if (!license || !isAuthenticated || hasValidated) return;
+    if (!isAuthenticated) return; // No validar licencia si no está autenticado
+    if (!license || hasValidated) return;
     setHasValidated(true);
     validateLicense(); // Solo validar una vez al montar o al entrar a la ruta
   }, [license, isAuthenticated, hasValidated]);
@@ -44,7 +51,7 @@ const LicenseGuard: React.FC<LicenseGuardProps> = ({ children }) => {
       }
       if (!validateDeviceFingerprint(storedFingerprint)) {
         setLicense(null);
-        localStorage.removeItem('fingerprint');
+        // localStorage.removeItem('fingerprint'); // No eliminar automáticamente
         setIsValidating(false);
         navigate('/license');
         return;
@@ -56,7 +63,7 @@ const LicenseGuard: React.FC<LicenseGuardProps> = ({ children }) => {
       const response = await licenseService.validateLicense(requestBody);
       if (!response.valid) {
         setLicense(null);
-        localStorage.removeItem('fingerprint');
+        // localStorage.removeItem('fingerprint'); // No eliminar automáticamente
         setValidationError(response.message || 'Licencia inválida');
         setIsValidating(false);
         setTimeout(() => {
@@ -100,9 +107,20 @@ const LicenseGuard: React.FC<LicenseGuardProps> = ({ children }) => {
     return <>{children}</>;
   }
 
+  // Si no está autenticado, redirigir a login
+  if (!isAuthenticated) {
+    if (location.pathname !== '/login') {
+      navigate('/login');
+    }
+    return null;
+  }
+
   // Si no hay licencia, redirigir a la página de activación
   if (!license) {
-    return null; // El navigate se maneja en el useEffect
+    if (location.pathname !== '/license') {
+      navigate('/license');
+    }
+    return null;
   }
 
   // Si hay error de validación, mostrar mensaje

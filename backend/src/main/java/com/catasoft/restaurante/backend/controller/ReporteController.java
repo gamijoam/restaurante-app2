@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 
 @RestController
@@ -45,8 +44,7 @@ public class ReporteController {
             @RequestParam("fechaInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam("fechaFin") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
         ReporteVentasDTO reporte = reporteService.generarReporteVentas(fechaInicio, fechaFin);
-        ByteArrayInputStream pdfStream = pdfService.generarPdfReporteVentas(reporte);
-        byte[] pdfBytes = pdfStream.readAllBytes();
+        byte[] pdfBytes = pdfService.generarPdfReporteVentas(reporte);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reporte_ventas.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
@@ -59,8 +57,7 @@ public class ReporteController {
             @RequestParam("fechaInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
             @RequestParam("fechaFin") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin) {
         ReporteVentasDTO reporte = reporteService.generarReporteVentas(fechaInicio, fechaFin);
-        ByteArrayInputStream excelStream = reporteService.exportarReporteVentasExcel(reporte);
-        byte[] excelBytes = excelStream.readAllBytes();
+        byte[] excelBytes = reporteService.exportarReporteVentasExcel(reporte).readAllBytes();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=reporte_ventas.xlsx")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))

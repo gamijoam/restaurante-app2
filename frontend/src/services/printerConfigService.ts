@@ -6,6 +6,7 @@ export interface PrinterConfig {
     role: string;
     printerType: string;
     printerTarget: string;
+    areaId?: string;
 }
 
 // Obtener todas las configuraciones

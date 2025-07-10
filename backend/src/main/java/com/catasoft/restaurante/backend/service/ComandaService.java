@@ -51,6 +51,7 @@ public class ComandaService {
     private final ProductAreaRepository productAreaRepository;
     private final ComandaAreaRepository comandaAreaRepository;
     private final ComandaAreaItemRepository comandaAreaItemRepository;
+    private final ComandaAreaService comandaAreaService;
 
     @Autowired
     public ComandaService(
@@ -66,7 +67,8 @@ public class ComandaService {
             SystemConfigService systemConfigService,
             ProductAreaRepository productAreaRepository,
             ComandaAreaRepository comandaAreaRepository,
-            ComandaAreaItemRepository comandaAreaItemRepository) {
+            ComandaAreaItemRepository comandaAreaItemRepository,
+            ComandaAreaService comandaAreaService) {
         this.comandaRepository = comandaRepository;
         this.mesaRepository = mesaRepository;
         this.productoRepository = productoRepository;
@@ -80,6 +82,7 @@ public class ComandaService {
         this.productAreaRepository = productAreaRepository;
         this.comandaAreaRepository = comandaAreaRepository;
         this.comandaAreaItemRepository = comandaAreaItemRepository;
+        this.comandaAreaService = comandaAreaService;
     }
 
     // --- MÉTODO MAPPER RESTAURADO A SU FORMA ORIGINAL Y CORRECTA ---
@@ -163,30 +166,16 @@ public class ComandaService {
         mesaRepository.save(mesa);
         messagingTemplate.convertAndSend("/topic/mesas", mesa);
 
-        // Solo enviar a cocina si no es una venta rápida
+        // --- ELIMINAR impresión automática de cocina aquí ---
+        // Solo notificar a cocina si no es una venta rápida
         if (request.getMesaId() == null || request.getMesaId() != 9999) {
-            try {
-                Optional<PrinterConfiguration> configOpt = printerConfigService.getConfigurationByRole("COCINA");
-                if (configOpt.isPresent()) {
-                    CocinaTicketDTO cocinaTicketData = getCocinaTicketData(comandaGuardada.getId());
-                    PrintJobDTO printJob = new PrintJobDTO(configOpt.get(), cocinaTicketData);
-                    webSocketService.sendPrintJob(printJob);
-                } else {
-                    logger.warn("No se encontró una configuración de impresora para el rol 'COCINA'. Saltando impresión automática.");
-                }
-            } catch (Exception e) {
-                logger.error("Fallo en el proceso de impresión automática para la comanda ID: {}", comandaGuardada.getId(), e);
-            }
-
             logger.info("Enviando notificación a /topic/cocina para nueva comanda ID: {}", comandaGuardada.getId());
             messagingTemplate.convertAndSend("/topic/cocina", mapToComandaResponseDTO(comandaGuardada));
         } else {
             logger.info("Venta rápida detectada, saltando notificaciones a cocina");
         }
-        
         logger.info("Enviando notificación a /topic/mesas para actualizar estado de mesa: {}", mesa.getNumero());
         messagingTemplate.convertAndSend("/topic/mesas", "Mesa " + mesa.getNumero() + " actualizada a OCUPADA");
-
         return mapToComandaResponseDTO(comandaGuardada);
     }
 
@@ -210,6 +199,11 @@ public class ComandaService {
                             item.getProducto().getNombre(), 
                             item.getProducto().getCategoria(),
                             asignaciones.size());
+                    
+                    // Mostrar todas las asignaciones encontradas
+                    for (ProductArea pa : asignaciones) {
+                        logger.info("  - Asignación: Producto {} -> Área {}", pa.getProducto().getNombre(), pa.getAreaId());
+                    }
                     
                     String areaId = asignaciones.stream()
                             .findFirst()
@@ -273,14 +267,21 @@ public class ComandaService {
     public ComandaResponseDTO crearComandaConDivisionPorAreas(ComandaRequestDTO request) {
         // Crear la comanda principal
         ComandaResponseDTO comandaResponse = crearComanda(request);
-        
         // Solo dividir por áreas si no es una venta rápida (mesa fantasma)
         if (request.getMesaId() != null && request.getMesaId() != 9999) {
             dividirComandaPorAreas(comandaResponse.getId());
+            // --- NUEVO: Imprimir un ticket por cada área creada ---
+            List<ComandaArea> areas = comandaAreaRepository.findByComandaId(comandaResponse.getId());
+            for (ComandaArea area : areas) {
+                try {
+                    comandaAreaService.imprimirComandaArea(area.getId());
+                } catch (Exception e) {
+                    logger.error("Error imprimiendo ticket para área {} de comanda {}: {}", area.getAreaId(), area.getComanda().getId(), e.getMessage());
+                }
+            }
         } else {
             logger.info("Venta rápida detectada (mesaId: {}), saltando división por áreas", request.getMesaId());
         }
-        
         return comandaResponse;
     }
 

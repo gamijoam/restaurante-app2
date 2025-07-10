@@ -99,9 +99,15 @@ const FacturacionPage = () => {
     };
 
     const getStatusFromFactura = (factura: FacturaResponseDTO): 'paid' | 'pending' | 'overdue' => {
-        if (factura.estado === 'PAGADA') return 'paid';
-        if (factura.estado === 'ANULADA') return 'overdue';
+        switch (factura.estado) {
+            case 'PAGADA':
+                return 'paid';
+            case 'ANULADA':
+                return 'overdue';
+            case 'PENDIENTE':
+            default:
         return 'pending';
+        }
     };
 
     const getPriorityFromFactura = (factura: FacturaResponseDTO): 'high' | 'medium' | 'low' => {
@@ -131,12 +137,37 @@ const FacturacionPage = () => {
 
     const filteredAndSortedFacturas = facturas
         .filter(factura => {
-            const matchesSearch = factura.id.toString().includes(searchTerm) ||
+            // Búsqueda mejorada - incluir más campos
+            const searchLower = searchTerm.toLowerCase();
+            const matchesSearch = 
+                factura.id.toString().includes(searchTerm) ||
                                 factura.comandaId.toString().includes(searchTerm) ||
-                                factura.numeroMesa.toString().includes(searchTerm);
-            const matchesStatus = filterStatus === 'TODOS' || factura.status === filterStatus;
-            const matchesDate = (!fechaInicio || new Date(factura.fechaEmision) >= new Date(fechaInicio)) &&
-                               (!fechaFin || new Date(factura.fechaEmision) <= new Date(fechaFin));
+                factura.numeroMesa.toString().includes(searchTerm) ||
+                factura.estado.toLowerCase().includes(searchLower) ||
+                factura.total.toString().includes(searchTerm);
+            
+            // Filtro de estado corregido - usar valores en español
+            let matchesStatus = true;
+            if (filterStatus !== 'TODOS') {
+                switch (filterStatus) {
+                    case 'paid':
+                        matchesStatus = factura.estado === 'PAGADA';
+                        break;
+                    case 'pending':
+                        matchesStatus = factura.estado === 'PENDIENTE';
+                        break;
+                    case 'overdue':
+                        matchesStatus = factura.estado === 'ANULADA';
+                        break;
+                    default:
+                        matchesStatus = true;
+                }
+            }
+            
+            // Filtro de fecha mejorado
+            const facturaDate = new Date(factura.fechaEmision);
+            const matchesDate = (!fechaInicio || facturaDate >= new Date(fechaInicio)) &&
+                               (!fechaFin || facturaDate <= new Date(fechaFin + 'T23:59:59'));
             
             return matchesSearch && matchesStatus && matchesDate;
         })
@@ -195,7 +226,20 @@ const FacturacionPage = () => {
     };
 
     const handleFiltrar = () => {
+        // Solo recargar del backend si hay fechas especificadas
+        if (fechaInicio || fechaFin) {
         loadFacturas(fechaInicio, fechaFin);
+        }
+        // Si no hay fechas, el filtrado se hace en el frontend
+    };
+
+    const handleLimpiarFiltros = () => {
+        setSearchTerm('');
+        setFechaInicio('');
+        setFechaFin('');
+        setFilterStatus('TODOS');
+        setSortBy('fecha');
+        loadFacturas(); // Recargar todas las facturas
     };
 
     if (loading) {
@@ -385,8 +429,25 @@ const FacturacionPage = () => {
                     >
                         Filtrar
                     </ModernButton>
+                    <ModernButton
+                        variant="outlined"
+                        onClick={() => handleLimpiarFiltros()}
+                        size="small"
+                    >
+                        Limpiar Filtros
+                    </ModernButton>
                 </Box>
             </Box>
+
+            {/* Indicador de resultados */}
+            {(searchTerm || filterStatus !== 'TODOS' || fechaInicio || fechaFin) && (
+                <Box sx={{ mb: 2, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+                    <Typography variant="body2" color="info.contrastText">
+                        Mostrando {filteredAndSortedFacturas.length} de {facturas.length} facturas
+                        {(searchTerm || filterStatus !== 'TODOS' || fechaInicio || fechaFin) && ' (filtradas)'}
+                    </Typography>
+                </Box>
+            )}
 
             {/* Vista de tabla */}
             {viewMode === 'table' ? (

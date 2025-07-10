@@ -34,6 +34,7 @@ import ComandaAreaManagementPage from './pages/ComandaAreaManagementPage';
 import TestDivisionPage from './pages/TestDivisionPage';
 import LicenseActivationPage from './pages/LicenseActivationPage';
 import LicenseAdminPage from './pages/LicenseAdminPage';
+import BusinessConfigPage from './pages/BusinessConfigPage';
 
 // Componente interno para manejar la verificación de licencias
 const AppContent: React.FC = () => {
@@ -50,19 +51,15 @@ const AppContent: React.FC = () => {
         {/* Rutas de licencia - siempre accesibles */}
         <Route path="/license" element={<LicenseActivationPage />} />
         <Route path="/license-admin" element={<LicenseAdminPage />} />
-        {/* Si la licencia es válida, permitir login y rutas protegidas */}
-        {isLicenseValid && <Route path="/login" element={<LoginPage />} />}
+        {/* Login siempre accesible */}
+        <Route path="/login" element={<LoginPage />} />
+        {/* Si la licencia es válida, permitir rutas protegidas */}
         {isLicenseValid && (
           <Route path="/*" element={
             <LicenseGuard>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 {/* Aquí solo rutas que requieren licencia */}
-                <Route path="/kitchen-view" element={
-                  <ProtectedRoute allowedPermissions={['COCINA']}>
-                    <KitchenViewPage />
-                  </ProtectedRoute>
-                } />
                 <Route path="/" element={<Layout />}>
                   <Route 
                     index
@@ -229,6 +226,14 @@ const AppContent: React.FC = () => {
                     element={
                       <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
                         <PrinterSettingsPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="business-config" 
+                    element={
+                      <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <BusinessConfigPage />
                       </ProtectedRoute>
                     } 
                   />

@@ -20,7 +20,9 @@ import {
   FormControl,
   InputLabel,
   Alert,
-  Snackbar
+  Snackbar,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import { 
   Delete as DeleteIcon, 
@@ -190,6 +192,7 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
     message: '',
     severity: 'success'
   });
+  const [isDefault, setIsDefault] = useState<boolean>(currentTemplate?.isDefault || false);
 
   // Cargar áreas al montar el componente
   useEffect(() => {
@@ -203,17 +206,41 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
       setSelectedArea(initialTemplate.area);
       setCurrentTemplate(initialTemplate);
       setBlocks(initialTemplate.blocks || []);
+      setEditingId(null);
+      setEditValue({ type: 'line' });
+    } else if (!initialTemplate) {
+      // Resetear estado cuando no hay plantilla inicial
+      setCurrentTemplate(null);
+      setBlocks([]);
+      setEditingId(null);
+      setEditValue({ type: 'line' });
     }
      
   }, [initialTemplate]);
 
+  // Actualizar isDefault si cambia la plantilla inicial
+  useEffect(() => {
+    setIsDefault(currentTemplate?.isDefault || false);
+  }, [currentTemplate]);
+
   // Cargar plantilla cuando cambie el área seleccionada
   useEffect(() => {
-    if (selectedArea && !initialTemplate) {
+    if (selectedArea && !initialTemplate && !currentTemplate) {
       loadTemplateForArea(selectedArea);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedArea, initialTemplate]);
+
+  // Limpiar estado cuando cambie el área (si no hay plantilla inicial)
+  useEffect(() => {
+    if (selectedArea && !initialTemplate && currentTemplate && currentTemplate.area !== selectedArea) {
+      // Si cambiamos de área y hay una plantilla cargada de otra área, limpiar
+      setCurrentTemplate(null);
+      setBlocks([]);
+      setEditingId(null);
+      setEditValue({ type: 'line' });
+    }
+  }, [selectedArea, initialTemplate, currentTemplate]);
 
   const loadAreas = async () => {
     try {
@@ -230,6 +257,10 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
   const loadTemplateForArea = async (areaId: string) => {
     setLoading(true);
     try {
+      // Limpiar estado actual antes de cargar nueva plantilla
+      setCurrentTemplate(null);
+      setBlocks([]);
+      
       const template = await getTemplateByArea(areaId);
       if (template) {
         setCurrentTemplate(template);
@@ -272,13 +303,14 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
         area: selectedArea,
         name: currentTemplate?.name || `Plantilla ${areas.find(a => a.areaId === selectedArea)?.name}`,
         blocks: blocks,
-        isDefault: currentTemplate?.isDefault || false
+        isDefault: isDefault
       };
 
       const savedTemplate = await saveTemplate(templateToSave);
       setCurrentTemplate(savedTemplate);
       setSnackbar({ open: true, message: 'Plantilla guardada exitosamente', severity: 'success' });
       
+      // Marcar que ya no es una plantilla inicial para evitar recargas
       if (onTemplateSaved) {
         onTemplateSaved();
       }
@@ -428,6 +460,10 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
       <Paper sx={{ p: 3, mb: 3 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h4">Editor de Plantillas de Tickets</Typography>
+          <FormControlLabel
+            control={<Checkbox checked={isDefault} onChange={e => setIsDefault(e.target.checked)} />}
+            label="Plantilla por defecto para el área"
+          />
           <Box sx={{ display: 'flex', gap: 2 }}>
             <Button
               variant="outlined"

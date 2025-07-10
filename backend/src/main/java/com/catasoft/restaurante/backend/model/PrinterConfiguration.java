@@ -23,6 +23,9 @@ public class PrinterConfiguration {
     @Column(name = "configuracion", nullable = false, length = 100)
     private String printerTarget;
 
+    @Column(name = "area_id", nullable = true, length = 100)
+    private String areaId;
+
     // --- Getters y Setters (incluyendo el nuevo para version) ---
 
     public Long getId() {
@@ -55,5 +58,13 @@ public class PrinterConfiguration {
 
     public void setPrinterTarget(String printerTarget) {
         this.printerTarget = printerTarget;
+    }
+
+    public String getAreaId() {
+        return areaId;
+    }
+
+    public void setAreaId(String areaId) {
+        this.areaId = areaId;
     }
 }
