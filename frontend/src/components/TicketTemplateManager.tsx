@@ -13,7 +13,6 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   Chip,
   Alert,
   Snackbar
@@ -29,7 +28,6 @@ import {
   getAllTemplates, 
   deleteTemplate, 
   generatePreview, 
-  generatePreviewFromTemplate,
   getAreas 
 } from '../services/ticketTemplateService';
 import type { TicketTemplateDTO as TicketTemplate, Area } from '../services/ticketTemplateService';

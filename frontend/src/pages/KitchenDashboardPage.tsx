@@ -3,33 +3,21 @@ import {
   Box,
   Grid,
   Typography,
-  Paper,
   Chip,
-  Card,
-  CardContent,
-  CardActions,
   useTheme,
-  useMediaQuery,
   Alert,
-  CircularProgress,
-  Badge,
   Divider,
   List,
   ListItem,
   ListItemText,
-  IconButton,
 } from '@mui/material';
 import {
-  Restaurant,
   CheckCircle,
   Timer,
   PriorityHigh,
   Refresh,
   Visibility,
   Print,
-  Dashboard,
-  TrendingUp,
-  TrendingDown,
 } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../hooks/useNotification';
@@ -41,10 +29,9 @@ import { getAreasPreparacion } from '../services/preparationAreaService';
 import type { PreparationArea, ComandaAreaResponseDTO } from '../types';
 
 const KitchenDashboardPage: React.FC = () => {
-  const { hasPermission } = useAuth();
-  const { showError, showSuccess } = useNotification();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  useAuth();
+  const { showError } = useNotification();
+  useTheme();
 
   const [areas, setAreas] = useState<PreparationArea[]>([]);
   const [comandasPorArea, setComandasPorArea] = useState<{ [areaId: number]: ComandaAreaResponseDTO[] }>({});
@@ -53,12 +40,14 @@ const KitchenDashboardPage: React.FC = () => {
 
   useEffect(() => {
     loadAreas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (areas.length > 0) {
       loadComandasForAllAreas();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areas]);
 
   const loadAreas = async () => {
@@ -66,7 +55,7 @@ const KitchenDashboardPage: React.FC = () => {
       setLoading(true);
       const areasData = await getAreasPreparacion();
       setAreas(areasData);
-    } catch (error) {
+    } catch {
       showError('Error al cargar áreas de preparación');
     } finally {
       setLoading(false);
@@ -82,14 +71,13 @@ const KitchenDashboardPage: React.FC = () => {
         try {
           const comandas = await getComandasPorArea(area.id);
           comandasData[area.id] = comandas;
-        } catch (error) {
-          console.error(`Error loading comandas for area ${area.id}:`, error);
+        } catch {
           comandasData[area.id] = [];
         }
       }
       
       setComandasPorArea(comandasData);
-    } catch (error) {
+    } catch {
       showError('Error al cargar comandas');
     } finally {
       setRefreshing(false);
@@ -115,20 +103,6 @@ const KitchenDashboardPage: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return <Timer color="warning" />;
-      case 'IN_PROGRESS':
-        return <PriorityHigh color="info" />;
-      case 'READY':
-        return <CheckCircle color="success" />;
-      case 'DELIVERED':
-        return <CheckCircle color="disabled" />;
-      default:
-        return <Timer />;
-    }
-  };
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -164,8 +138,8 @@ const KitchenDashboardPage: React.FC = () => {
     return (
       <ModernCard
         key={area.id}
-        title={area.nombre}
-        subtitle={area.descripcion || 'Área de preparación'}
+        title={area.name}
+        subtitle={area.description || 'Área de preparación'}
         chips={[
           `${stats.total} comandas`,
           `${stats.pending} pendientes`,
@@ -217,7 +191,7 @@ const KitchenDashboardPage: React.FC = () => {
                         </Typography>
                         <Chip
                           label={getStatusText(comanda.estado)}
-                          color={getStatusColor(comanda.estado) as any}
+                          color={getStatusColor(comanda.estado) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                           size="small"
                         />
                       </Box>
@@ -322,7 +296,7 @@ const KitchenDashboardPage: React.FC = () => {
       </Box>
 
       {/* Estadísticas Generales */}
-      <ModernCard sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3 }}>
         <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
           Estadísticas Generales
         </Typography>
@@ -368,7 +342,7 @@ const KitchenDashboardPage: React.FC = () => {
             </Box>
           </Grid>
         </Grid>
-      </ModernCard>
+      </Box>
 
       {/* Áreas de Preparación */}
       <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>

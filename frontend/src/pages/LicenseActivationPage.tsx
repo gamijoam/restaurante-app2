@@ -1,38 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Box,
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  CircularProgress,
-  Chip,
-  Divider,
-  Paper,
-  Grid,
-  IconButton,
-  Tooltip,
-  Select,
-  MenuItem,
-} from '@mui/material';
-import {
-  Key,
-  CheckCircle,
-  Error,
-  Refresh,
-  ContentCopy,
-  Info,
-  Warning,
-} from '@mui/icons-material';
+import { Box, Typography, TextField, Alert, Divider, Paper, Grid, IconButton, Tooltip } from '@mui/material';
+import { ContentCopy } from '@mui/icons-material';
 import { useNotification } from '../hooks/useNotification';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
-import LoadingSpinner from '../components/LoadingSpinner';
 import { useLicense } from '../context/LicenseContext';
 import licenseService from '../services/licenseService';
-import { generateDeviceFingerprint, getOrCreateFingerprint } from '../utils/deviceFingerprint';
+import { getOrCreateFingerprint } from '../utils/deviceFingerprint';
 import NotificationManager from '../components/NotificationManager';
 
 interface LicenseStatus {
@@ -51,7 +25,7 @@ const LicenseActivationPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [validating, setValidating] = useState(false);
   const [licenseStatus, setLicenseStatus] = useState<LicenseStatus | null>(null);
-  const [systemInfo, setSystemInfo] = useState<string>('');
+  const [systemInfo] = useState<string>('');
   const [showSystemInfo, setShowSystemInfo] = useState(false);
   // 1. Elimina los estados licenseType y duration
   // 2. Elimina la función handleGenerateLicense
@@ -139,9 +113,7 @@ const LicenseActivationPage: React.FC = () => {
     return valid ? 'success' : 'error';
   };
 
-  const getStatusIcon = (valid: boolean) => {
-    return valid ? <CheckCircle /> : <Error />;
-  };
+  // const getStatusIcon = (valid: boolean) => null;
 
   const formatExpirationDate = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -165,31 +137,7 @@ const LicenseActivationPage: React.FC = () => {
   // 2. Elimina la función handleGenerateLicense
   // 3. Elimina del JSX los campos y botones relacionados con la generación de licencia
   // 4. Deja solo el fingerprint y el formulario para ingresar y validar el código de licencia
-  let data;
-  const handleGenerateLicense = async () => {
-    if (!fingerprint) {
-      showError('Datos incompletos', 'Genera un código de equipo primero');
-      return;
-    }
-    setLoading(true);
-    try {
-      const clientName = 'Cliente'; // Puedes pedirlo en el formulario si lo deseas
-      data = await licenseService.generateLicense(fingerprint, clientName, 'PERPETUAL');
-      if (data.valid) {
-        showSuccess('Licencia generada', data.message || 'Licencia generada correctamente');
-        setLicense(data);
-        localStorage.setItem('fingerprint', fingerprint);
-        setTimeout(() => { window.location.href = '/login'; }, 2000);
-      } else {
-        showError('Error', data.message || 'No se pudo generar la licencia');
-      }
-    } catch (error) {
-      showError('Error', 'No se pudo generar la licencia');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Eliminada función y bloque de generación de licencia
   return (
     <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
       <Typography variant="h4" sx={{ mb: 3, fontWeight: 700, textAlign: 'center' }}>
@@ -250,7 +198,7 @@ const LicenseActivationPage: React.FC = () => {
                   onClick={() => setShowSystemInfo(!showSystemInfo)}
                   color="primary"
                 >
-                  <Info />
+                  {/* <Info /> */}
                 </IconButton>
               </Tooltip>
             </Box>
@@ -301,8 +249,8 @@ const LicenseActivationPage: React.FC = () => {
                 <Divider sx={{ mb: 2 }} />
                 
                 <Alert 
-                  severity={getStatusColor(licenseStatus.valid) as any}
-                  icon={getStatusIcon(licenseStatus.valid)}
+                  severity={getStatusColor(licenseStatus.valid) as 'success' | 'info' | 'warning' | 'error'}
+                  // icon removed
                   sx={{ mb: 2 }}
                 >
                   {licenseStatus.message}
@@ -315,11 +263,9 @@ const LicenseActivationPage: React.FC = () => {
                         <Typography variant="body2" color="text.secondary">
                           Tipo de Licencia
                         </Typography>
-                        <Chip 
-                          label={licenseStatus.type || 'N/A'} 
-                          color="primary" 
-                          size="small" 
-                        />
+                        <Typography variant="body2" color="primary">
+                          {licenseStatus.type || 'N/A'}
+                        </Typography>
                       </Grid>
                       
                       <Grid item xs={6}>
@@ -350,6 +296,5 @@ const LicenseActivationPage: React.FC = () => {
       <NotificationManager />
     </Box>
   );
-};
-
-export default LicenseActivationPage; 
+}
+export default LicenseActivationPage;

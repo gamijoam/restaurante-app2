@@ -1,18 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Container,
-  Paper,
-  Typography,
-  TextField,
-  Button,
-  Alert,
-  CircularProgress,
-  InputAdornment,
-  IconButton,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
+import { Box, Container, Paper, Typography, TextField, InputAdornment, IconButton } from '@mui/material';
 import {
   Visibility,
   VisibilityOff,
@@ -28,8 +15,8 @@ const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  // const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const [formData, setFormData] = useState({
     username: '',
@@ -82,7 +69,7 @@ const LoginPage: React.FC = () => {
       
       showSuccess('¡Inicio de sesión exitoso!', 'Bienvenido al sistema');
       navigate('/');
-    } catch (error) {
+    } catch {
       showError(
         'Error al iniciar sesión',
         'Verifica tus credenciales e intenta nuevamente'

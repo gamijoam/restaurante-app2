@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Button, Alert, CircularProgress } from '@mui/material';
+import { Box, Typography, Alert, CircularProgress } from '@mui/material';
 import { useLicense } from '../context/LicenseContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import licenseService from '../services/licenseService';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Container,
     Typography,
@@ -18,17 +18,9 @@ import {
     Tooltip,
     Stack,
     Avatar,
-    Badge,
     useTheme,
     useMediaQuery,
     Alert,
-    Skeleton,
-    Divider,
-    Button,
-    InputAdornment,
-    Slider,
-    FormControlLabel,
-    Switch,
     Table,
     TableBody,
     TableCell,
@@ -36,10 +28,6 @@ import {
     TableHead,
     TableRow,
     Paper,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
 } from '@mui/material';
 import {
     Search as SearchIcon,
@@ -48,20 +36,11 @@ import {
     ViewModule as ViewModuleIcon,
     Add as AddIcon,
     Receipt as ReceiptIcon,
-    AttachMoney as MoneyIcon,
     Download as DownloadIcon,
     Visibility as ViewIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
     Refresh as RefreshIcon,
-    Sort as SortIcon,
-    TrendingUp as TrendingIcon,
     CalendarToday as CalendarIcon,
-    Print as PrintIcon,
-    Email as EmailIcon,
-    Share as ShareIcon,
     Assessment as AssessmentIcon,
-    AccountBalance as BankIcon,
 } from '@mui/icons-material';
 import type { FacturaResponseDTO } from '../types';
 import { getFacturas, descargarFacturaPdf } from '../services/facturaService';
@@ -91,13 +70,14 @@ const FacturacionPage = () => {
     const [filterStatus, setFilterStatus] = useState<string>('TODOS');
     const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
     const [sortBy, setSortBy] = useState<'fecha' | 'total' | 'id'>('fecha');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+    const [sortOrder] = useState<'asc' | 'desc'>('desc');
     const [selectedFactura, setSelectedFactura] = useState<FacturaWithStats | null>(null);
     const [openDetailModal, setOpenDetailModal] = useState(false);
     const [downloadingPdf, setDownloadingPdf] = useState<number | null>(null);
 
     useEffect(() => {
         loadFacturas();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadFacturas = async (inicio?: string, fin?: string) => {
@@ -111,7 +91,7 @@ const FacturacionPage = () => {
                 priority: getPriorityFromFactura(factura),
             }));
             setFacturas(facturasArray);
-        } catch (err) {
+        } catch {
             setError('Error al cargar las facturas');
         } finally {
             setLoading(false);
@@ -148,14 +128,6 @@ const FacturacionPage = () => {
         }
     };
 
-    const getPriorityColor = (priority: string) => {
-        switch (priority) {
-            case 'high': return theme.palette.error.main;
-            case 'medium': return theme.palette.warning.main;
-            case 'low': return theme.palette.success.main;
-            default: return theme.palette.grey[500];
-        }
-    };
 
     const filteredAndSortedFacturas = facturas
         .filter(factura => {
@@ -169,8 +141,7 @@ const FacturacionPage = () => {
             return matchesSearch && matchesStatus && matchesDate;
         })
         .sort((a, b) => {
-            let aValue: any, bValue: any;
-            
+            let aValue: number | string, bValue: number | string;
             switch (sortBy) {
                 case 'fecha':
                     aValue = new Date(a.fechaEmision).getTime();
@@ -188,7 +159,6 @@ const FacturacionPage = () => {
                     aValue = new Date(a.fechaEmision).getTime();
                     bValue = new Date(b.fechaEmision).getTime();
             }
-            
             if (sortOrder === 'asc') {
                 return aValue > bValue ? 1 : -1;
             } else {
@@ -354,7 +324,7 @@ const FacturacionPage = () => {
                             <InputLabel>Ordenar por</InputLabel>
                             <Select
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as any)}
+                                onChange={(e) => setSortBy(e.target.value as 'fecha' | 'total' | 'id')}
                                 label="Ordenar por"
                             >
                                 <MenuItem value="fecha">Fecha</MenuItem>

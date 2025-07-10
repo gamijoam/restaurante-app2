@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Container,
     Typography,
-    Button,
-    Paper,
     Box,
     Grid,
     Chip,
@@ -12,24 +10,16 @@ import {
     Card,
     CardContent,
     CardActions,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     TextField,
     FormControl,
     InputLabel,
     Select,
     MenuItem,
     Fab,
-    Tooltip,
-    Divider,
     Stack,
     Avatar,
-    Badge,
     useTheme,
     useMediaQuery,
-    Skeleton,
 } from '@mui/material';
 import {
     Edit as EditIcon,
@@ -39,7 +29,6 @@ import {
     People as PeopleIcon,
     LocationOn as LocationIcon,
     Refresh as RefreshIcon,
-    FilterList as FilterIcon,
     Search as SearchIcon,
     Visibility as ViewIcon,
 } from '@mui/icons-material';
@@ -85,7 +74,7 @@ const GestionMesasPage = () => {
                     setMesas(prevMesas =>
                         prevMesas.map(m => m.id === mesaActualizada.id ? { ...m, ...mesaActualizada } : m)
                     );
-                } catch (e) {
+                } catch {
                     // Mensaje no es una mesa válida
                 }
             });
@@ -100,7 +89,7 @@ const GestionMesasPage = () => {
             setLoading(true);
             const data = await getMesas();
             setMesas(data);
-        } catch (err) {
+        } catch {
             setError('Error al cargar las mesas');
         } finally {
             setLoading(false);
@@ -150,7 +139,7 @@ const GestionMesasPage = () => {
             }
             handleCloseDialog();
             loadMesas();
-        } catch (err) {
+        } catch {
             setError('Error al guardar la mesa');
         }
     };
@@ -161,7 +150,7 @@ const GestionMesasPage = () => {
                 await deleteMesa(id);
                 setSuccess('Mesa eliminada correctamente');
                 loadMesas();
-            } catch (err) {
+            } catch {
                 setError('Error al eliminar la mesa');
             }
         }
@@ -336,7 +325,7 @@ const GestionMesasPage = () => {
                             <InputLabel>Filtrar por estado</InputLabel>
                             <Select
                                 value={filterEstado}
-                                onChange={(e) => setFilterEstado(e.target.value)}
+                                onChange={(e) => setFilterEstado(e.target.value as string)}
                                 label="Filtrar por estado"
                             >
                                 <MenuItem value="TODOS">Todos los estados</MenuItem>
@@ -563,7 +552,7 @@ const GestionMesasPage = () => {
                                     <InputLabel>Estado</InputLabel>
                                     <Select
                                         value={formData.estado}
-                                        onChange={(e) => setFormData({ ...formData, estado: e.target.value as any })}
+                                        onChange={(e) => setFormData({ ...formData, estado: e.target.value as Mesa["estado"] })}
                                         label="Estado"
                                     >
                                         <MenuItem value="LIBRE">Libre</MenuItem>

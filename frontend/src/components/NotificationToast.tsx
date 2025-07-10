@@ -3,9 +3,7 @@ import {
   Snackbar, 
   Alert, 
   AlertTitle, 
-  Box, 
   Typography,
-  IconButton,
   Slide,
 } from '@mui/material';
 import type { SlideProps } from '@mui/material';
@@ -14,7 +12,6 @@ import {
   Error, 
   Warning, 
   Info, 
-  Close 
 } from '@mui/icons-material';
 
 interface NotificationToastProps {

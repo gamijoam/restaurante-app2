@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Container,
     Typography,
@@ -26,25 +26,12 @@ import {
     TableHead,
     TableRow,
     Avatar,
-    Stack,
-    Divider,
     Tooltip,
     Fab,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
-    ListItemSecondaryAction,
-    Switch,
-    FormControlLabel,
-    Badge,
-    LinearProgress,
-    Slider,
-    Autocomplete,
     Stepper,
     Step,
     StepLabel,
@@ -56,53 +43,20 @@ import {
     Add as AddIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
-    Visibility as ViewIcon,
     Search as SearchIcon,
-    FilterList as FilterIcon,
     Refresh as RefreshIcon,
-    Download as DownloadIcon,
-    Print as PrintIcon,
-    Email as EmailIcon,
-    Inventory as InventoryIcon,
-    LocalOffer as OfferIcon,
-    Star as StarIcon,
-    Warning as WarningIcon,
-    Info as InfoIcon,
-    CheckCircle as CheckIcon,
-    Cancel as CancelIcon,
-    TrendingUp as TrendingUpIcon,
-    TrendingDown as TrendingDownIcon,
-    Settings as SettingsIcon,
-    MoreVert as MoreIcon,
-    ThumbUp as ThumbUpIcon,
-    ThumbDown as ThumbDownIcon,
-    Schedule as ScheduleIcon,
-    AttachMoney as MoneyIcon,
     MenuBook as RecipeIcon,
     Add as AddProductIcon,
     Kitchen as KitchenIcon,
-    Scale as ScaleIcon,
-    Calculate as CalculateIcon,
-    ListAlt as ListIcon,
     Assignment as AssignmentIcon,
-    Book as BookIcon,
-    Science as ScienceIcon,
-    Build as BuildIcon,
-    Create as CreateIcon,
-    Save as SaveIcon,
-    Close as CloseIcon,
-    Check as CheckIcon2,
-    Error as ErrorIcon,
-    Success as SuccessIcon,
 } from '@mui/icons-material';
 import { getProductos, createProducto } from '../services/productoService';
 import type { Producto } from '../types';
 import { getIngredientes, type Ingrediente } from '../services/ingredienteService';
-import { getRecetasByProducto, actualizarRecetaProducto, agregarIngredienteAProducto, actualizarReceta, deleteReceta, type RecetaIngrediente } from '../services/recetaService';
+import { getRecetasByProducto, agregarIngredienteAProducto, actualizarReceta, deleteReceta, type RecetaIngrediente } from '../services/recetaService';
 import { useAuth } from '../context/AuthContext';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
-import ModernModal from '../components/ModernModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const RecetasPage = () => {
@@ -150,6 +104,7 @@ const RecetasPage = () => {
 
     useEffect(() => {
         loadData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const loadData = async () => {
@@ -161,7 +116,7 @@ const RecetasPage = () => {
             ]);
             setProductos(productosData);
             setIngredientes(ingredientesData);
-        } catch (err) {
+        } catch {
             showSnackbar('Error al cargar los datos', 'error');
         } finally {
             setLoading(false);
@@ -175,7 +130,7 @@ const RecetasPage = () => {
             const recetasData = await getRecetasByProducto(producto.id!);
             setRecetas(recetasData);
             showSnackbar(`Receta cargada para: ${producto.nombre}`, 'success');
-        } catch (err) {
+        } catch {
             setRecetas([]);
             showSnackbar('No se encontró receta para este producto', 'error');
         }
@@ -248,7 +203,7 @@ const RecetasPage = () => {
             
             // Opcional: seleccionar automáticamente el nuevo producto
             handleProductoSelect(nuevoProducto);
-        } catch (err) {
+        } catch {
             showSnackbar('Error al crear el producto', 'error');
         }
     };
@@ -283,7 +238,7 @@ const RecetasPage = () => {
             
             setRecetas(nuevasRecetas);
             handleCloseDialog();
-        } catch (err) {
+        } catch {
             showSnackbar('Error al guardar la receta', 'error');
         }
     };
@@ -294,7 +249,7 @@ const RecetasPage = () => {
                 await deleteReceta(recetaId);
                 setRecetas(recetas.filter(r => r.id !== recetaId));
                 showSnackbar('Ingrediente eliminado de la receta', 'success');
-            } catch (err) {
+            } catch {
                 showSnackbar('Error al eliminar el ingrediente', 'error');
             }
         }

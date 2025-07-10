@@ -9,7 +9,6 @@ import {
   Typography,
   Box,
   Divider,
-  Fade,
   Slide,
 } from '@mui/material';
 import type { SlideProps } from '@mui/material';
@@ -19,7 +18,6 @@ import {
   Info,
   Error,
   CheckCircle,
-  Help,
 } from '@mui/icons-material';
 import ModernButton from './ModernButton';
 
@@ -68,7 +66,6 @@ const ModernModal: React.FC<ModernModalProps> = ({
   onConfirm,
   onCancel,
   loading = false,
-  disableBackdropClick = false,
   disableEscapeKeyDown = false,
   sx,
 }) => {

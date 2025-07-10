@@ -1,0 +1,2 @@
+# Solo estándar, pero se recomienda PyInstaller para generar el .exe
+pyinstaller

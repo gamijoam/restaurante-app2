@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Grid,
   Typography,
-  Paper,
   Chip,
-  IconButton,
   useTheme,
   useMediaQuery,
   Tabs,
@@ -15,17 +12,13 @@ import {
   Card,
   CardContent,
   CardActions,
-  Button,
   Divider,
   List,
   ListItem,
   ListItemText,
-  ListItemSecondaryAction,
-  CircularProgress,
 } from '@mui/material';
 import {
   Restaurant,
-  LocalDining,
   CheckCircle,
   Timer,
   PriorityHigh,
@@ -65,7 +58,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const KitchenViewPage: React.FC = () => {
-  const { hasPermission } = useAuth();
+  useAuth();
   const { showError, showSuccess } = useNotification();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -76,14 +69,18 @@ const KitchenViewPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+   
   useEffect(() => {
     loadAreas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+   
   useEffect(() => {
     if (areas.length > 0) {
       loadComandasForAllAreas();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areas]);
 
   const loadAreas = async () => {
@@ -95,8 +92,7 @@ const KitchenViewPage: React.FC = () => {
       console.log('Primera área:', areasData[0]);
       console.log('Estructura de área:', JSON.stringify(areasData[0], null, 2));
       setAreas(areasData);
-    } catch (error) {
-      console.error('Error al cargar áreas:', error);
+    } catch {
       showError('Error al cargar áreas de preparación');
     } finally {
       setLoading(false);
@@ -115,8 +111,8 @@ const KitchenViewPage: React.FC = () => {
           const comandas = await getComandasPorArea(area.id);
           console.log(`Comandas encontradas para área ${area.id}:`, comandas);
           comandasData[area.id] = comandas;
-        } catch (error) {
-          console.error(`Error loading comandas for area ${area.id}:`, error);
+        } catch{
+          console.error(`Error loading comandas for area ${area.id}:`);
           comandasData[area.id] = [];
         }
       }
@@ -131,7 +127,7 @@ const KitchenViewPage: React.FC = () => {
     }
   };
 
-  const handleAreaChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleAreaChange = (_event: React.SyntheticEvent, newValue: number) => {
     setSelectedAreaIndex(newValue);
   };
 
@@ -188,7 +184,7 @@ const KitchenViewPage: React.FC = () => {
             {getStatusIcon(comanda.estado)}
             <Chip
               label={comanda.estado}
-              color={getStatusColor(comanda.estado) as any}
+              color={getStatusColor(comanda.estado) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
               size="small"
             />
           </Box>
@@ -197,7 +193,7 @@ const KitchenViewPage: React.FC = () => {
         <Divider sx={{ my: 2 }} />
 
         <List dense>
-          {comanda.items.map((item: any) => (
+          {comanda.items.map((item: { id: number; productoNombre: string; cantidad: number; observaciones?: string }) => (
             <ListItem key={item.id} sx={{ px: 0 }}>
               <ListItemText
                 primary={
@@ -269,7 +265,7 @@ const KitchenViewPage: React.FC = () => {
       await startPreparation(comandaAreaId);
       showSuccess('Preparación iniciada', 'La comanda ha sido marcada como en preparación');
       await loadComandasForAllAreas();
-    } catch (error) {
+    } catch {
       showError('Error al iniciar preparación');
     }
   };
@@ -279,7 +275,7 @@ const KitchenViewPage: React.FC = () => {
       await markAsReady(comandaAreaId);
       showSuccess('Comanda lista', 'La comanda ha sido marcada como lista');
       await loadComandasForAllAreas();
-    } catch (error) {
+    } catch {
       showError('Error al marcar como listo');
     }
   };
@@ -299,8 +295,13 @@ const KitchenViewPage: React.FC = () => {
   }
 
   const selectedArea = areas[selectedAreaIndex];
-  const comandasDelArea = comandasPorArea[selectedArea?.id] || [];
-
+  if (!selectedArea) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Alert severity="error">Área de preparación no encontrada.</Alert>
+      </Box>
+    );
+  }
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>

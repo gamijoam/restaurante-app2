@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { crearComandaConDivisionPorAreasAPI } from '../services/comandaService';
 import { getProductos } from '../services/productoService';
 import { useNotification } from '../hooks/useNotification';
@@ -9,63 +9,67 @@ import ModernForm from '../components/ModernForm';
 import LoadingSpinner from '../components/LoadingSpinner';
 import type { Producto } from '../types';
 
+interface ComandaItem {
+  productoId: number;
+  cantidad: number;
+}
+
+interface FormData {
+  mesaId: string;
+  items: string;
+}
+
 const TestDivisionPage: React.FC = () => {
   const [products, setProducts] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const { showSuccess, showError } = useNotification();
 
-  React.useEffect(() => {
-    loadProducts();
-  }, []);
-
+   
   const loadProducts = async () => {
     try {
       setLoading(true);
       const productsData = await getProductos();
       setProducts(productsData);
-    } catch (error) {
+    } catch {
       showError('Error al cargar productos');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateTestOrder = async (formData: any) => {
+  useEffect(() => {
+    loadProducts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleCreateTestOrder = async (formData: FormData) => {
     console.log('handleCreateTestOrder called with:', formData);
     try {
       setLoading(true);
-      
-      // Parsear el JSON de items
-      let items;
+
+      let items: ComandaItem[];
       try {
-        items = JSON.parse(formData.items);
-        console.log('Parsed items:', items);
+        items = JSON.parse(formData.items).map((item: ComandaItem) => ({
+          productoId: parseInt(item.productoId.toString()),
+          cantidad: parseInt(item.cantidad.toString())
+        }));
       } catch (e) {
         console.error('JSON parse error:', e);
         showError('Error en formato JSON', 'Por favor, verifica el formato del JSON');
         return;
       }
-      
+
       const comandaData = {
         mesaId: parseInt(formData.mesaId),
-        items: items.map((item: any) => ({
-          productoId: parseInt(item.productoId),
-          cantidad: parseInt(item.cantidad),
-        })),
+        items
       };
 
-      console.log('Sending comanda data:', comandaData);
-      console.log('API URL being used:', import.meta.env.VITE_API_URL);
-      
       const response = await crearComandaConDivisionPorAreasAPI(comandaData);
-      console.log('Response received:', response);
       showSuccess('Comanda creada con división por áreas', `Comanda ID: ${response.id}`);
       setShowModal(false);
-    } catch (error: any) {
-      console.error('Error in handleCreateTestOrder:', error);
-      console.error('Error response:', error.response);
-      console.error('Error message:', error.message);
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } }; message: string };
       showError(`Error al crear comanda: ${error.response?.data?.message || error.message}`);
     } finally {
       setLoading(false);
@@ -73,16 +77,16 @@ const TestDivisionPage: React.FC = () => {
   };
 
   const formFields = [
-    { 
-      name: 'mesaId', 
-      label: 'ID de Mesa', 
-      type: 'number' as const, 
-      required: true 
+    {
+      name: 'mesaId',
+      label: 'ID de Mesa',
+      type: 'number' as const,
+      required: true
     },
-    { 
-      name: 'items', 
-      label: 'Items (JSON)', 
-      type: 'textarea' as const, 
+    {
+      name: 'items',
+      label: 'Items (JSON)',
+      type: 'textarea' as const,
       required: true,
       placeholder: '[{"productoId": 1, "cantidad": 2}, {"productoId": 4, "cantidad": 1}]'
     }
@@ -143,4 +147,4 @@ const TestDivisionPage: React.FC = () => {
   );
 };
 
-export default TestDivisionPage; 
+export default TestDivisionPage;

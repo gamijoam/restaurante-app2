@@ -20,17 +20,11 @@ import {
   Autocomplete,
   InputAdornment,
   IconButton,
-  Collapse,
-  Alert,
   CircularProgress,
 } from '@mui/material';
 import {
   Visibility,
   VisibilityOff,
-  Search,
-  Clear,
-  Add,
-  Remove,
 } from '@mui/icons-material';
 
 interface FormField {
@@ -73,7 +67,6 @@ interface ModernFormProps {
   submitText?: string;
   cancelText?: string;
   showCancel?: boolean;
-  layout?: 'vertical' | 'horizontal';
   spacing?: number;
   sx?: any;
 }
@@ -89,7 +82,6 @@ const ModernForm: React.FC<ModernFormProps> = ({
   submitText = 'Guardar',
   cancelText = 'Cancelar',
   showCancel = true,
-  layout = 'vertical',
   spacing = 2,
   sx,
 }) => {
@@ -211,7 +203,7 @@ const ModernForm: React.FC<ModernFormProps> = ({
               endAdornment: (
                 <InputAdornment position="end">
                   <IconButton
-                    onClick={() => setShowPassword((prev: Record<string, boolean>) => ({ ...prev, [field.name]: !prev[field.name] }))}
+                    onClick={() => setShowPassword(prev => ({ ...prev, [field.name]: !prev[field.name] }))}
                     edge="end"
                   >
                     {showPassword[field.name] ? <VisibilityOff /> : <Visibility />}
@@ -319,7 +311,7 @@ const ModernForm: React.FC<ModernFormProps> = ({
             </Typography>
             <Slider
               value={value || 0}
-              onChange={(e, newValue) => handleFieldChange(field.name, newValue)}
+              onChange={(_, newValue) => handleFieldChange(field.name, newValue)}
               disabled={field.disabled || loading}
               min={field.validation?.min}
               max={field.validation?.max}
@@ -340,7 +332,7 @@ const ModernForm: React.FC<ModernFormProps> = ({
                 )
               : (field.options || []).find(opt => opt.value === value) || null
             }
-            onChange={(e, newValue) => {
+            onChange={(_, newValue) => {
               if (field.multiple) {
                 const selectedValues = Array.isArray(newValue) 
                   ? newValue.map((opt: any) => opt.value)

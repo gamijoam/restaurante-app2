@@ -1,8 +1,7 @@
-import React, { createContext, useState, useContext, type ReactNode, useCallback } from 'react';
+import { createContext, useState, type ReactNode, useCallback } from 'react';
 import type { Producto, ComandaResponseDTO } from '../types';
 import { crearComandaAPI, agregarItemsAComanda, updateComandaEstado, limpiarItemsComandaAPI } from '../services/comandaService';
 import type { ItemRequestDTO } from '../dto/ItemRequestDTO';
-import type { ComandaItemResponseDTO } from '../dto/comandaDTOs';
 
 // --- INTERFAZ UNIFICADA Y FINAL ---
 interface IOrderContext {

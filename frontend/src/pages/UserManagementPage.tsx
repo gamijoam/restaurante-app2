@@ -1,76 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-    Container,
-    Typography,
-    Box,
-    Grid,
-    Card,
-    CardContent,
-    CardActions,
-    Button,
-    TextField,
-    Alert,
-    Chip,
-    IconButton,
-    useTheme,
-    useMediaQuery,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Avatar,
-    Stack,
-    Divider,
-    Tooltip,
-    Fab,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
-    ListItemSecondaryAction,
-    Switch,
-    FormControlLabel,
-    Badge,
-    LinearProgress,
+  Container,
+  Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+  TextField,
+  Alert,
+  Chip,
+  IconButton,
+  useTheme,
+  useMediaQuery,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Avatar,
+  Stack,
+  Tooltip,
+  Fab,
+  Dialog,
+  DialogTitle,
+  DialogContent
 } from '@mui/material';
 import {
-    People as PeopleIcon,
-    PersonAdd as PersonAddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Visibility as ViewIcon,
-    Block as BlockIcon,
-    CheckCircle as CheckIcon,
-    Cancel as CancelIcon,
-    Search as SearchIcon,
-    FilterList as FilterIcon,
-    Refresh as RefreshIcon,
-    Download as DownloadIcon,
-    Print as PrintIcon,
-    Email as EmailIcon,
-    Security as SecurityIcon,
-    AdminPanelSettings as AdminIcon,
-    Restaurant as CookIcon,
-    PointOfSale as CashierIcon,
-    Settings as SettingsIcon,
-    Add as AddIcon,
-    MoreVert as MoreIcon,
-    Star as StarIcon,
-    Warning as WarningIcon,
-    Info as InfoIcon,
-    CheckCircle as ActiveIcon,
-    Cancel as InactiveIcon,
+  People as PeopleIcon,
+  PersonAdd as PersonAddIcon,
+  Edit as EditIcon,
+  Visibility as ViewIcon,
+  Block as BlockIcon,
+  CheckCircle as CheckIcon,
+  Search as SearchIcon,
+  Refresh as RefreshIcon,
+  Email as EmailIcon,
+  Security as SecurityIcon,
+  AdminPanelSettings as AdminIcon,
+  Restaurant as CookIcon,
+  PointOfSale as CashierIcon,
+  Settings as SettingsIcon,
+  Add as AddIcon,
+  CheckCircle as ActiveIcon,
+  Cancel as InactiveIcon
 } from '@mui/icons-material';
 import type { UsuarioResponseDTO } from '../types';
 import { getUsuarios } from '../services/usuarioService';
@@ -97,7 +76,7 @@ const UserManagementPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UsuarioResponseDTO | null>(null);
     const [openDetailModal, setOpenDetailModal] = useState(false);
-    const [openEditModal, setOpenEditModal] = useState(false);
+    // Eliminado openEditModal porque no se usa
 
     useEffect(() => {
         fetchUsuarios();
@@ -405,7 +384,7 @@ const UserManagementPage = () => {
                                                 <Chip
                                                     key={index}
                                                     label={getRoleText(role)}
-                                                    color={getRoleColor(role) as any}
+                                                    color={getRoleColor(role) as "error" | "warning" | "info" | "default"}
                                                     size="small"
                                                     icon={getRoleIcon(role)}
                                                 />
@@ -440,7 +419,7 @@ const UserManagementPage = () => {
                                                             size="small"
                                                             onClick={() => {
                                                                 setSelectedUser(usuario);
-                                                                setOpenEditModal(true);
+                                                                setOpenDetailModal(true);
                                                             }}
                                                         >
                                                             <EditIcon />
@@ -526,7 +505,7 @@ const UserManagementPage = () => {
                                                 <Chip
                                                     key={index}
                                                     label={getRoleText(role)}
-                                                    color={getRoleColor(role) as any}
+                                                    color={getRoleColor(role) as "error" | "warning" | "info" | "default"}
                                                     size="small"
                                                     icon={getRoleIcon(role)}
                                                 />
@@ -568,7 +547,7 @@ const UserManagementPage = () => {
                                                 startIcon={<EditIcon />}
                                                 onClick={() => {
                                                     setSelectedUser(usuario);
-                                                    setOpenEditModal(true);
+                                                    setOpenDetailModal(true);
                                                 }}
                                                 sx={{ flex: 1 }}
                                             >
@@ -666,7 +645,7 @@ const UserManagementPage = () => {
                                         <Chip
                                             key={index}
                                             label={getRoleText(role)}
-                                            color={getRoleColor(role) as any}
+                                            color={getRoleColor(role) as "error" | "warning" | "info" | "default"}
                                             size="small"
                                             icon={getRoleIcon(role)}
                                         />

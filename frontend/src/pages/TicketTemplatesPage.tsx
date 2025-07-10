@@ -3,12 +3,11 @@ import {
   Box,
   Tabs,
   Tab,
-  Paper,
-  Typography
+  Paper
 } from '@mui/material';
 import TicketEditorPage from './TicketEditorPage';
 import TicketTemplateManager from '../components/TicketTemplateManager';
-import type { TicketTemplate } from '../services/ticketTemplateService';
+import type { TicketTemplateDTO } from '../services/ticketTemplateService';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -38,13 +37,13 @@ function TabPanel(props: TabPanelProps) {
 
 const TicketTemplatesPage: React.FC = () => {
   const [tabValue, setTabValue] = useState(0);
-  const [editingTemplate, setEditingTemplate] = useState<TicketTemplate | null>(null);
+  const [editingTemplate, setEditingTemplate] = useState<TicketTemplateDTO | null>(null);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  const handleEditTemplate = (template: TicketTemplate) => {
+  const handleEditTemplate = (template: TicketTemplateDTO) => {
     setEditingTemplate(template);
     setTabValue(0); // Cambiar a la pestaña del editor
   };

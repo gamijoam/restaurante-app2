@@ -1,23 +1,6 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Typography,
-  TextField,
-  Grid,
-  Paper,
-  Alert,
-  Divider,
-  Chip,
-  IconButton,
-  Tooltip,
-  MenuItem,
-} from '@mui/material';
-import {
-  ContentCopy,
-  Add,
-  Refresh,
-  Delete,
-} from '@mui/icons-material';
+import { Box, Typography, TextField, Grid, Paper, Alert, Chip, IconButton, MenuItem } from '@mui/material';
+import { ContentCopy } from '@mui/icons-material';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import { useNotification } from '../hooks/useNotification';
@@ -36,7 +19,7 @@ const LicenseAdminPage: React.FC = () => {
   const [fingerprint, setFingerprint] = useState<string>('');
   const [clientName, setClientName] = useState<string>('');
   const [duration, setDuration] = useState<number>(30);
-  const [durationUnit, setDurationUnit] = useState<'days' | 'hours'>('days');
+  // const [durationUnit, setDurationUnit] = useState<'days' | 'hours'>('days');
   const [licenseType, setLicenseType] = useState<'HOURLY' | 'DAILY' | 'MONTHLY' | 'ANNUAL' | 'PERPETUAL'>('DAILY');
   const [generatedLicense, setGeneratedLicense] = useState<GeneratedLicense | null>(null);
   const [loading, setLoading] = useState(false);
@@ -102,7 +85,7 @@ const LicenseAdminPage: React.FC = () => {
       try {
         await fetch(`http://localhost:8081/api/license/deactivate-activation?fingerprint=${fingerprint}`, { method: 'POST' });
         showSuccess('Activación desactivada', 'La activación ha sido desactivada en el backend');
-      } catch (e) {
+      } catch {
         showError('Error', 'No se pudo desactivar la activación en el backend');
       }
     }
@@ -264,7 +247,7 @@ const LicenseAdminPage: React.FC = () => {
                   label="Tipo de Licencia"
                   select
                   value={licenseType}
-                  onChange={(e) => setLicenseType(e.target.value as any)}
+                  onChange={(e) => setLicenseType(e.target.value as 'HOURLY' | 'DAILY' | 'MONTHLY' | 'ANNUAL' | 'PERPETUAL')}
                   sx={{ minWidth: 180 }}
                 >
                   <MenuItem value="HOURLY">Por Horas</MenuItem>

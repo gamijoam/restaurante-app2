@@ -1,79 +1,49 @@
-import React, { useState, useEffect } from 'react';
-import {
-    Container,
-    Typography,
-    Box,
-    Grid,
-    Card,
-    CardContent,
-    CardActions,
-    Button,
-    TextField,
-    Alert,
-    Chip,
-    IconButton,
-    useTheme,
-    useMediaQuery,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Avatar,
-    Stack,
-    Divider,
-    Tooltip,
-    Fab,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
-    ListItemSecondaryAction,
-    Switch,
-    FormControlLabel,
-    Badge,
-    LinearProgress,
-    Slider,
-    InputAdornment,
-} from '@mui/material';
-import {
-    Restaurant as RestaurantIcon,
-    Add as AddIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Visibility as ViewIcon,
-    Search as SearchIcon,
-    FilterList as FilterIcon,
-    Refresh as RefreshIcon,
-    Download as DownloadIcon,
-    Print as PrintIcon,
-    Email as EmailIcon,
-    Inventory as InventoryIcon,
-    LocalOffer as OfferIcon,
-    Star as StarIcon,
-    Warning as WarningIcon,
-    Info as InfoIcon,
-    CheckCircle as CheckIcon,
-    Cancel as CancelIcon,
-    TrendingUp as TrendingUpIcon,
-    TrendingDown as TrendingDownIcon,
-    Settings as SettingsIcon,
-    MoreVert as MoreIcon,
-    ThumbUp as ThumbUpIcon,
-    ThumbDown as ThumbDownIcon,
-    Schedule as ScheduleIcon,
-    AttachMoney as MoneyIcon,
-} from '@mui/icons-material';
+import { useState, useEffect } from 'react';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardActions from '@mui/material/CardActions';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import Alert from '@mui/material/Alert';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import useTheme from '@mui/material/styles/useTheme';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Paper from '@mui/material/Paper';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Avatar from '@mui/material/Avatar';
+import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import Fab from '@mui/material/Fab';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import InputAdornment from '@mui/material/InputAdornment';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import SearchIcon from '@mui/icons-material/Search';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import WarningIcon from '@mui/icons-material/Warning';
+import InfoIcon from '@mui/icons-material/Info';
+import CheckIcon from '@mui/icons-material/CheckCircle';
+import InventoryIcon from '@mui/icons-material/Inventory';
 import { getIngredientes, createIngrediente, updateIngrediente, deleteIngrediente, type Ingrediente, ingresarStockIngrediente } from '../services/ingredienteService';
 import { useAuth } from '../context/AuthContext';
 import ModernCard from '../components/ModernCard';
@@ -102,8 +72,7 @@ const IngredientesPage = () => {
         nombre: '',
         stock: 0,
         unidad: '',
-        descripcion: '',
-        precioUnitario: 0
+        descripcion: ''
     });
     const [openStockDialog, setOpenStockDialog] = useState(false);
     const [stockForm, setStockForm] = useState<{ ingredienteId: number; cantidad: number }>({ ingredienteId: 0, cantidad: 0 });
@@ -118,7 +87,7 @@ const IngredientesPage = () => {
         try {
             const data = await getIngredientes();
             setIngredientes(data);
-        } catch (err) {
+        } catch {
             setError('Error al cargar los ingredientes');
         } finally {
             setLoading(false);
@@ -135,8 +104,7 @@ const IngredientesPage = () => {
                 nombre: '',
                 stock: 0,
                 unidad: '',
-                descripcion: '',
-                precioUnitario: 0
+                descripcion: ''
             });
         }
         setOpenDialog(true);
@@ -149,8 +117,7 @@ const IngredientesPage = () => {
             nombre: '',
             stock: 0,
             unidad: '',
-            descripcion: '',
-            precioUnitario: 0
+            descripcion: ''
         });
         setError(null);
     };
@@ -166,7 +133,7 @@ const IngredientesPage = () => {
             }
             handleCloseDialog();
             loadIngredientes();
-        } catch (err) {
+        } catch {
             setError('Error al guardar el ingrediente');
         }
     };
@@ -177,7 +144,7 @@ const IngredientesPage = () => {
                 await deleteIngrediente(id);
                 setSuccess('Ingrediente eliminado correctamente');
                 loadIngredientes();
-            } catch (err) {
+            } catch {
                 setError('Error al eliminar el ingrediente');
             }
         }
@@ -197,7 +164,7 @@ const IngredientesPage = () => {
 
     const filteredIngredientes = ingredientes.filter(ingrediente => {
         const matchesSearch = ingrediente.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            ingrediente.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
+                            (ingrediente.descripcion?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
         
         const stockStatus = getStockStatus(ingrediente.stock);
         const matchesStock = filterStock === 'TODOS' || 
@@ -349,7 +316,7 @@ const IngredientesPage = () => {
                                 onClick={() => setViewMode('table')}
                                 color={viewMode === 'table' ? 'primary' : 'default'}
                             >
-                                <ViewIcon />
+                                <VisibilityIcon />
                             </IconButton>
                             <IconButton
                                 onClick={() => setViewMode('cards')}
@@ -445,7 +412,7 @@ const IngredientesPage = () => {
                                         </TableCell>
                                 <TableCell>
                                             <Typography variant="body2" color="text.secondary">
-                                                {ingrediente.descripcion}
+                                                {ingrediente.descripcion || '-'}
                                             </Typography>
                                         </TableCell>
                                         <TableCell align="center">
@@ -458,7 +425,7 @@ const IngredientesPage = () => {
                                                             setOpenDetailModal(true);
                                                         }}
                                                     >
-                                                        <ViewIcon />
+                                                        <VisibilityIcon />
                                                     </IconButton>
                                                 </Tooltip>
                                                 {isGerente && (
@@ -568,7 +535,7 @@ const IngredientesPage = () => {
                                             <ModernButton
                                                 variant="outlined"
                                                 size="small"
-                                                startIcon={<ViewIcon />}
+                                                startIcon={<VisibilityIcon />}
                                                 onClick={() => {
                                                     setSelectedIngrediente(ingrediente);
                                                     setOpenDetailModal(true);
@@ -741,16 +708,6 @@ const IngredientesPage = () => {
                         multiline
                         rows={3}
                     />
-                    <TextField
-                        label="Precio Unitario"
-                        type="number"
-                        value={formData.precioUnitario}
-                        onChange={e => setFormData({ ...formData, precioUnitario: parseFloat(e.target.value) })}
-                        fullWidth
-                        margin="normal"
-                        required
-                        inputProps={{ min: 0, step: 0.01 }}
-                    />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog}>Cancelar</Button>
@@ -826,4 +783,4 @@ const IngredientesPage = () => {
     );
 };
 
-export default IngredientesPage; 
+export default IngredientesPage;

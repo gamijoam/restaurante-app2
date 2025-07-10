@@ -26,7 +26,7 @@ import InventarioHelpPage from './pages/InventarioHelpPage';
 import RolesPermisosPage from './pages/RolesPermisosPage';
 import PrinterSettingsPage from './pages/PrinterSettingsPage.tsx';
 import ConfiguracionGeneralPage from './pages/ConfiguracionGeneralPage';
-import TicketEditorPage from './pages/TicketEditorPage';
+
 import TicketTemplatesPage from './pages/TicketTemplatesPage';
 import PreparationAreasPage from './pages/PreparationAreasPage';
 import ProductAreaAssignmentPage from './pages/ProductAreaAssignmentPage';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Container,
     Typography,
@@ -16,36 +16,22 @@ import {
     Select,
     MenuItem,
     Fab,
-    Tooltip,
     Stack,
-    Avatar,
-    Badge,
     useTheme,
     useMediaQuery,
     Alert,
-    Skeleton,
-    Divider,
-    Button,
-    InputAdornment,
     Slider,
     FormControlLabel,
     Switch,
 } from '@mui/material';
 import {
     Search as SearchIcon,
-    FilterList as FilterIcon,
     ViewList as ViewListIcon,
     ViewModule as ViewModuleIcon,
     Add as AddIcon,
     ShoppingCart as CartIcon,
     Star as StarIcon,
-    LocalOffer as TagIcon,
-    Visibility as ViewIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
     Refresh as RefreshIcon,
-    Sort as SortIcon,
-    TrendingUp as TrendingIcon,
     Inventory as StockIcon,
 } from '@mui/icons-material';
 import { getProductos, getStockDisponibleProducto } from '../services/productoService';
@@ -55,11 +41,9 @@ import { useAuth } from '../context/AuthContext';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ModernModal from '../components/ModernModal';
 
 interface ProductoWithStock extends Producto {
-    stock?: number;
-    categoria?: string;
+    stock: number;
     imagen?: string;
     destacado?: boolean;
 }
@@ -79,18 +63,20 @@ const ProductList = () => {
     const [filterPrecio, setFilterPrecio] = useState<[number, number]>([0, 1000]);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [sortBy, setSortBy] = useState<'nombre' | 'precio' | 'stock'>('nombre');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+     
+    // const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
     const [showOnlyFeatured, setShowOnlyFeatured] = useState(false);
 
+     
     useEffect(() => {
         loadProductos();
     }, []);
 
     const loadProductos = async () => {
-            try {
+        try {
             setLoading(true);
-                const data = await getProductos();
+            const data = await getProductos();
             const productosWithStock = await Promise.all(
                 (Array.isArray(data) ? data : []).map(async (producto) => {
                     try {
@@ -98,15 +84,13 @@ const ProductList = () => {
                         return {
                             ...producto,
                             stock,
-                            categoria: getCategoriaFromProducto(producto),
                             imagen: getImagenFromProducto(producto),
                             destacado: Math.random() > 0.7, // Simular productos destacados
                         };
-                    } catch (err) {
+                    } catch {
                         return {
                             ...producto,
                             stock: 0,
-                            categoria: getCategoriaFromProducto(producto),
                             imagen: getImagenFromProducto(producto),
                             destacado: false,
                         };
@@ -114,12 +98,12 @@ const ProductList = () => {
                 })
             );
             setProductos(productosWithStock);
-            } catch (err) {
+        } catch {
             setError('Error al cargar los productos');
-            } finally {
-                setLoading(false);
-            }
-        };
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const getCategoriaFromProducto = (producto: Producto): string => {
         // Simular categorías basadas en el nombre del producto
@@ -156,17 +140,16 @@ const ProductList = () => {
     const filteredAndSortedProductos = productos
         .filter(producto => {
             const matchesSearch = producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesCategoria = filterCategoria === 'TODAS' || producto.categoria === filterCategoria;
+                producto.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesCategoria = filterCategoria === 'TODAS' || getCategoriaFromProducto(producto) === filterCategoria;
             const matchesPrecio = producto.precio >= filterPrecio[0] && producto.precio <= filterPrecio[1];
             const matchesAvailable = !showOnlyAvailable || (producto.stock && producto.stock > 0);
             const matchesFeatured = !showOnlyFeatured || producto.destacado;
-            
             return matchesSearch && matchesCategoria && matchesPrecio && matchesAvailable && matchesFeatured;
         })
         .sort((a, b) => {
-            let aValue: any, bValue: any;
-            
+            let aValue: string | number = '';
+            let bValue: string | number = '';
             switch (sortBy) {
                 case 'nombre':
                     aValue = a.nombre.toLowerCase();
@@ -177,19 +160,17 @@ const ProductList = () => {
                     bValue = b.precio;
                     break;
                 case 'stock':
-                    aValue = a.stock || 0;
-                    bValue = b.stock || 0;
+                    aValue = a.stock;
+                    bValue = b.stock;
                     break;
                 default:
                     aValue = a.nombre.toLowerCase();
                     bValue = b.nombre.toLowerCase();
             }
-            
-            if (sortOrder === 'asc') {
-                return aValue > bValue ? 1 : -1;
-            } else {
-                return aValue < bValue ? 1 : -1;
-            }
+            // Orden ascendente por defecto
+            if (aValue > bValue) return 1;
+            if (aValue < bValue) return -1;
+            return 0;
         });
 
     const categorias = ['TODAS', 'Pizzas y Pastas', 'Hamburguesas', 'Bebidas', 'Postres', 'Ensaladas', 'Otros'];
@@ -197,7 +178,7 @@ const ProductList = () => {
         total: productos.length,
         disponibles: productos.filter(p => p.stock && p.stock > 0).length,
         destacados: productos.filter(p => p.destacado).length,
-        categorias: new Set(productos.map(p => p.categoria)).size,
+        categorias: new Set(productos.map(p => getCategoriaFromProducto(p))).size,
     };
 
     if (loading) {
@@ -325,7 +306,7 @@ const ProductList = () => {
                             <InputLabel>Ordenar por</InputLabel>
                             <Select
                                 value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value as any)}
+                                onChange={(e) => setSortBy(e.target.value as 'nombre' | 'precio' | 'stock')}
                                 label="Ordenar por"
                             >
                                 <MenuItem value="nombre">Nombre</MenuItem>
@@ -386,7 +367,7 @@ const ProductList = () => {
                         </Typography>
                         <Slider
                             value={filterPrecio}
-                            onChange={(e, newValue) => setFilterPrecio(newValue as [number, number])}
+                            onChange={(_, newValue) => setFilterPrecio(newValue as [number, number])}
                             valueLabelDisplay="auto"
                             min={0}
                             max={1000}
@@ -435,7 +416,7 @@ const ProductList = () => {
 
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                         <Chip
-                                            label={producto.categoria}
+                                            label={getCategoriaFromProducto(producto)}
                                             size="small"
                                             sx={{
                                                 bgcolor: getCategoriaColor(producto.categoria || ''),

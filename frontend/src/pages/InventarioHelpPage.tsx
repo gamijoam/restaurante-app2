@@ -1,10 +1,8 @@
-import React from 'react';
-import {
-    Container,
+// import React from 'react';
+import { Container,
     Typography,
     Card,
     CardContent,
-    Box,
     List,
     ListItem,
     ListItemText,

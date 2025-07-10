@@ -4,22 +4,13 @@ import {
   Grid,
   Typography,
   Paper,
-  Chip,
   IconButton,
   useTheme,
   useMediaQuery,
-  Fade,
   Divider,
   Badge,
   Drawer,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   Fab,
-  SpeedDial,
-  SpeedDialAction,
-  SpeedDialIcon,
   AppBar,
   Toolbar,
   Alert,
@@ -27,18 +18,8 @@ import {
 } from '@mui/material';
 import {
   ShoppingCart,
-  Restaurant,
-  Add,
-  Remove,
-  Delete,
-  Save,
-  Print,
   ArrowBack,
-  Menu,
   Close,
-  LocalDining,
-  AttachMoney,
-  Receipt,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -48,12 +29,12 @@ import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import ModernModal from '../components/ModernModal';
 import LoadingSpinner from '../components/LoadingSpinner';
-import SkeletonLoader from '../components/SkeletonLoader';
+// import SkeletonLoader from '../components/SkeletonLoader';
 import { getProductos } from '../services/productoService';
-import { crearComandaAPI, crearComandaConDivisionPorAreasAPI } from '../services/comandaService';
+import { crearComandaConDivisionPorAreasAPI } from '../services/comandaService';
 import { getComandaActivaPorMesa } from '../services/mesaService';
 import type { Producto } from '../types';
-import type { ComandaResponseDTO, ComandaItemResponseDTO } from '../types';
+import type { ComandaResponseDTO } from '../types';
 import ProductCard from '../components/ProductCard';
 
 interface OrderItem {
@@ -67,13 +48,13 @@ interface OrderItem {
 const OrderPage: React.FC = () => {
     const { mesaId } = useParams<{ mesaId: string }>();
   const navigate = useNavigate();
-  const { hasPermission } = useAuth();
+  useAuth();
   const { showError, showSuccess } = useNotification();
-  const { orderItems, addProductToOrder, updateItemQuantity, removeItemFromOrder, clearOrder, loadExistingOrder, activeComandaId } = useOrder();
+  const { orderItems, addProductToOrder, updateItemQuantity, clearOrder, loadExistingOrder, activeComandaId } = useOrder();
   
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
+  // const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
 
   const [productos, setProductos] = useState<Producto[]>([]);
     const [loading, setLoading] = useState(true);
@@ -83,7 +64,7 @@ const OrderPage: React.FC = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [comandaActiva, setComandaActiva] = useState<ComandaResponseDTO | null>(null);
+  // Eliminado: comandaActiva y setComandaActiva ya no se usan
   const [cantidades, setCantidades] = React.useState<{ [productoId: number]: number }>({});
 
     useEffect(() => {
@@ -93,19 +74,20 @@ const OrderPage: React.FC = () => {
             getComandaActivaPorMesa(Number(mesaId))
                 .then((comanda: ComandaResponseDTO) => {
                     if (comanda && comanda.items && comanda.estado !== 'PAGADA' && comanda.estado !== 'CANCELADA') {
-                        setComandaActiva(comanda);
+                        // Eliminado: setComandaActiva(comanda);
                         // Usar la función del contexto para cargar la comanda activa
                         loadExistingOrder(comanda);
                     } else {
-                        setComandaActiva(null);
+                        // Eliminado: setComandaActiva(null);
                         clearOrder();
                     }
                 })
                 .catch(() => {
-                    setComandaActiva(null);
+                    // Eliminado: setComandaActiva(null);
                     clearOrder();
                 });
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [mesaId]);
 
   const loadProductos = async () => {
@@ -114,31 +96,31 @@ const OrderPage: React.FC = () => {
       setError(null);
       const response = await getProductos();
       setProductos(response);
-    } catch (err) {
+    } catch {
       setError('Error al cargar los productos');
       showError('Error al cargar los productos', 'Intenta nuevamente');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-  const handleAddToCart = async (producto: Producto) => {
-    try {
-      await addProductToOrder(producto);
-      showSuccess('Producto agregado', `${producto.nombre} agregado al pedido`);
-    } catch (err) {
-      showError('Error al agregar producto', 'No se pudo agregar el producto al pedido');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRemoveFromCart = (productoId: number, itemPrincipalId?: number) => {
-    removeItemFromOrder(productoId, itemPrincipalId);
-    showSuccess('Producto removido', 'Producto removido del pedido');
-  };
+  // const handleAddToCart = async (producto: Producto) => {
+  //   try {
+  //     await addProductToOrder(producto);
+  //     showSuccess('Producto agregado', `${producto.nombre} agregado al pedido`);
+  //   } catch {
+  //     showError('Error al agregar producto', 'No se pudo agregar el producto al pedido');
+  //   }
+  // };
 
-  const handleUpdateQuantity = (productoId: number, cantidad: number, itemPrincipalId?: number) => {
-    updateItemQuantity(productoId, cantidad, itemPrincipalId);
-  };
+  // const handleRemoveFromCart = (productoId: number, itemPrincipalId?: number) => {
+  //   removeItemFromOrder(productoId, itemPrincipalId);
+  //   showSuccess('Producto removido', 'Producto removido del pedido');
+  // };
+
+  // const handleUpdateQuantity = (productoId: number, cantidad: number, itemPrincipalId?: number) => {
+  //   updateItemQuantity(productoId, cantidad, itemPrincipalId);
+  // };
 
   const getTotal = () => {
     return orderItems.reduce((total, item) => total + (item.cantidad * item.precioUnitario), 0);
@@ -164,7 +146,7 @@ const OrderPage: React.FC = () => {
       showSuccess('Pedido guardado', 'El pedido se ha guardado exitosamente');
             clearOrder();
       navigate('/');
-    } catch (err) {
+    } catch {
       showError('Error al guardar', 'No se pudo guardar el pedido');
     } finally {
       setSaving(false);
@@ -248,11 +230,11 @@ const OrderPage: React.FC = () => {
   );
 
   // Nueva función para agregar adicional
-  const handleAddAdicional = (producto: Producto, principal: OrderItem) => {
-    addProductToOrder(producto, principal.productoId);
-    showSuccess('Adicional agregado', `${producto.nombre} agregado como adicional de ${principal.productoNombre}`);
-    setSelectedAdicional(null);
-  };
+  // const handleAddAdicional = (producto: Producto, principal: OrderItem) => {
+  //   addProductToOrder(producto, principal.productoId);
+  //   showSuccess('Adicional agregado', `${producto.nombre} agregado como adicional de ${principal.productoNombre}`);
+  //   setSelectedAdicional(null);
+  // };
 
   const renderMobileView = () => (
     <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>

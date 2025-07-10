@@ -1,13 +1,12 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Box, Container, useTheme, useMediaQuery } from '@mui/material';
+import { Box, Container } from '@mui/material';
 import { OrderProvider } from '../context/OrderContext';
 import Navbar from './Navbar';
 import NotificationManager from './NotificationManager';
 
 const Layout: React.FC = () => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  // const theme = useTheme();
 
   return (
     <OrderProvider>

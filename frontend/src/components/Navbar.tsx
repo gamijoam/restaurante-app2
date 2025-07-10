@@ -40,11 +40,8 @@ import {
   Help,
   ExpandLess,
   ExpandMore,
-  Business,
-  Store,
   AdminPanelSettings,
 } from '@mui/icons-material';
-import ReceiptIcon from '@mui/icons-material/Receipt';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';

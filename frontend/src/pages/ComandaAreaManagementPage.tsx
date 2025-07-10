@@ -33,7 +33,7 @@ const ComandaAreaManagementPage: React.FC = () => {
       
       setAreas(areasResponse.data);
       setComandaAreas(comandaAreasResponse.data);
-    } catch (error) {
+    } catch {
       showError('Error al cargar los datos');
     } finally {
       setLoading(false);
@@ -61,42 +61,57 @@ const ComandaAreaManagementPage: React.FC = () => {
         console.log('Respuesta del servidor:', response);
         showSuccess('Comanda de área eliminada correctamente');
         loadData();
-      } catch (error: any) {
-        console.error('Error al eliminar comanda área:', error);
-        showError(`Error al eliminar la comanda de área: ${error.response?.data?.message || error.message}`);
+      } catch (error: unknown) {
+        const err = error as { message?: string; response?: { data?: { message?: string } } };
+        console.error('Error al eliminar comanda área:', err);
+        showError(`Error al eliminar la comanda de área: ${err.response?.data?.message || err.message}`);
       }
     }
   };
 
-  const handleStatusChange = async (comandaArea: ComandaArea, newStatus: string) => {
-    try {
-      const updatedComandaArea = { ...comandaArea, status: newStatus };
-      await comandaAreaService.update(comandaArea.id!, updatedComandaArea);
-      showSuccess('Estado actualizado correctamente');
-      loadData();
-    } catch (error: any) {
-      console.error('Error al actualizar estado:', error);
-      showError(`Error al actualizar el estado: ${error.response?.data?.message || error.message}`);
-    }
-  };
+  // const handleStatusChange = async (comandaArea: ComandaArea, newStatus: string) => {
+  //   try {
+  //     const updatedComandaArea = { ...comandaArea, status: newStatus };
+  //     await comandaAreaService.update(comandaArea.id!, updatedComandaArea);
+  //     showSuccess('Estado actualizado correctamente');
+  //     loadData();
+  //   } catch (error: unknown) {
+  //     const err = error as { message?: string; response?: { data?: { message?: string } } };
+  //     console.error('Error al actualizar estado:', err);
+  //     showError(`Error al actualizar el estado: ${err.response?.data?.message || err.message}`);
+  //   }
+  // };
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: Record<string, unknown>) => {
+    // Convertir formData a ComandaArea usando los campos requeridos
+    const comandaArea: ComandaArea = {
+      ...(editingComandaArea ?? {}),
+      comandaId: Number(formData.comandaId),
+      areaId: String(formData.areaId),
+      status: String(formData.status),
+      assignedTo: formData.assignedTo ? String(formData.assignedTo) : undefined,
+      notes: formData.notes ? String(formData.notes) : undefined,
+      estimatedTime: formData.estimatedTime ? Number(formData.estimatedTime) : undefined,
+      startedAt: formData.startedAt ? String(formData.startedAt) : undefined,
+      completedAt: formData.completedAt ? String(formData.completedAt) : undefined,
+    };
     try {
-      console.log('Enviando datos del formulario:', formData);
+      console.log('Enviando datos del formulario:', comandaArea);
       if (editingComandaArea) {
         console.log('Actualizando comanda área existente:', editingComandaArea.id);
-        await comandaAreaService.update(editingComandaArea.id!, formData);
+        await comandaAreaService.update(editingComandaArea.id!, comandaArea);
         showSuccess('Comanda de área actualizada correctamente');
       } else {
         console.log('Creando nueva comanda área');
-        await comandaAreaService.create(formData);
+        await comandaAreaService.create(comandaArea);
         showSuccess('Comanda de área creada correctamente');
       }
       setShowModal(false);
       loadData();
-    } catch (error: any) {
-      console.error('Error al guardar comanda área:', error);
-      showError(`Error al guardar la comanda de área: ${error.response?.data?.message || error.message}`);
+    } catch (error: unknown) {
+      const err = error as { message?: string; response?: { data?: { message?: string } } };
+      console.error('Error al guardar comanda área:', err);
+      showError(`Error al guardar la comanda de área: ${err.response?.data?.message || err.message}`);
     }
   };
 
@@ -158,15 +173,15 @@ const ComandaAreaManagementPage: React.FC = () => {
     return statusMap[status] || status;
   };
 
-  const getStatusColor = (status: string) => {
-    const colorMap: { [key: string]: string } = {
-      'PENDING': 'warning',
-      'IN_PROGRESS': 'info',
-      'COMPLETED': 'success',
-      'CANCELLED': 'error'
-    };
-    return colorMap[status] || 'default';
-  };
+  // const getStatusColor = (status: string) => {
+  //   const colorMap: { [key: string]: string } = {
+  //     'PENDING': 'warning',
+  //     'IN_PROGRESS': 'info',
+  //     'COMPLETED': 'success',
+  //     'CANCELLED': 'error'
+  //   };
+  //   return colorMap[status] || 'default';
+  // };
 
   const filteredComandaAreas = comandaAreas.filter(ca => {
     const areaMatch = selectedArea === 'all' || ca.areaId === selectedArea;

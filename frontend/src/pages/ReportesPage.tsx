@@ -1,79 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Container,
-    Typography,
-    Box,
-    Grid,
-    Card,
-    CardContent,
-    CardActions,
-    Button,
-    TextField,
-    Alert,
-    Chip,
-    IconButton,
-    useTheme,
-    useMediaQuery,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Tabs,
-    Tab,
-    Paper,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    LinearProgress,
-    Avatar,
-    Stack,
-    Divider,
-    Tooltip,
-    Fab,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
-    ListItemSecondaryAction,
+  Container,
+  Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  TextField,
+  Alert,
+  Chip,
+  IconButton,
+  useTheme,
+  useMediaQuery,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Tabs,
+  Tab,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  LinearProgress,
+  Avatar,
+  Stack,
+  Tooltip,
+  Fab,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon
 } from '@mui/material';
 import {
-    Assessment as AssessmentIcon,
-    TrendingUp as TrendingUpIcon,
-    TrendingDown as TrendingDownIcon,
-    AttachMoney as MoneyIcon,
-    ShoppingCart as CartIcon,
-    Restaurant as RestaurantIcon,
-    CalendarToday as CalendarIcon,
-    FilterList as FilterIcon,
-    Refresh as RefreshIcon,
-    Download as DownloadIcon,
-    Print as PrintIcon,
-    Share as ShareIcon,
-    Email as EmailIcon,
-    BarChart as BarChartIcon,
-    PieChart as PieChartIcon,
-    ShowChart as LineChartIcon,
-    TableChart as TableChartIcon,
-    Visibility as ViewIcon,
-    Edit as EditIcon,
-    Delete as DeleteIcon,
-    Add as AddIcon,
-    Schedule as ScheduleIcon,
-    LocalOffer as OfferIcon,
-    Star as StarIcon,
-    ThumbUp as ThumbUpIcon,
-    ThumbDown as ThumbDownIcon,
-    CheckCircle as CheckIcon,
-    Cancel as CancelIcon,
-    Warning as WarningIcon,
-    Info as InfoIcon,
+  Assessment as AssessmentIcon,
+  TrendingUp as TrendingUpIcon,
+  AttachMoney as MoneyIcon,
+  ShoppingCart as CartIcon,
+  Restaurant as RestaurantIcon,
+  CalendarToday as CalendarIcon,
+  Refresh as RefreshIcon,
+  Download as DownloadIcon,
+  Visibility as ViewIcon,
+  Add as AddIcon,
+  Schedule as ScheduleIcon,
+  ThumbUp as ThumbUpIcon,
+  Warning as WarningIcon,
+  Info as InfoIcon
 } from '@mui/icons-material';
 import type { ReporteVentasDTO, ProductoVendidoDTO } from '../dto/ReportesDTO';
 import { getReporteVentas, descargarReporteVentasPdf, descargarReporteVentasExcel } from '../services/reporteService';
@@ -165,7 +141,7 @@ const ReportesPage = () => {
             document.body.appendChild(link);
             link.click();
             link.parentNode?.removeChild(link);
-        } catch (err) {
+        } catch {
             setError('Error al descargar el PDF.');
         } finally {
             setLoading(false);
@@ -187,18 +163,14 @@ const ReportesPage = () => {
             document.body.appendChild(link);
             link.click();
             link.parentNode?.removeChild(link);
-        } catch (err) {
+        } catch {
             setError('Error al descargar el Excel.');
         } finally {
             setLoading(false);
         }
     };
 
-    const getGrowthIndicator = (current: number, previous: number) => {
-        if (previous === 0) return { value: 100, type: 'up' };
-        const growth = ((current - previous) / previous) * 100;
-        return { value: Math.abs(growth), type: growth >= 0 ? 'up' : 'down' };
-    };
+
 
     const getRandomData = (): {
         totalRecaudado: number;
@@ -317,7 +289,7 @@ const ReportesPage = () => {
                             <InputLabel>Tipo de Reporte</InputLabel>
                             <Select
                                 value={reportType}
-                                onChange={(e) => setReportType(e.target.value as any)}
+                                onChange={(e) => setReportType(e.target.value as 'ventas' | 'productos' | 'mesas' | 'tendencias')}
                                 label="Tipo de Reporte"
                             >
                                 <MenuItem value="ventas">Ventas</MenuItem>
@@ -466,7 +438,7 @@ const ReportesPage = () => {
                 <Paper sx={{ borderRadius: 2, overflow: 'hidden' }}>
                     <Tabs
                         value={tabValue}
-                        onChange={(e, newValue) => setTabValue(newValue)}
+                        onChange={(_, newValue) => setTabValue(newValue)}
                         sx={{ borderBottom: 1, borderColor: 'divider' }}
                     >
                         <Tab label="Productos Más Vendidos" />

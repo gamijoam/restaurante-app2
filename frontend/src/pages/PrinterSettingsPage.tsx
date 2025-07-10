@@ -1,3 +1,4 @@
+import type { SelectChangeEvent } from '@mui/material/Select';
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     Container,
@@ -27,25 +28,12 @@ import {
     TableRow,
     Avatar,
     Stack,
-    Divider,
     Tooltip,
     Fab,
     Dialog,
     DialogTitle,
     DialogContent,
     DialogActions,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemIcon,
-    ListItemSecondaryAction,
-    Switch,
-    FormControlLabel,
-    Badge,
-    LinearProgress,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
 } from '@mui/material';
 import {
     Print as PrintIcon,
@@ -54,42 +42,16 @@ import {
     Delete as DeleteIcon,
     Visibility as ViewIcon,
     Search as SearchIcon,
-    FilterList as FilterIcon,
     Refresh as RefreshIcon,
-    Download as DownloadIcon,
     Settings as SettingsIcon,
-    Star as StarIcon,
-    Warning as WarningIcon,
-    Info as InfoIcon,
-    CheckCircle as CheckIcon,
-    Cancel as CancelIcon,
-    TrendingUp as TrendingUpIcon,
-    TrendingDown as TrendingDownIcon,
-    MoreVert as MoreIcon,
-    ThumbUp as ThumbUpIcon,
-    ThumbDown as ThumbDownIcon,
-    Schedule as ScheduleIcon,
-    AttachMoney as MoneyIcon,
     Computer as ComputerIcon,
     Wifi as WifiIcon,
     Usb as UsbIcon,
     SettingsEthernet as SerialIcon,
-    Build as BuildIcon,
-    Create as CreateIcon,
-    Save as SaveIcon,
-    Close as CloseIcon,
-    Check as CheckIcon2,
-    Error as ErrorIcon,
-    Success as SuccessIcon,
     Restaurant as KitchenIcon,
     PointOfSale as CashierIcon,
     LocalBar as BarIcon,
     NetworkCheck as NetworkIcon,
-    Storage as StorageIcon,
-    Speed as SpeedIcon,
-    Security as SecurityIcon,
-    Help as HelpIcon,
-    Test as TestIcon,
 } from '@mui/icons-material';
 import {
     getAllPrinterConfigs,
@@ -132,7 +94,7 @@ const PrinterSettingsPage = () => {
         try {
             const data = await getAllPrinterConfigs();
             setConfigs(data);
-        } catch (error) {
+        } catch {
             setError('Error al cargar las configuraciones de impresoras');
         } finally {
             setLoading(false);
@@ -143,7 +105,9 @@ const PrinterSettingsPage = () => {
         fetchConfigs();
     }, [fetchConfigs]);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+    const handleInputChange = (
+        e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }> | SelectChangeEvent
+    ) => {
         const { name, value } = e.target;
         setCurrentConfig(prev => ({ ...prev, [name as string]: value }));
     };
@@ -160,7 +124,7 @@ const PrinterSettingsPage = () => {
             fetchConfigs();
             resetForm();
             setOpenDialog(false);
-        } catch (error) {
+        } catch {
             setError('Error al guardar la configuración.');
         }
     };
@@ -177,7 +141,7 @@ const PrinterSettingsPage = () => {
                 await deletePrinterConfig(id);
                 setSuccess('Configuración eliminada exitosamente.');
                 fetchConfigs();
-            } catch (error) {
+            } catch {
                 setError('Error al eliminar la configuración.');
             }
         }
@@ -410,7 +374,7 @@ const PrinterSettingsPage = () => {
                             <InputLabel>Rol</InputLabel>
                             <Select
                                 value={filterRole}
-                                onChange={(e) => setFilterRole(e.target.value)}
+                                onChange={(e: SelectChangeEvent) => setFilterRole(e.target.value)}
                                 label="Rol"
                             >
                                 <MenuItem value="TODOS">Todos los roles</MenuItem>
@@ -495,7 +459,7 @@ const PrinterSettingsPage = () => {
                                     <TableCell>
                                         <Chip
                                             label={getRoleText(config.role)}
-                                            color={getRoleColor(config.role) as any}
+                                            color={getRoleColor(config.role) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                                             size="small"
                                             icon={getRoleIcon(config.role)}
                                         />
@@ -503,7 +467,7 @@ const PrinterSettingsPage = () => {
                                     <TableCell>
                                         <Chip
                                             label={getPrinterTypeText(config.printerType)}
-                                            color={getPrinterTypeColor(config.printerType) as any}
+                                            color={getPrinterTypeColor(config.printerType) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                                             size="small"
                                             icon={getPrinterTypeIcon(config.printerType)}
                                         />
@@ -611,7 +575,7 @@ const PrinterSettingsPage = () => {
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                                         <Chip
                                             label={getRoleText(config.role)}
-                                            color={getRoleColor(config.role) as any}
+                                            color={getRoleColor(config.role) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                                             size="small"
                                             icon={getRoleIcon(config.role)}
                                         />
@@ -731,13 +695,13 @@ const PrinterSettingsPage = () => {
                                 <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                                     <Chip
                                         label={getRoleText(selectedConfig.role)}
-                                        color={getRoleColor(selectedConfig.role) as any}
+                                        color={getRoleColor(selectedConfig.role) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                                         size="small"
                                         icon={getRoleIcon(selectedConfig.role)}
                                     />
                                     <Chip
                                         label={getPrinterTypeText(selectedConfig.printerType)}
-                                        color={getPrinterTypeColor(selectedConfig.printerType) as any}
+                                        color={getPrinterTypeColor(selectedConfig.printerType) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                                         size="small"
                                         icon={getPrinterTypeIcon(selectedConfig.printerType)}
                                     />
@@ -773,7 +737,7 @@ const PrinterSettingsPage = () => {
                             <Select
                                 name="role"
                                 value={currentConfig.role || 'COCINA'}
-                                onChange={handleInputChange as any}
+                                onChange={handleInputChange}
                                 label="Rol"
                             >
                                 <MenuItem value="COCINA">Cocina</MenuItem>
@@ -788,7 +752,7 @@ const PrinterSettingsPage = () => {
                             <Select
                                 name="printerType"
                                 value={currentConfig.printerType || 'TCP'}
-                                onChange={handleInputChange as any}
+                                onChange={handleInputChange}
                                 label="Tipo de Conexión"
                             >
                                 <MenuItem value="TCP">Red (TCP/IP)</MenuItem>

@@ -1,0 +1,61 @@
+{
+  "name": "catasoft-restaurante-launcher",
+  "version": "1.0.0",
+  "description": "Launcher para el sistema de restaurante Catasoft",
+  "main": "launcher.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron .",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux"
+  },
+  "keywords": [
+    "electron",
+    "restaurante",
+    "launcher",
+    "catasoft"
+  ],
+  "author": "Catasoft",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "svg2png-wasm": "^1.4.1"
+  },
+  "build": {
+    "appId": "com.catasoft.restaurante",
+    "productName": "Catasoft Restaurante",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "launcher.js",
+      "index.html",
+      "assets/**/*",
+      "backend/**/*",
+      "license-service/**/*",
+      "puente-impresion/**/*",
+      "frontend/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

@@ -6,7 +6,6 @@ import {
   DialogActions,
   Typography,
   Button,
-  Box,
   Alert,
 } from '@mui/material';
 import { Warning } from '@mui/icons-material';

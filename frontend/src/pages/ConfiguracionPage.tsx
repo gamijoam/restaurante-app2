@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Container, Typography, Box, TextField, Button, Alert, Paper } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { getImpuesto, setImpuesto } from '../services/configService';
@@ -26,7 +26,7 @@ const ConfiguracionPage = () => {
     try {
       await setImpuesto(parseFloat(impuesto));
       setSuccess('Impuesto actualizado correctamente.');
-    } catch (e) {
+    } catch {
       setError('Error al actualizar el impuesto.');
     } finally {
       setLoading(false);

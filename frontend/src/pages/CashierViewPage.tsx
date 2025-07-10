@@ -1,83 +1,51 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import {
-  Box,
-  Grid,
-  Typography,
-  Card,
-  CardContent,
-  CardActions,
-  Button,
-  CircularProgress,
-  Alert,
-  Chip,
-  IconButton,
-  useTheme,
-  useMediaQuery,
-  Divider,
-  Badge,
-  AppBar,
-  Toolbar,
-  Fab,
-  SpeedDial,
-  SpeedDialAction,
-  SpeedDialIcon,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  ListItemSecondaryAction,
-  LinearProgress,
-  Avatar,
-  Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Switch,
-  FormControlLabel,
-} from '@mui/material';
-import {
-  PointOfSale,
-  Receipt,
-  Print,
-  CheckCircle,
-  AccessTime,
-  Restaurant,
-  Refresh,
-  FilterList,
-  ViewList,
-  GridView,
-  AttachMoney,
-  LocalDining,
-  Timer,
-  Payment,
-  Delete,
-  Add,
-  Remove,
-} from '@mui/icons-material';
-import type { ComandaResponseDTO } from '../types';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
+import useTheme from '@mui/material/styles/useTheme';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import Divider from '@mui/material/Divider';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import Fab from '@mui/material/Fab';
+import Paper from '@mui/material/Paper';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
+import Avatar from '@mui/material/Avatar';
+import TextField from '@mui/material/TextField';
+import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import GridViewIcon from '@mui/icons-material/GridView';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import TimerIcon from '@mui/icons-material/Timer';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
+import type { ComandaResponseDTO, ComandaAreaResponseDTO } from '../types';
 import { getComandasPorMultiplesEstados, updateComandaEstado, getComandaAreasStatus } from '../services/comandaService';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useNotification } from '../hooks/useNotification';
-import ModernCard from '../components/ModernCard';
+// import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import ModernModal from '../components/ModernModal';
 import LoadingSpinner from '../components/LoadingSpinner';
-import SkeletonLoader from '../components/SkeletonLoader';
+// import SkeletonLoader from '../components/SkeletonLoader';
 import OrderSummary from '../components/OrderSummary';
 import { imprimirTicketCaja } from '../services/impresionService';
-import ProductCard from '../components/ProductCard';
+// import ProductCard from '../components/ProductCard';
 import { getProductos } from '../services/productoService';
 import { agregarItemsAComanda } from '../services/comandaService';
 import type { Producto } from '../types';
 import { crearComandaAPI } from '../services/comandaService';
 import { getFacturas, updateFacturaEstado } from '../services/facturaService';
+import { PointOfSale } from '@mui/icons-material';
 
 // --- Componente interno para selección de productos ---
 interface ProductSelectorWizardModalProps {
@@ -140,7 +108,7 @@ const ProductSelectorWizardModal: React.FC<ProductSelectorWizardModalProps> = ({
                     <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{producto.nombre}</Typography>
                     <Typography variant="body2" color="text.secondary">${producto.precio.toFixed(2)}</Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                      <IconButton size="small" onClick={() => setSelected(s => ({ ...s, [producto.id]: Math.max(0, (s[producto.id] || 0) - 1) }))} disabled={!selected[producto.id]}><Remove /></IconButton>
+                      <IconButton size="small" onClick={() => setSelected(s => ({ ...s, [producto.id]: Math.max(0, (s[producto.id] || 0) - 1) }))} disabled={!selected[producto.id]}><RemoveIcon /></IconButton>
                       <TextField
                         type="number"
                         size="small"
@@ -149,7 +117,7 @@ const ProductSelectorWizardModal: React.FC<ProductSelectorWizardModalProps> = ({
                         sx={{ width: 50 }}
                         inputProps={{ min: 0, style: { textAlign: 'center' } }}
                       />
-                      <IconButton size="small" onClick={() => setSelected(s => ({ ...s, [producto.id]: (s[producto.id] || 0) + 1 }))}><Add /></IconButton>
+                      <IconButton size="small" onClick={() => setSelected(s => ({ ...s, [producto.id]: (s[producto.id] || 0) + 1 }))}><AddIcon /></IconButton>
                     </Box>
                   </Card>
                 ))}
@@ -217,8 +185,8 @@ const ProductSelectorWizardModal: React.FC<ProductSelectorWizardModalProps> = ({
 const CashierViewPage: React.FC = () => {
     const [comandas, setComandas] = useState<ComandaResponseDTO[]>([]);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [comandasAreasStatus, setComandasAreasStatus] = useState<{ [comandaId: number]: any[] }>({});
+    // refreshing state removed (was unused)
+    const [comandasAreasStatus, setComandasAreasStatus] = useState<{ [comandaId: number]: ComandaAreaResponseDTO[] }>({});
     const [error, setError] = useState<string | null>(null);
     const [submittingId, setSubmittingId] = useState<number | null>(null);
     const [printingId, setPrintingId] = useState<number | null>(null);
@@ -232,15 +200,15 @@ const CashierViewPage: React.FC = () => {
   const [loadingProductos, setLoadingProductos] = useState(false);
   const [quickSaleModalOpen, setQuickSaleModalOpen] = useState(false);
   const [quickSaleProducts, setQuickSaleProducts] = useState<{ [productoId: number]: number }>({});
-  const [quickSaleLoading, setQuickSaleLoading] = useState(false);
-  const [quickSaleProductos, setQuickSaleProductos] = useState<Producto[]>([]);
+  const [quickSaleLoading] = useState(false);
+  const [quickSaleProductos] = useState<Producto[]>([]);
   const [creatingQuickSale, setCreatingQuickSale] = useState(false);
   
   const { stompClient, isConnected } = useWebSocket();
   const { showError, showSuccess } = useNotification();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
+  // const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
 
     const fetchInitialComandas = useCallback(async () => {
         setLoading(true);
@@ -249,7 +217,7 @@ const CashierViewPage: React.FC = () => {
             setComandas(Array.isArray(data) ? data : []);
             
             // Cargar estado de áreas para cada comanda
-            const areasStatus: { [comandaId: number]: any[] } = {};
+            const areasStatus: { [comandaId: number]: ComandaAreaResponseDTO[] } = {};
             for (const comanda of Array.isArray(data) ? data : []) {
                 try {
                     const areas = await getComandaAreasStatus(comanda.id);
@@ -260,7 +228,7 @@ const CashierViewPage: React.FC = () => {
                 }
             }
             setComandasAreasStatus(areasStatus);
-        } catch (err) {
+        } catch {
             setError('Error al cargar las comandas a cobrar.');
             showError('Error al cargar comandas', 'No se pudieron cargar las comandas pendientes');
         } finally {
@@ -290,16 +258,8 @@ const CashierViewPage: React.FC = () => {
 
   useEffect(() => {
     if (isConnected && stompClient) {
-      const subscription = stompClient.subscribe('/topic/mesas', (message) => {
-        try {
-          const mesaActualizada = JSON.parse(message.body);
-          // Si tienes un estado de mesas, actualízalo aquí
-          // setMesas(prevMesas => prevMesas.map(m => m.id === mesaActualizada.id ? { ...m, ...mesaActualizada } : m));
-          // Si solo usas comandas, podrías refrescar la lista de comandas
-          // loadComandas();
-        } catch (e) {
-          // Mensaje no es una mesa válida
-        }
+      const subscription = stompClient.subscribe('/topic/mesas', () => {
+        // Mensaje no es una mesa válida o no se usa
       });
       return () => {
         subscription.unsubscribe();
@@ -320,12 +280,12 @@ const CashierViewPage: React.FC = () => {
         if (factura) {
           await updateFacturaEstado(factura.id, 'PAGADA');
         }
-      } catch (e) {
+      } catch {
         // Si no hay factura, no hacer nada
       }
       setComandas(prevComandas => prevComandas.filter(c => c.id !== comanda.id));
       showSuccess('Comanda pagada', `Mesa ${comanda.numeroMesa} marcada como pagada`);
-    } catch (err) {
+    } catch {
       showError('Error al pagar', 'No se pudo marcar la comanda como pagada');
     } finally {
       setSubmittingId(null);
@@ -337,11 +297,11 @@ const CashierViewPage: React.FC = () => {
         try {
       await imprimirTicketCaja(comanda.id);
       showSuccess('Ticket impreso', `Ticket de mesa ${comanda.numeroMesa} enviado a impresora`);
-        } catch (error: any) {
-            if (error.response?.status === 404) {
-        showError('Impresora no configurada', 'Configure una impresora para el rol CAJA en Configuración');
+        } catch (error: unknown) {
+            if (typeof error === 'object' && error !== null && 'response' in error && (error as { response?: { status?: number } }).response?.status === 404) {
+                showError('Impresora no configurada', 'Configure una impresora para el rol CAJA en Configuración');
             } else {
-        showError('Error de impresión', 'Verifique que el Puente de Impresión esté conectado');
+                showError('Error de impresión', 'Verifique que el Puente de Impresión esté conectado');
             }
         } finally {
             setPrintingId(null);
@@ -355,79 +315,14 @@ const CashierViewPage: React.FC = () => {
     try {
       const productos = await getProductos();
       setProductos(productos);
-    } catch (e) {
+    } catch {
       showError('Error al cargar productos', 'No se pudieron cargar los productos');
     } finally {
       setLoadingProductos(false);
     }
   };
 
-  const handleSelectProduct = (productoId: number, cantidad: number) => {
-    setSelectedProducts(prev => ({ ...prev, [productoId]: cantidad }));
-  };
-
-  const handleAddProductsToComanda = async () => {
-    if (!selectedComandaForAdd) return;
-    const items = Object.entries(selectedProducts)
-      .filter(([_, cantidad]) => cantidad > 0)
-      .map(([productoId, cantidad]) => ({ productoId: Number(productoId), cantidad }));
-    if (items.length === 0) {
-      showError('Selecciona productos', 'Debes seleccionar al menos un producto');
-      return;
-    }
-    try {
-      setLoading(true);
-      const response = await agregarItemsAComanda(selectedComandaForAdd.id, items);
-      setComandas(prev => prev.map(c => c.id === response.data.id ? response.data : c));
-      showSuccess('Productos agregados', 'Productos agregados a la comanda');
-      setAddProductsModalOpen(false);
-      setSelectedProducts({});
-    } catch (e) {
-      showError('Error al agregar productos', 'No se pudieron agregar los productos');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOpenQuickSale = async () => {
-    setQuickSaleModalOpen(true);
-    setQuickSaleLoading(true);
-    try {
-      const productos = await getProductos();
-      setQuickSaleProductos(productos);
-    } catch (e) {
-      showError('Error al cargar productos', 'No se pudieron cargar los productos');
-    } finally {
-      setQuickSaleLoading(false);
-    }
-  };
-
-  const handleSelectQuickSaleProduct = (productoId: number, cantidad: number) => {
-    setQuickSaleProducts(prev => ({ ...prev, [productoId]: cantidad }));
-  };
-
-  const handleCreateQuickSale = async () => {
-    const items = Object.entries(quickSaleProducts)
-      .filter(([_, cantidad]) => cantidad > 0)
-      .map(([productoId, cantidad]) => ({ productoId: Number(productoId), cantidad }));
-    if (items.length === 0) {
-      showError('Selecciona productos', 'Debes seleccionar al menos un producto');
-      return;
-    }
-    setCreatingQuickSale(true);
-    try {
-      // Usar mesaId: 9999 para venta rápida
-      const response = await crearComandaAPI({ mesaId: 9999, items });
-      setComandas(prev => [response, ...prev]);
-      showSuccess('Venta rápida creada', 'Comanda rápida creada correctamente');
-      setQuickSaleModalOpen(false);
-      setQuickSaleProducts({});
-    } catch (e) {
-      showError('Error en venta rápida', 'No se pudo crear la venta rápida');
-    } finally {
-      setCreatingQuickSale(false);
-    }
-  };
+  // Removed unused handlers: handleSelectProduct, handleAddProductsToComanda, handleOpenQuickSale, handleSelectQuickSaleProduct, handleCreateQuickSale
 
   const getEstadoColor = (estado: string) => {
     switch (estado) {
@@ -458,8 +353,8 @@ const CashierViewPage: React.FC = () => {
       <OrderSummary 
         key={comanda.id}
         comanda={comanda}
-        areaStatuses={areaStatuses.map((area: any) => ({
-          areaId: area.areaId,
+        areaStatuses={areaStatuses.map((area) => ({
+          areaId: String(area.areaId),
           areaName: area.areaNombre,
           status: area.estado,
           type: area.areaNombre.toLowerCase().includes('cocina') ? 'KITCHEN' : 'BAR'
@@ -482,13 +377,13 @@ const CashierViewPage: React.FC = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box sx={{ flexGrow: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-            <Restaurant color="primary" />
+            <RestaurantIcon color="primary" />
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               {comanda.numeroMesa == null ? 'Venta rápida' : `Mesa ${comanda.numeroMesa}`}
             </Typography>
             <Chip
               label={getEstadoText(comanda.estado)}
-              color={getEstadoColor(comanda.estado) as any}
+              color={getEstadoColor(comanda.estado) as "default" | "primary" | "secondary" | "error" | "info" | "success" | "warning"}
                                         size="small"
             />
           </Box>
@@ -558,7 +453,7 @@ const CashierViewPage: React.FC = () => {
       <AppBar position="static" elevation={0}>
         <Toolbar>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <PointOfSale color="primary" />
+            <PointOfSaleIcon color="primary" />
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               Caja
             </Typography>
@@ -567,7 +462,7 @@ const CashierViewPage: React.FC = () => {
           <Box sx={{ flexGrow: 1 }} />
           
           <IconButton onClick={fetchInitialComandas} disabled={loading}>
-            <Refresh />
+            <RefreshIcon />
           </IconButton>
         </Toolbar>
       </AppBar>
@@ -585,7 +480,7 @@ const CashierViewPage: React.FC = () => {
 
         {comandas.length === 0 ? (
           <Box sx={{ textAlign: 'center', py: 4 }}>
-            <PointOfSale sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+            <PointOfSaleIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
             <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
               No hay comandas pendientes
             </Typography>
@@ -612,7 +507,7 @@ const CashierViewPage: React.FC = () => {
         onClick={fetchInitialComandas}
         disabled={loading}
       >
-        <Refresh />
+        <RefreshIcon />
       </Fab>
     </Box>
   );
@@ -644,7 +539,7 @@ const CashierViewPage: React.FC = () => {
             onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
             sx={{ border: '1px solid', borderColor: 'divider' }}
           >
-            {viewMode === 'grid' ? <ViewList /> : <GridView />}
+            {viewMode === 'grid' ? <ViewListIcon /> : <GridViewIcon />}
           </IconButton>
         </Box>
       </Box>
@@ -654,12 +549,12 @@ const CashierViewPage: React.FC = () => {
         <Chip
           label={`${comandas.length} Pendientes`}
           color="warning"
-          icon={<Timer />}
+          icon={<TimerIcon />}
         />
         <Chip
           label={`$${comandas.reduce((sum, c) => sum + c.total, 0).toFixed(2)} Total`}
           color="primary"
-          icon={<AttachMoney />}
+          icon={<AttachMoneyIcon />}
         />
       </Box>
 
@@ -763,7 +658,7 @@ const CashierViewPage: React.FC = () => {
   initialSelected={selectedProducts}
   onConfirm={async (selected) => {
     const items = Object.entries(selected)
-      .filter(([_, cantidad]) => cantidad > 0)
+      .filter(([, cantidad]) => cantidad > 0)
       .map(([productoId, cantidad]) => ({ productoId: Number(productoId), cantidad }));
     if (!selectedComandaForAdd) return;
     if (items.length === 0) {
@@ -782,7 +677,7 @@ const CashierViewPage: React.FC = () => {
       showSuccess('Productos agregados', 'Productos agregados a la comanda');
       setAddProductsModalOpen(false);
       setSelectedProducts({});
-    } catch (e) {
+    } catch {
       showError('Error al agregar productos', 'No se pudieron agregar los productos');
     } finally {
       setLoading(false);
@@ -800,7 +695,7 @@ const CashierViewPage: React.FC = () => {
   initialSelected={quickSaleProducts}
   onConfirm={async (selected) => {
     const items = Object.entries(selected)
-      .filter(([_, cantidad]) => cantidad > 0)
+      .filter(([, cantidad]) => cantidad > 0)
       .map(([productoId, cantidad]) => ({ productoId: Number(productoId), cantidad }));
     if (items.length === 0) {
       showError('Selecciona productos', 'Debes seleccionar al menos un producto');
@@ -814,7 +709,7 @@ const CashierViewPage: React.FC = () => {
       showSuccess('Venta rápida creada', 'Comanda rápida creada correctamente');
       setQuickSaleModalOpen(false);
       setQuickSaleProducts({});
-    } catch (e) {
+    } catch {
       showError('Error en venta rápida', 'No se pudo crear la venta rápida');
     } finally {
       setCreatingQuickSale(false);
@@ -827,7 +722,7 @@ const CashierViewPage: React.FC = () => {
         color="secondary"
         aria-label="venta-rapida"
         sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        onClick={handleOpenQuickSale}
+        onClick={() => setQuickSaleModalOpen(true)}
       >
         <PointOfSale />
       </Fab>

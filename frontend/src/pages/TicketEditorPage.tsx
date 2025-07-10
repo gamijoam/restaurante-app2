@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DndContext, closestCenter } from '@dnd-kit/core';
+import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { 
   Box, 
@@ -28,7 +28,6 @@ import {
   Save as SaveIcon, 
   Close as CloseIcon,
   Add as AddIcon,
-  Settings as SettingsIcon,
   PictureAsPdf as PdfIcon
 } from '@mui/icons-material';
 import { 
@@ -52,40 +51,81 @@ const blockPalette = [
   { type: 'datetime', format: 'DD/MM/YYYY HH:mm', id: '' } as TicketBlock,
 ];
 
-function renderBlock(block: TicketBlock, isEditing: boolean, editValue: any, setEditValue: any) {
+
+type EditValue =
+  | ({ type: 'text'; value: string; align: 'left' | 'center' | 'right'; bold: boolean })
+  | ({ type: 'table'; columns: string[] })
+  | ({ type: 'total'; label: string; field: string })
+  | ({ type: 'qr'; value: string })
+  | ({ type: 'datetime'; format: string })
+  | ({ type: 'line' | 'logo' });
+
+function renderBlock(
+  block: TicketBlock,
+  isEditing: boolean,
+  editValue: EditValue,
+  setEditValue: React.Dispatch<React.SetStateAction<EditValue>>
+) {
   if (isEditing) {
     switch (block.type) {
-      case 'text':
+      case 'text': {
+        const v = editValue.type === 'text'
+          ? editValue
+          : { type: 'text', value: '', align: 'left' as const, bold: false };
         return (
           <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <TextField size="small" value={editValue.value} onChange={e => setEditValue((v: any) => ({ ...v, value: e.target.value }))} sx={{ flex: 1 }} />
-            <Select size="small" value={editValue.align} onChange={e => setEditValue((v: any) => ({ ...v, align: e.target.value }))}>
+            <TextField
+              size="small"
+              value={v.value}
+              onChange={e => setEditValue({ ...v, value: e.target.value, type: 'text', align: v.align as 'left' | 'center' | 'right' })}
+              sx={{ flex: 1 }}
+            />
+            <Select
+              size="small"
+              value={v.align}
+              onChange={e => setEditValue({ ...v, align: e.target.value as 'left' | 'center' | 'right', type: 'text' })}
+            >
               <MenuItem value="left">Izquierda</MenuItem>
               <MenuItem value="center">Centro</MenuItem>
               <MenuItem value="right">Derecha</MenuItem>
             </Select>
-            <Button variant={editValue.bold ? 'contained' : 'outlined'} size="small" onClick={() => setEditValue((v: any) => ({ ...v, bold: !v.bold }))}>Negrita</Button>
+            <Button
+              variant={v.bold ? 'contained' : 'outlined'}
+              size="small"
+              onClick={() => setEditValue({ ...v, bold: !v.bold, type: 'text', align: v.align as 'left' | 'center' | 'right' })}
+            >
+              Negrita
+            </Button>
           </Box>
         );
-      case 'table':
+      }
+      case 'table': {
+        const v = editValue.type === 'table' ? editValue : { type: 'table', columns: [] };
         return (
-          <TextField size="small" value={editValue.columns.join(',')} onChange={e => setEditValue((v: any) => ({ ...v, columns: e.target.value.split(',') }))} fullWidth label="Columnas (separadas por coma)" />
+          <TextField size="small" value={v.columns.join(',')} onChange={e => setEditValue({ ...v, columns: e.target.value.split(','), type: 'table' })} fullWidth label="Columnas (separadas por coma)" />
         );
-      case 'total':
+      }
+      case 'total': {
+        const v = editValue.type === 'total' ? editValue : { type: 'total', label: '', field: '' };
         return (
           <Box sx={{ display: 'flex', gap: 1 }}>
-            <TextField size="small" value={editValue.label} onChange={e => setEditValue((v: any) => ({ ...v, label: e.target.value }))} label="Etiqueta" />
-            <TextField size="small" value={editValue.field} onChange={e => setEditValue((v: any) => ({ ...v, field: e.target.value }))} label="Campo" />
+            <TextField size="small" value={v.label} onChange={e => setEditValue({ ...v, label: e.target.value, type: 'total' })} label="Etiqueta" />
+            <TextField size="small" value={v.field} onChange={e => setEditValue({ ...v, field: e.target.value, type: 'total' })} label="Campo" />
           </Box>
         );
-      case 'qr':
+      }
+      case 'qr': {
+        const v = editValue.type === 'qr' ? editValue : { type: 'qr', value: '' };
         return (
-          <TextField size="small" value={editValue.value} onChange={e => setEditValue((v: any) => ({ ...v, value: e.target.value }))} fullWidth label="Valor QR" />
+          <TextField size="small" value={v.value} onChange={e => setEditValue({ ...v, value: e.target.value, type: 'qr' })} fullWidth label="Valor QR" />
         );
-      case 'datetime':
+      }
+      case 'datetime': {
+        const v = editValue.type === 'datetime' ? editValue : { type: 'datetime', format: '' };
         return (
-          <TextField size="small" value={editValue.format} onChange={e => setEditValue((v: any) => ({ ...v, format: e.target.value }))} fullWidth label="Formato" />
+          <TextField size="small" value={v.format} onChange={e => setEditValue({ ...v, format: e.target.value, type: 'datetime' })} fullWidth label="Formato" />
         );
+      }
       default:
         return null;
     }
@@ -136,7 +176,7 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
 }) => {
   const [blocks, setBlocks] = useState<TicketBlock[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editValue, setEditValue] = useState<any>({});
+  const [editValue, setEditValue] = useState<EditValue>({ type: 'line' });
   const [areas, setAreas] = useState<Area[]>([]);
   const [selectedArea, setSelectedArea] = useState<string>('');
   const [currentTemplate, setCurrentTemplate] = useState<TicketTemplate | null>(null);
@@ -154,6 +194,7 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
   // Cargar áreas al montar el componente
   useEffect(() => {
     loadAreas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Cargar plantilla inicial si se proporciona
@@ -163,6 +204,7 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
       setCurrentTemplate(initialTemplate);
       setBlocks(initialTemplate.blocks || []);
     }
+     
   }, [initialTemplate]);
 
   // Cargar plantilla cuando cambie el área seleccionada
@@ -170,6 +212,7 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
     if (selectedArea && !initialTemplate) {
       loadTemplateForArea(selectedArea);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedArea, initialTemplate]);
 
   const loadAreas = async () => {
@@ -306,12 +349,15 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
     }
   };
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    if (!over) return;
     if (active.id !== over.id) {
       const oldIndex = blocks.findIndex(b => b.id === active.id);
       const newIndex = blocks.findIndex(b => b.id === over.id);
-      setBlocks(arrayMove(blocks, oldIndex, newIndex));
+      if (oldIndex !== -1 && newIndex !== -1) {
+        setBlocks(arrayMove(blocks, oldIndex, newIndex));
+      }
     }
   };
 
@@ -323,18 +369,52 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
   // Editar bloque
   const handleEditBlock = (block: TicketBlock) => {
     setEditingId(block.id || '');
-    setEditValue({ ...block });
+    switch (block.type) {
+      case 'text':
+        setEditValue({ type: 'text', value: block.value || '', align: block.align || 'left', bold: !!block.bold });
+        break;
+      case 'table':
+        setEditValue({ type: 'table', columns: block.columns || [] });
+        break;
+      case 'total':
+        setEditValue({ type: 'total', label: block.label || '', field: block.field || '' });
+        break;
+      case 'qr':
+        setEditValue({ type: 'qr', value: block.value || '' });
+        break;
+      case 'datetime':
+        setEditValue({ type: 'datetime', format: block.format || '' });
+        break;
+      default:
+        setEditValue({ type: block.type });
+    }
   };
 
   const handleSaveEdit = () => {
-    setBlocks(blocks.map(b => b.id === editingId ? { ...b, ...editValue } : b));
+    setBlocks(blocks.map(b => {
+      if (b.id !== editingId) return b;
+      switch (editValue.type) {
+        case 'text':
+          return { ...b, type: 'text', value: editValue.value, align: editValue.align, bold: editValue.bold };
+        case 'table':
+          return { ...b, type: 'table', columns: editValue.columns };
+        case 'total':
+          return { ...b, type: 'total', label: editValue.label, field: editValue.field };
+        case 'qr':
+          return { ...b, type: 'qr', value: editValue.value };
+        case 'datetime':
+          return { ...b, type: 'datetime', format: editValue.format };
+        default:
+          return { ...b, type: editValue.type };
+      }
+    }));
     setEditingId(null);
-    setEditValue({});
+    setEditValue({ type: 'line' });
   };
 
   const handleCancelEdit = () => {
     setEditingId(null);
-    setEditValue({});
+    setEditValue({ type: 'line' });
   };
 
   // Eliminar bloque
@@ -468,9 +548,29 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
         <Paper sx={{ p: 2, minWidth: 320, bgcolor: '#222', color: '#fff' }}>
           <Typography variant="h6" sx={{ mb: 2, color: '#fff' }}>Previsualización</Typography>
           <Box sx={{ fontFamily: 'monospace', fontSize: 16, bgcolor: '#111', p: 2, borderRadius: 2, minHeight: 500, width: 320 }}>
-            {blocks.map(block => (
-              <div key={block.id}>{renderBlock(block, false, {}, () => {})}</div>
-            ))}
+            {blocks.map(block => {
+              let previewValue: EditValue;
+              switch (block.type) {
+                case 'text':
+                  previewValue = { type: 'text', value: block.value || '', align: block.align || 'left', bold: !!block.bold };
+                  break;
+                case 'table':
+                  previewValue = { type: 'table', columns: block.columns || [] };
+                  break;
+                case 'total':
+                  previewValue = { type: 'total', label: block.label || '', field: block.field || '' };
+                  break;
+                case 'qr':
+                  previewValue = { type: 'qr', value: block.value || '' };
+                  break;
+                case 'datetime':
+                  previewValue = { type: 'datetime', format: block.format || '' };
+                  break;
+                default:
+                  previewValue = { type: block.type };
+              }
+              return <div key={block.id}>{renderBlock(block, false, previewValue, () => {})}</div>;
+            })}
           </Box>
         </Paper>
       </Box>

@@ -1,31 +1,26 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-    Container,
-    Typography,
-    Box,
-    Paper,
-    Button,
-    Alert,
-    IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Chip,
-    Tooltip
-} from '@mui/material';
-import {
-    Edit as EditIcon,
-    Save as SaveIcon,
-    Cancel as CancelIcon,
-    Add as AddIcon
-} from '@mui/icons-material';
-import { getMesasMapa, updateMesaPosicion, updateMesasPosiciones, createMesa, updateMesaEstado, type MesaMapa } from '../services/mesaService';
+import Container from '@mui/material/Container';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Button from '@mui/material/Button';
+import Alert from '@mui/material/Alert';
+import IconButton from '@mui/material/IconButton';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Chip from '@mui/material/Chip';
+import Tooltip from '@mui/material/Tooltip';
+import EditIcon from '@mui/icons-material/Edit';
+import SaveIcon from '@mui/icons-material/Save';
+import AddIcon from '@mui/icons-material/Add';
+import { getMesasMapa, updateMesaPosicion, createMesa, updateMesaEstado, type MesaMapa } from '../services/mesaService';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useNavigate } from 'react-router-dom';
@@ -68,7 +63,7 @@ const MesaMapaPage = () => {
             setLoading(true);
             const data = await getMesasMapa();
             setMesas(data.map(mesa => ({ ...mesa, isDragging: false, isEditing: false })));
-        } catch (err) {
+        } catch {
             setError('Error al cargar las mesas');
         } finally {
             setLoading(false);
@@ -88,7 +83,7 @@ const MesaMapaPage = () => {
                     setMesas(prevMesas =>
                         prevMesas.map(m => m.id === mesaActualizada.id ? { ...m, ...mesaActualizada } : m)
                     );
-                } catch (e) {
+                } catch {
                     console.warn('Mensaje de /topic/mesas no es un objeto Mesa:', message.body);
                 }
             });
@@ -101,7 +96,7 @@ const MesaMapaPage = () => {
 
     const handleCreateMesa = async () => {
         try {
-            const nuevaMesa = await createMesa({
+            await createMesa({
                 numero: createForm.numero,
                 capacidad: createForm.capacidad,
                 estado: 'LIBRE',
@@ -109,7 +104,6 @@ const MesaMapaPage = () => {
                 posicionX: createForm.posicionX,
                 posicionY: createForm.posicionY
             });
-            
             setCreateDialog(false);
             setCreateForm({ 
                 numero: 0, 
@@ -120,21 +114,18 @@ const MesaMapaPage = () => {
             });
             setSuccess('Mesa creada correctamente');
             loadMesas(); // Recargar para obtener la nueva mesa
-        } catch (err) {
+        } catch {
             setError('Error al crear la mesa');
         }
     };
 
     const handleMouseDown = (e: React.MouseEvent, mesa: MesaVisual) => {
         if (!isGerente) return;
-        
         const rect = e.currentTarget.getBoundingClientRect();
         const offsetX = e.clientX - rect.left;
         const offsetY = e.clientY - rect.top;
-        
         setDraggedMesa(mesa);
         setDragOffset({ x: offsetX, y: offsetY });
-        
         setMesas(prev => prev.map(m => 
             m.id === mesa.id ? { ...m, isDragging: true } : m
         ));
@@ -184,8 +175,7 @@ const MesaMapaPage = () => {
                     loadMesas();
                 }, 100);
             }
-        } catch (err) {
-            console.error('Error al actualizar posición:', err);
+        } catch {
             setError('Error al actualizar la posición de la mesa');
             loadMesas(); // Recargar para restaurar posición original
         }
@@ -221,7 +211,7 @@ const MesaMapaPage = () => {
             setEditDialog(false);
             setEditingMesa(null);
             setSuccess('Mesa actualizada correctamente');
-        } catch (err) {
+        } catch {
             setError('Error al actualizar la mesa');
         }
     };
@@ -240,14 +230,14 @@ const MesaMapaPage = () => {
             
             setMesas(prev => prev.map(m => 
                 m.id === editingMesa.id 
-                    ? { ...m, estado: estadoForm.estado as any }
+                    ? { ...m, estado: estadoForm.estado as MesaMapa['estado'] }
                     : m
             ));
             
             setEstadoDialog(false);
             setEditingMesa(null);
             setSuccess('Estado de mesa actualizado correctamente');
-        } catch (err) {
+        } catch {
             setError('Error al actualizar el estado de la mesa');
         }
     };

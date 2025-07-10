@@ -1,30 +1,6 @@
 import React, { useState } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TablePagination,
-  TableSortLabel,
-  Paper,
-  Box,
-  Typography,
-  Chip,
-  IconButton,
-  Tooltip,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
-import {
-  Edit,
-  Delete,
-  Visibility,
-  MoreVert,
-  FilterList,
-  Search,
-} from '@mui/icons-material';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, TableSortLabel, Paper, Box, Typography, IconButton, Tooltip, useTheme, useMediaQuery } from '@mui/material';
+import { Edit, Delete, Visibility } from '@mui/icons-material';
 
 interface Column {
   id: string;
@@ -39,17 +15,14 @@ interface ModernTableProps {
   columns: Column[];
   data: any[];
   title?: string;
-  loading?: boolean;
   pagination?: boolean;
   searchable?: boolean;
-  filterable?: boolean;
   selectable?: boolean;
   actions?: boolean;
   onEdit?: (row: any) => void;
   onDelete?: (row: any) => void;
   onView?: (row: any) => void;
   onRowClick?: (row: any) => void;
-  onSelectionChange?: (selectedRows: any[]) => void;
   rowsPerPageOptions?: number[];
   emptyMessage?: string;
   sx?: any;
@@ -59,17 +32,12 @@ const ModernTable: React.FC<ModernTableProps> = ({
   columns,
   data,
   title,
-  loading = false,
   pagination = true,
-  searchable = false,
-  filterable = false,
-  selectable = false,
   actions = false,
   onEdit,
   onDelete,
   onView,
   onRowClick,
-  onSelectionChange,
   rowsPerPageOptions = [5, 10, 25],
   emptyMessage = 'No hay datos disponibles',
   sx,
@@ -81,8 +49,6 @@ const ModernTable: React.FC<ModernTableProps> = ({
   const [rowsPerPage, setRowsPerPage] = useState(rowsPerPageOptions[0]);
   const [orderBy, setOrderBy] = useState<string>('');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
 
   const handleSort = (columnId: string) => {
     const isAsc = orderBy === columnId && order === 'asc';
@@ -90,52 +56,10 @@ const ModernTable: React.FC<ModernTableProps> = ({
     setOrderBy(columnId);
   };
 
-  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      const newSelected = data.map((row) => row);
-      setSelectedRows(newSelected);
-      onSelectionChange?.(newSelected);
-    } else {
-      setSelectedRows([]);
-      onSelectionChange?.([]);
-    }
-  };
-
-  const handleSelectRow = (row: any) => {
-    const selectedIndex = selectedRows.findIndex((selectedRow) => selectedRow.id === row.id);
-    let newSelected: any[] = [];
-
-    if (selectedIndex === -1) {
-      newSelected = newSelected.concat(selectedRows, row);
-    } else if (selectedIndex === 0) {
-      newSelected = newSelected.concat(selectedRows.slice(1));
-    } else if (selectedIndex === selectedRows.length - 1) {
-      newSelected = newSelected.concat(selectedRows.slice(0, -1));
-    } else if (selectedIndex > 0) {
-      newSelected = newSelected.concat(
-        selectedRows.slice(0, selectedIndex),
-        selectedRows.slice(selectedIndex + 1),
-      );
-    }
-
-    setSelectedRows(newSelected);
-    onSelectionChange?.(newSelected);
-  };
-
-  const isSelected = (row: any) => selectedRows.findIndex((selectedRow) => selectedRow.id === row.id) !== -1;
-
-  const filteredData = data.filter((row) => {
-    if (!searchTerm) return true;
-    return columns.some((column) => {
-      const value = row[column.id];
-      return value?.toString().toLowerCase().includes(searchTerm.toLowerCase());
-    });
-  });
-
   const sortedData = React.useMemo(() => {
-    if (!orderBy) return filteredData;
+    if (!orderBy) return data;
     
-    return [...filteredData].sort((a, b) => {
+    return [...data].sort((a, b) => {
       const aValue = a[orderBy];
       const bValue = b[orderBy];
       
@@ -145,13 +69,13 @@ const ModernTable: React.FC<ModernTableProps> = ({
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
     });
-  }, [filteredData, orderBy, order]);
+  }, [data, orderBy, order]);
 
   const paginatedData = pagination 
     ? sortedData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
     : sortedData;
 
-  const handleChangePage = (event: unknown, newPage: number) => {
+  const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage);
   };
 
@@ -203,12 +127,6 @@ const ModernTable: React.FC<ModernTableProps> = ({
           <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
             {title}
           </Typography>
-        )}
-        
-        {searchable && (
-          <Box sx={{ mb: 2 }}>
-            {/* Mobile search implementation */}
-          </Box>
         )}
         
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -274,11 +192,6 @@ const ModernTable: React.FC<ModernTableProps> = ({
         <Table sx={{ minWidth: 650 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: 'background.light' }}>
-              {selectable && (
-                <TableCell padding="checkbox">
-                  {/* Checkbox for select all */}
-                </TableCell>
-              )}
               {columns.map((column) => (
                 <TableCell
                   key={column.id}
@@ -313,7 +226,7 @@ const ModernTable: React.FC<ModernTableProps> = ({
           <TableBody>
             {paginatedData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length + (selectable ? 1 : 0) + (actions ? 1 : 0)}>
+                <TableCell colSpan={columns.length + (actions ? 1 : 0)}>
                   <Box sx={{ 
                     display: 'flex', 
                     justifyContent: 'center', 
@@ -327,47 +240,37 @@ const ModernTable: React.FC<ModernTableProps> = ({
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedData.map((row, index) => {
-                const isItemSelected = isSelected(row);
-                
-                return (
-                  <TableRow
-                    key={index}
-                    hover
-                    selected={isItemSelected}
-                    onClick={() => onRowClick?.(row)}
-                    sx={{
-                      cursor: onRowClick ? 'pointer' : 'default',
-                      '&:hover': {
-                        backgroundColor: 'action.hover',
-                      },
-                    }}
-                  >
-                    {selectable && (
-                      <TableCell padding="checkbox">
-                        {/* Checkbox for row selection */}
-                      </TableCell>
-                    )}
-                    {columns.map((column) => (
-                      <TableCell
-                        key={column.id}
-                        align={column.align || 'left'}
-                        sx={{
-                          borderBottom: '1px solid',
-                          borderColor: 'divider',
-                        }}
-                      >
-                        {renderCell(column, row)}
-                      </TableCell>
-                    ))}
-                    {actions && (
-                      <TableCell align="center">
-                        {renderActions(row)}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                );
-              })
+              paginatedData.map((row, index) => (
+                <TableRow
+                  key={index}
+                  hover
+                  onClick={() => onRowClick?.(row)}
+                  sx={{
+                    cursor: onRowClick ? 'pointer' : 'default',
+                    '&:hover': {
+                      backgroundColor: 'action.hover',
+                    },
+                  }}
+                >
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.id}
+                      align={column.align || 'left'}
+                      sx={{
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                      }}
+                    >
+                      {renderCell(column, row)}
+                    </TableCell>
+                  ))}
+                  {actions && (
+                    <TableCell align="center">
+                      {renderActions(row)}
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>

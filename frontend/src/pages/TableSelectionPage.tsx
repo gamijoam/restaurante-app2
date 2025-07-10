@@ -9,52 +9,49 @@ import {
   useTheme,
   useMediaQuery,
   Fade,
-  Skeleton,
   Alert,
-  Fab,
-  SpeedDial,
-  SpeedDialAction,
-  SpeedDialIcon,
+  Fab
 } from '@mui/material';
 import {
   TableRestaurant,
   Restaurant,
   People,
   AccessTime,
-  Add,
   Refresh,
-  FilterList,
   ViewList,
-  GridView,
-  Search,
+  GridView
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+// import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../hooks/useNotification';
 import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
-import LoadingSpinner from '../components/LoadingSpinner';
-import SkeletonLoader from '../components/SkeletonLoader';
+// import LoadingSpinner from '../components/LoadingSpinner';
+// import SkeletonLoader from '../components/SkeletonLoader';
 import { getMesas, type Mesa } from '../services/mesaService';
 import { useWebSocket } from '../context/WebSocketContext';
 
 interface MesaWithComanda extends Mesa {
-  comandaActual?: any;
+  comandaActual?: {
+    total?: number;
+    items?: unknown[];
+    [key: string]: unknown;
+  };
 }
 
 const TableSelectionPage: React.FC = () => {
-  const { hasPermission } = useAuth();
+  // const { hasPermission } = useAuth();
   const navigate = useNavigate();
-  const { showError, showSuccess } = useNotification();
+  const { showError } = useNotification();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
+  // const isTablet = useMediaQuery(theme.breakpoints.down('lg'));
 
   const [mesas, setMesas] = useState<MesaWithComanda[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [filter, setFilter] = useState<'all' | 'libre' | 'ocupada' | 'reservada'>('all');
+  const [filter] = useState<'all' | 'libre' | 'ocupada' | 'reservada'>('all');
 
   const { stompClient, isConnected } = useWebSocket();
 
@@ -68,7 +65,7 @@ const TableSelectionPage: React.FC = () => {
           setMesas(prevMesas =>
             prevMesas.map(m => m.id === mesaActualizada.id ? { ...m, ...mesaActualizada } : m)
           );
-        } catch (e) {
+        } catch {
           // Mensaje no es una mesa válida
         }
       });
@@ -84,7 +81,7 @@ const TableSelectionPage: React.FC = () => {
       setError(null);
       const response = await getMesas();
       setMesas(response as MesaWithComanda[]);
-    } catch (err) {
+    } catch {
       setError('Error al cargar las mesas');
       showError('Error al cargar las mesas', 'Intenta nuevamente');
     } finally {
@@ -154,7 +151,7 @@ const TableSelectionPage: React.FC = () => {
             <Box sx={{ display: 'flex', gap: 1 }}>
               <Chip
                 label={getEstadoText(mesa.estado)}
-                color={getEstadoColor(mesa.estado) as any}
+                color={getEstadoColor(mesa.estado) as 'success' | 'error' | 'warning' | 'default'}
                 size="small"
                 variant="filled"
               />
@@ -259,7 +256,7 @@ const TableSelectionPage: React.FC = () => {
               </Box>
               <Chip
                 label={getEstadoText(mesa.estado)}
-                color={getEstadoColor(mesa.estado) as any}
+                color={getEstadoColor(mesa.estado) as 'success' | 'error' | 'warning' | 'default'}
                 size="small"
               />
             </Box>
@@ -366,7 +363,7 @@ const TableSelectionPage: React.FC = () => {
   if (loading) {
     return (
       <Box sx={{ p: 3 }}>
-        <SkeletonLoader variant="grid" count={8} height={200} />
+        {/* <SkeletonLoader variant="grid" count={8} height={200} /> */}
       </Box>
     );
   }

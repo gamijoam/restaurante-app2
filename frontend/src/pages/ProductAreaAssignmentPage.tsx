@@ -9,6 +9,7 @@ import ModernModal from '../components/ModernModal';
 import ModernForm from '../components/ModernForm';
 import ModernTable from '../components/ModernTable';
 import LoadingSpinner from '../components/LoadingSpinner';
+import type { AxiosError } from 'axios';
 
 interface Product {
   id: number;
@@ -16,6 +17,12 @@ interface Product {
   precio: number;
   categoria: string;
   descripcion?: string;
+}
+
+interface AssignmentForm {
+  productId: number;
+  areaId: string;
+  preparationTime: number;
 }
 
 const ProductAreaAssignmentPage: React.FC = () => {
@@ -29,27 +36,26 @@ const ProductAreaAssignmentPage: React.FC = () => {
   const { showSuccess, showError } = useNotification();
 
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [areasResponse, productsResponse, assignmentsResponse] = await Promise.all([
+          areaService.getActive(),
+          getProductos(),
+          productAreaService.getAll()
+        ]);
+        setAreas(areasResponse.data);
+        setProducts(productsResponse);
+        setProductAreas(assignmentsResponse.data);
+      } catch {
+        showError('Error al cargar los datos');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadData();
   }, []);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [areasResponse, productsResponse, assignmentsResponse] = await Promise.all([
-        areaService.getActive(),
-        getProductos(),
-        productAreaService.getAll()
-      ]);
-      
-      setAreas(areasResponse.data);
-      setProducts(productsResponse);
-      setProductAreas(assignmentsResponse.data);
-    } catch (error) {
-      showError('Error al cargar los datos');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCreate = () => {
     setEditingAssignment(null);
@@ -71,25 +77,35 @@ const ProductAreaAssignmentPage: React.FC = () => {
         const response = await productAreaService.delete(id!);
         console.log('Respuesta del servidor:', response);
         showSuccess('Asignación eliminada correctamente');
-        loadData();
-      } catch (error: any) {
-        console.error('Error al eliminar asignación:', error);
-        showError(`Error al eliminar la asignación: ${error.response?.data?.message || error.message}`);
+        const reload = async () => {
+          const [areasResponse, productsResponse, assignmentsResponse] = await Promise.all([
+            areaService.getActive(),
+            getProductos(),
+            productAreaService.getAll()
+          ]);
+          setAreas(areasResponse.data);
+          setProducts(productsResponse);
+          setProductAreas(assignmentsResponse.data);
+        };
+        reload();
+      } catch (error: unknown) {
+        const err = error as AxiosError<{ message?: string }>;
+        console.error('Error al eliminar asignación:', err);
+        showError(`Error al eliminar la asignación: ${err.response?.data?.message || err.message}`);
       }
     }
   };
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: AssignmentForm) => {
     try {
       console.log('Enviando datos del formulario:', formData);
-      
-      // Preparar solo los campos necesarios para el DTO
+
       const requestData = {
         productId: formData.productId,
         areaId: formData.areaId,
         preparationTime: formData.preparationTime
       };
-      
+
       if (editingAssignment) {
         console.log('Actualizando asignación existente:', editingAssignment.id);
         await productAreaService.update(editingAssignment.id!, requestData);
@@ -100,46 +116,52 @@ const ProductAreaAssignmentPage: React.FC = () => {
         showSuccess('Asignación creada correctamente');
       }
       setShowModal(false);
-      loadData();
-    } catch (error: any) {
-      console.error('Error al guardar asignación:', error);
-      
-      // Manejar errores específicos
-      if (error.response?.status === 409) {
+
+      const reload = async () => {
+        const [areasResponse, productsResponse, assignmentsResponse] = await Promise.all([
+          areaService.getActive(),
+          getProductos(),
+          productAreaService.getAll()
+        ]);
+        setAreas(areasResponse.data);
+        setProducts(productsResponse);
+        setProductAreas(assignmentsResponse.data);
+      };
+      reload();
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message?: string }>;
+      console.error('Error al guardar asignación:', err);
+
+      const message = err.response?.data?.message || err.message;
+
+      if (err.response?.status === 409 || message.includes('Duplicate entry') || message.includes('uk_product_area')) {
         showError('Ya existe una asignación para este producto en esta área. Por favor, edite la asignación existente.');
-      } else if (error.response?.status === 500) {
-        const errorMessage = error.response?.data?.message || error.message;
-        if (errorMessage.includes('Duplicate entry') || errorMessage.includes('uk_product_area')) {
-          showError('Ya existe una asignación para este producto en esta área. Por favor, edite la asignación existente.');
-        } else {
-          showError(`Error al guardar la asignación: ${errorMessage}`);
-        }
       } else {
-        showError(`Error al guardar la asignación: ${error.response?.data?.message || error.message}`);
+        showError(`Error al guardar la asignación: ${message}`);
       }
     }
   };
 
   const formFields = [
-    { 
-      name: 'productId', 
-      label: 'Producto', 
-      type: 'select' as const, 
+    {
+      name: 'productId',
+      label: 'Producto',
+      type: 'select' as const,
       options: products.map(p => ({ value: p.id, label: p.nombre })),
-      required: true 
+      required: true
     },
-    { 
-      name: 'areaId', 
-      label: 'Área de Preparación', 
-      type: 'select' as const, 
+    {
+      name: 'areaId',
+      label: 'Área de Preparación',
+      type: 'select' as const,
       options: areas.map(a => ({ value: a.areaId, label: a.name })),
-      required: true 
+      required: true
     },
-    { 
-      name: 'preparationTime', 
-      label: 'Tiempo de Preparación (minutos)', 
-      type: 'number' as const, 
-      required: true 
+    {
+      name: 'preparationTime',
+      label: 'Tiempo de Preparación (minutos)',
+      type: 'number' as const,
+      required: true
     }
   ];
 
@@ -153,8 +175,8 @@ const ProductAreaAssignmentPage: React.FC = () => {
     return area?.name || areaId;
   };
 
-  const filteredAssignments = selectedArea === 'all' 
-    ? productAreas 
+  const filteredAssignments = selectedArea === 'all'
+    ? productAreas
     : productAreas.filter(pa => pa.areaId === selectedArea);
 
   const tableColumns = [
@@ -221,4 +243,4 @@ const ProductAreaAssignmentPage: React.FC = () => {
   );
 };
 
-export default ProductAreaAssignmentPage; 
+export default ProductAreaAssignmentPage;

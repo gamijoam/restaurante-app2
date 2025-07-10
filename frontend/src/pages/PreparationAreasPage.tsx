@@ -18,6 +18,7 @@ const PreparationAreasPage: React.FC = () => {
 
   useEffect(() => {
     loadAreas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadAreas = async () => {
@@ -25,7 +26,7 @@ const PreparationAreasPage: React.FC = () => {
       setLoading(true);
       const response = await areaService.getAll();
       setAreas(response.data);
-    } catch (error) {
+    } catch {
       showError('Error al cargar las áreas');
     } finally {
       setLoading(false);
@@ -53,35 +54,42 @@ const PreparationAreasPage: React.FC = () => {
         console.log('Respuesta del servidor:', response);
         showSuccess('Área eliminada correctamente');
         loadAreas();
-      } catch (error: any) {
+      } catch (err: unknown) {
+        const error = err as { message?: string; response?: { status?: number; data?: { message?: string } }; config?: unknown };
         console.error('Error al eliminar área:', error);
         console.error('Detalles del error:', {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-          config: error.config
+          message: error?.message,
+          status: error?.response?.status,
+          data: error?.response?.data,
+          config: error?.config
         });
-        showError(`Error al eliminar el área: ${error.response?.data?.message || error.message}`);
+        showError(`Error al eliminar el área: ${error?.response?.data?.message || error?.message}`);
       }
     }
   };
 
-  const handleSubmit = async (formData: any) => {
+  const handleSubmit = async (formData: Record<string, unknown>) => {
     try {
-      console.log('Enviando datos del formulario:', formData);
+      // Convertir formData a PreparationArea
+      const area: PreparationArea = {
+        ...formData,
+        areaId: String(formData.areaId),
+        name: String(formData.name),
+        type: String(formData.type),
+        description: formData.description ? String(formData.description) : undefined,
+        active: Boolean(formData.active),
+        orderIndex: Number(formData.orderIndex),
+      };
       if (editingArea) {
-        console.log('Actualizando área existente:', editingArea.id);
-        await areaService.update(editingArea.id!, formData);
+        await areaService.update(editingArea.id!, area);
         showSuccess('Área actualizada correctamente');
       } else {
-        console.log('Creando nueva área');
-        await areaService.create(formData);
+        await areaService.create(area);
         showSuccess('Área creada correctamente');
       }
       setShowModal(false);
       loadAreas();
-    } catch (error) {
-      console.error('Error al guardar área:', error);
+    } catch {
       showError('Error al guardar el área');
     }
   };

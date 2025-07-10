@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Container,
     Typography,
     Card,
     CardContent,
-    CardActions,
     Button,
     List,
     ListItem,
@@ -15,16 +14,12 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    TextField,
     Alert,
     Box,
     Grid,
     Chip,
-    IconButton,
     Snackbar,
-    Divider,
-    FormControlLabel,
-    Switch
+    FormControlLabel
 } from '@mui/material';
 import {
     Security as SecurityIcon,
@@ -44,8 +39,8 @@ const RolesPermisosPage = () => {
     const [selectedUsuario, setSelectedUsuario] = useState<UsuarioResponseDTO | null>(null);
     const [usuarioPermisos, setUsuarioPermisos] = useState<Permiso[]>([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
+    // const [error, setError] = useState<string | null>(null);
+    // const [success, setSuccess] = useState<string | null>(null);
     const [openDialog, setOpenDialog] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -58,6 +53,7 @@ const RolesPermisosPage = () => {
         if (esGerente) {
             loadData();
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [esGerente]);
 
     const loadData = async () => {
@@ -69,7 +65,7 @@ const RolesPermisosPage = () => {
             ]);
             setUsuarios(usuariosData);
             setPermisos(permisosData);
-        } catch (err) {
+        } catch {
             showSnackbar('Error al cargar los datos', 'error');
         } finally {
             setLoading(false);
@@ -82,7 +78,7 @@ const RolesPermisosPage = () => {
             const permisosUsuario = await getPermisosUsuario(usuario.id!);
             setUsuarioPermisos(permisosUsuario);
             setOpenDialog(true);
-        } catch (err) {
+        } catch {
             showSnackbar('Error al cargar los permisos del usuario', 'error');
         }
     };
@@ -112,7 +108,7 @@ const RolesPermisosPage = () => {
             setOpenDialog(false);
             setSelectedUsuario(null);
             setUsuarioPermisos([]);
-        } catch (err) {
+        } catch {
             showSnackbar('Error al actualizar los permisos', 'error');
         } finally {
             setLoading(false);
@@ -180,7 +176,7 @@ const RolesPermisosPage = () => {
                                                         Usuario: {usuario.username}
                                                     </Typography>
                                                     <Box sx={{ mt: 1 }}>
-                                                        {usuario.roles.map((rol) => (
+                                                        {usuario.roles.map((rol: string) => (
                                                             <Chip
                                                                 key={rol}
                                                                 label={rol.replace('ROLE_', '')}
