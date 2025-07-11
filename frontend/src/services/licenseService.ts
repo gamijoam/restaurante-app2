@@ -144,6 +144,40 @@ class LicenseService {
       throw error;
     }
   }
+
+  async getLocalLicense(): Promise<LicenseValidationResponse | null> {
+    try {
+      const response = await fetch(`${LICENSE_SERVICE_URL}/api/license/local`);
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async saveLocalLicense(license: LicenseValidationResponse): Promise<boolean> {
+    try {
+      const response = await fetch(`${LICENSE_SERVICE_URL}/api/license/local`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(license),
+      });
+      return response.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async deleteLocalLicense(): Promise<boolean> {
+    try {
+      const response = await fetch(`${LICENSE_SERVICE_URL}/api/license/local`, {
+        method: 'DELETE',
+      });
+      return response.ok;
+    } catch (e) {
+      return false;
+    }
+  }
 }
 
 const licenseService = new LicenseService();

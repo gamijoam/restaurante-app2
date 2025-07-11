@@ -7,6 +7,7 @@ com\catasoft\license\dto\LicenseRequestDTO.class
 com\catasoft\license\model\License.class
 com\catasoft\license\config\SecurityConfig.class
 com\catasoft\license\repository\LicenseRepository.class
+com\catasoft\license\config\JacksonConfig.class
 com\catasoft\license\LicenseServiceApplication.class
 com\catasoft\license\repository\ActivationRepository.class
 com\catasoft\license\model\Activation.class

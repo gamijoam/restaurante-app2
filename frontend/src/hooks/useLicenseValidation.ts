@@ -12,13 +12,14 @@ interface UseLicenseValidationOptions {
 export const useLicenseValidation = (options: UseLicenseValidationOptions = {}) => {
   const { checkInterval = 5 * 60 * 1000, enabled = true } = options; // 5 minutos por defecto
   const { license, setLicense } = useLicense();
-  const { showError } = useNotification();
+  const { showError, showWarning } = useNotification();
   const intervalRef = useRef<number | null>(null);
   const [showExpiredModal, setShowExpiredModal] = useState(false);
   const location = useLocation();
 
   const validateLicense = async () => {
     if (!license?.licenseCode) {
+      console.log('[LicenseValidation] No hay licencia para validar');
       return;
     }
 
@@ -42,10 +43,31 @@ export const useLicenseValidation = (options: UseLicenseValidationOptions = {}) 
 
       if (!response.valid) {
         console.log('[LicenseValidation] Licencia expirada o inválida');
-        showError('Licencia expirada', 'Tu licencia ha expirado. Por favor, renueva tu licencia.');
-        setLicense(null); // Limpiar licencia inválida
-        setShowExpiredModal(true); // Mostrar modal
+        console.log('[LicenseValidation] Motivo:', response.message);
+        
+        // Mostrar advertencia antes de mostrar el modal
+        showWarning(
+          'Licencia Expirada', 
+          'Tu licencia ha expirado. Se mostrará un modal con opciones para renovar.'
+        );
+        
+        // Limpiar licencia inválida
+        setLicense(null);
+        
+        // Mostrar modal después de un breve delay
+        setTimeout(() => {
+          setShowExpiredModal(true);
+        }, 1000);
+        
         return false;
+      }
+
+      // Verificar si la licencia está próxima a expirar (menos de 7 días)
+      if (response.daysRemaining && response.daysRemaining <= 7) {
+        showWarning(
+          'Licencia próxima a expirar',
+          `Tu licencia expira en ${response.daysRemaining} días. Considera renovarla pronto.`
+        );
       }
 
       // Actualizar la licencia con la información más reciente
@@ -54,6 +76,7 @@ export const useLicenseValidation = (options: UseLicenseValidationOptions = {}) 
       return true;
     } catch (error) {
       console.error('[LicenseValidation] Error verificando licencia:', error);
+      showError('Error de validación', 'No se pudo verificar la licencia. Verifica tu conexión.');
       return false;
     }
   };

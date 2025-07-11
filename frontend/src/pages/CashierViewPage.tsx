@@ -21,7 +21,6 @@ import Avatar from '@mui/material/Avatar';
 import TextField from '@mui/material/TextField';
 import PointOfSaleIcon from '@mui/icons-material/PointOfSale';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import GridViewIcon from '@mui/icons-material/GridView';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';

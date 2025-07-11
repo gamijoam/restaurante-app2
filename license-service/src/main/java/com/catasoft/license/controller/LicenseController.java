@@ -15,6 +15,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import com.catasoft.license.repository.ActivationRepository;
+import java.io.*;
+import org.springframework.http.HttpStatus;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RestController
 @RequestMapping("/api/license")
@@ -25,11 +28,7 @@ public class LicenseController {
     private final LicenseRepository licenseRepository;
     private final ActivationRepository activationRepository;
     
-    public LicenseController(LicenseService licenseService, LicenseRepository licenseRepository, ActivationRepository activationRepository) {
-        this.licenseService = licenseService;
-        this.licenseRepository = licenseRepository;
-        this.activationRepository = activationRepository;
-    }
+
     
     /**
      * Genera una nueva licencia
@@ -221,5 +220,59 @@ public class LicenseController {
         response.put("service", "License Service");
         response.put("timestamp", java.time.LocalDateTime.now().toString());
         return ResponseEntity.ok(response);
+    }
+
+    // --- Persistencia local de licencia en license.json ---
+    private static final String LOCAL_LICENSE_FILE = "license.json";
+    private final ObjectMapper objectMapper;
+    
+    public LicenseController(LicenseService licenseService, LicenseRepository licenseRepository, ActivationRepository activationRepository, ObjectMapper objectMapper) {
+        this.licenseService = licenseService;
+        this.licenseRepository = licenseRepository;
+        this.activationRepository = activationRepository;
+        this.objectMapper = objectMapper;
+    }
+
+    @GetMapping("/local")
+    public ResponseEntity<?> getLocalLicense() {
+        try {
+            File file = new File(System.getProperty("user.dir"), LOCAL_LICENSE_FILE);
+            if (!file.exists()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No existe licencia local");
+            }
+            LicenseResponseDTO license = objectMapper.readValue(file, LicenseResponseDTO.class);
+            return ResponseEntity.ok(license);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error leyendo licencia local: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/local")
+    public ResponseEntity<?> saveLocalLicense(@RequestBody LicenseResponseDTO license) {
+        try {
+            File file = new File(System.getProperty("user.dir"), LOCAL_LICENSE_FILE);
+            objectMapper.writerWithDefaultPrettyPrinter().writeValue(file, license);
+            return ResponseEntity.ok("Licencia guardada localmente");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error guardando licencia local: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/local")
+    public ResponseEntity<?> deleteLocalLicense() {
+        try {
+            File file = new File(System.getProperty("user.dir"), LOCAL_LICENSE_FILE);
+            if (file.exists()) {
+                if (file.delete()) {
+                    return ResponseEntity.ok("Licencia local eliminada");
+                } else {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No se pudo eliminar la licencia local");
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No existe licencia local");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error eliminando licencia local: " + e.getMessage());
+        }
     }
 } 

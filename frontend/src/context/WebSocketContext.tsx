@@ -14,7 +14,9 @@ export const WebSocketProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         console.log("Intentando conectar WebSocket...");
-        const wsURL = import.meta.env.VITE_API_URL.replace(/^http/, 'ws') + '/ws';
+        // Corregir la URL del WebSocket - usar la URL base sin /api
+        const baseURL = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8080';
+        const wsURL = baseURL.replace(/^http/, 'ws') + '/ws';
 
         const client = new Client({
             // ESTA LÍNEA ES LA MÁS IMPORTANTE

@@ -72,7 +72,8 @@ const IngredientesPage = () => {
         nombre: '',
         stock: 0,
         unidad: '',
-        descripcion: ''
+        descripcion: '',
+        precio_unitario: 0
     });
     const [openStockDialog, setOpenStockDialog] = useState(false);
     const [stockForm, setStockForm] = useState<{ ingredienteId: number; cantidad: number }>({ ingredienteId: 0, cantidad: 0 });
@@ -104,7 +105,8 @@ const IngredientesPage = () => {
                 nombre: '',
                 stock: 0,
                 unidad: '',
-                descripcion: ''
+                descripcion: '',
+                precio_unitario: 0
             });
         }
         setOpenDialog(true);
@@ -117,7 +119,8 @@ const IngredientesPage = () => {
             nombre: '',
             stock: 0,
             unidad: '',
-            descripcion: ''
+            descripcion: '',
+            precio_unitario: 0
         });
         setError(null);
     };

@@ -18,20 +18,24 @@ const LicenseGuard: React.FC<LicenseGuardProps> = ({ children }) => {
     return <>{children}</>;
   }
 
-  const { license, setLicense } = useLicense();
+  const { license, setLicense, isLoadingLicense } = useLicense();
   const { isAuthenticated } = useAuth();
   const [isValidating, setIsValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [hasValidated, setHasValidated] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!isAuthenticated) return; // No validar licencia si no está autenticado
-    if (!license || hasValidated) return;
-    setHasValidated(true);
-    validateLicense(); // Solo validar una vez al montar o al entrar a la ruta
-  }, [license, isAuthenticated, hasValidated]);
+    if (isLoadingLicense) return; // Espera a que termine de cargar
+    if (!isAuthenticated && location.pathname !== '/login') {
+      navigate('/login');
+      return;
+    }
+    if (isAuthenticated && !license && location.pathname !== '/license' && location.pathname !== '/license-admin') {
+      navigate('/license');
+      return;
+    }
+  }, [isAuthenticated, license, location.pathname, navigate, isLoadingLicense]);
 
   const validateLicense = async () => {
     if (!license || !isAuthenticated) {
@@ -98,6 +102,25 @@ const LicenseGuard: React.FC<LicenseGuardProps> = ({ children }) => {
     navigate('/license');
   };
 
+  // Si la licencia está cargando, mostrar loader y no redirigir
+  if (isLoadingLicense) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh',
+        gap: 2
+      }}>
+        <CircularProgress />
+        <Typography variant="body2" color="text.secondary">
+          Cargando licencia...
+        </Typography>
+      </Box>
+    );
+  }
+
   // Permitir acceso libre a /login, /license y /license-admin
   if (
     location.pathname === '/login' ||
@@ -107,19 +130,8 @@ const LicenseGuard: React.FC<LicenseGuardProps> = ({ children }) => {
     return <>{children}</>;
   }
 
-  // Si no está autenticado, redirigir a login
-  if (!isAuthenticated) {
-    if (location.pathname !== '/login') {
-      navigate('/login');
-    }
-    return null;
-  }
-
-  // Si no hay licencia, redirigir a la página de activación
-  if (!license) {
-    if (location.pathname !== '/license') {
-      navigate('/license');
-    }
+  // Si no está autenticado o no hay licencia, no renderizar nada (la redirección la maneja useEffect)
+  if (!isAuthenticated || !license) {
     return null;
   }
 

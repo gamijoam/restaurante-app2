@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import licenseService from '../services/licenseService';
 
 export interface License {
   valid: boolean;
@@ -16,6 +17,7 @@ interface LicenseContextType {
   setLicense: (license: License | null) => void;
   isLicenseValid: boolean;
   clearLicense: () => void;
+  isLoadingLicense: boolean;
 }
 
 const LicenseContext = createContext<LicenseContextType | undefined>(undefined);
@@ -28,8 +30,8 @@ const LICENSE_DISABLED = import.meta.env.VITE_DISABLE_LICENSE === 'true';
 
 export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) => {
   const [license, setLicenseState] = useState<License | null>(null);
+  const [isLoadingLicense, setIsLoadingLicense] = useState(true);
 
-  // Si la licencia está desactivada, mockear una licencia válida
   useEffect(() => {
     if (LICENSE_DISABLED) {
       setLicenseState({
@@ -41,48 +43,53 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) =>
         clientName: 'DEMO',
         message: 'Licencia desactivada por entorno',
       });
+      setIsLoadingLicense(false);
     } else {
-      // Cargar licencia desde localStorage al inicializar
-      const savedLicense = localStorage.getItem('license');
-      if (savedLicense) {
-        try {
-          const parsedLicense = JSON.parse(savedLicense);
-          if (typeof parsedLicense === 'object' && parsedLicense !== null && 'valid' in parsedLicense) {
-            setLicenseState(parsedLicense);
-            console.log('[LicenseContext] Licencia cargada desde localStorage:', parsedLicense);
-          } else {
-            console.error('[LicenseContext] El valor de license en localStorage no es un objeto de licencia válido:', parsedLicense);
-          }
-        } catch (error) {
-          console.error('[LicenseContext] Error parseando licencia guardada. No se eliminará automáticamente. Corrige el valor en localStorage:', error, savedLicense);
+      // Cargar licencia desde backend local al inicializar
+      licenseService.getLocalLicense().then((lic) => {
+        if (lic && lic.valid) {
+          setLicenseState(lic);
+          console.log('[LicenseContext] Licencia cargada desde backend local:', lic);
+        } else {
+          setLicenseState(null);
         }
-      }
+        setIsLoadingLicense(false);
+      });
     }
   }, []);
 
   const setLicense = (newLicense: License | null) => {
-    if (LICENSE_DISABLED) return; // No permitir cambios si está desactivado
+    if (LICENSE_DISABLED) return;
     setLicenseState(newLicense);
     if (newLicense) {
-      try {
-        const serialized = JSON.stringify(newLicense);
-        localStorage.setItem('license', serialized);
-        console.log('[LicenseContext] Licencia guardada en localStorage:', newLicense);
-      } catch (err) {
-        console.error('[LicenseContext] Error serializando licencia antes de guardar:', err, newLicense);
-      }
+      licenseService.saveLocalLicense(newLicense).then((ok) => {
+        if (ok) {
+          console.log('[LicenseContext] Licencia guardada en backend local:', newLicense);
+        } else {
+          console.error('[LicenseContext] Error guardando licencia en backend local:', newLicense);
+        }
+      });
     } else {
-      localStorage.removeItem('license');
-      console.log('[LicenseContext] Licencia eliminada de localStorage');
+      licenseService.deleteLocalLicense().then((ok) => {
+        if (ok) {
+          console.log('[LicenseContext] Licencia eliminada del backend local');
+        } else {
+          console.error('[LicenseContext] Error eliminando licencia del backend local');
+        }
+      });
     }
   };
 
   const clearLicense = () => {
     if (LICENSE_DISABLED) return;
     setLicense(null);
-    localStorage.removeItem('license');
-    localStorage.removeItem('fingerprint'); // También limpiar el fingerprint
-    console.log('[LicenseContext] Licencia y fingerprint eliminados');
+    licenseService.deleteLocalLicense().then((ok) => {
+      if (ok) {
+        console.log('[LicenseContext] Licencia eliminada del backend local');
+      } else {
+        console.error('[LicenseContext] Error eliminando licencia del backend local');
+      }
+    });
   };
 
   const isLicenseValid = LICENSE_DISABLED ? true : license?.valid || false;
@@ -92,6 +99,7 @@ export const LicenseProvider: React.FC<LicenseProviderProps> = ({ children }) =>
     setLicense,
     isLicenseValid,
     clearLicense,
+    isLoadingLicense,
   };
 
   return (

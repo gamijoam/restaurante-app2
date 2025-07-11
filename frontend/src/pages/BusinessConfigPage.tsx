@@ -2,39 +2,44 @@ import React, { useState, useEffect } from 'react';
 import {
     Container,
     Typography,
-    Box,
-    Card,
-    CardContent,
     TextField,
-    Button,
+    Box,
     Grid,
-    Alert,
-    Snackbar,
-    Divider,
-    IconButton,
-    InputAdornment,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
     Switch,
     FormControlLabel,
+    Alert,
+    Snackbar,
+    CardContent,
+    Divider,
+    InputAdornment,
+    Button
 } from '@mui/material';
 import {
     Business as BusinessIcon,
+    Phone as PhoneIcon,
+    Email as EmailIcon,
+    Language as LanguageIcon,
     Save as SaveIcon,
     Refresh as RefreshIcon,
-    Email as EmailIcon,
-    Phone as PhoneIcon,
-    Language as LanguageIcon,
-    Description as DescriptionIcon,
-    AttachMoney as MoneyIcon,
+    AttachMoney as MoneyIcon
 } from '@mui/icons-material';
+import { getBusinessConfig, saveBusinessConfig } from '../services/businessConfigService';
 import { useAuth } from '../context/AuthContext';
-import ModernCard from '../components/ModernCard';
-import ModernButton from '../components/ModernButton';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { getBusinessConfig, saveBusinessConfig, type BusinessConfig } from '../services/businessConfigService';
+import ModernCard from '../components/ModernCard';
+
+interface BusinessConfig {
+    businessName: string;
+    taxId: string;
+    address: string;
+    phone: string;
+    email: string;
+    website: string;
+    description: string;
+    taxRate: number;
+    currency: string;
+    isActive: boolean;
+}
 
 const BusinessConfigPage: React.FC = () => {
     const { roles } = useAuth();
@@ -262,34 +267,6 @@ const BusinessConfigPage: React.FC = () => {
                                 helperText="Porcentaje de impuesto que se aplicará a las ventas"
                             />
                             
-                            <FormControl fullWidth margin="normal">
-                                <InputLabel>Moneda</InputLabel>
-                                <Select
-                                    value={config.currency}
-                                    onChange={(e) => handleInputChange('currency', e.target.value)}
-                                    label="Moneda"
-                                >
-                                    <MenuItem value="USD">USD - Dólar Estadounidense</MenuItem>
-                                    <MenuItem value="EUR">EUR - Euro</MenuItem>
-                                    <MenuItem value="VES">VES - Bolívar Venezolano</MenuItem>
-                                    <MenuItem value="COP">COP - Peso Colombiano</MenuItem>
-                                    <MenuItem value="ARS">ARS - Peso Argentino</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </CardContent>
-                    </ModernCard>
-                </Grid>
-
-                {/* Configuración del Sistema */}
-                <Grid item xs={12} md={6}>
-                    <ModernCard>
-                        <CardContent>
-                            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <DescriptionIcon color="primary" />
-                                Configuración del Sistema
-                            </Typography>
-                            <Divider sx={{ mb: 3 }} />
-                            
                             <FormControlLabel
                                 control={
                                     <Switch
@@ -308,23 +285,23 @@ const BusinessConfigPage: React.FC = () => {
                             </Typography>
                             
                             <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-                                <ModernButton
-                                    variant="primary"
+                                <Button
+                                    variant="contained"
                                     onClick={handleSave}
                                     disabled={saving}
                                     startIcon={<SaveIcon />}
                                     fullWidth
                                 >
                                     {saving ? 'Guardando...' : 'Guardar Configuración'}
-                                </ModernButton>
+                                </Button>
                                 
-                                <ModernButton
+                                <Button
                                     variant="outlined"
                                     onClick={loadConfig}
                                     startIcon={<RefreshIcon />}
                                 >
                                     Recargar
-                                </ModernButton>
+                                </Button>
                             </Box>
                         </CardContent>
                     </ModernCard>

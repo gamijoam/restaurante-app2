@@ -1,12 +1,13 @@
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\model\License.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\dto\LicenseResponseDTO.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\config\SecurityConfig.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\dto\LicenseRequestDTO.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\dto\ValidateRequestDTO.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\repository\LicenseRepository.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\model\Activation.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\model\LicenseType.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\repository\ActivationRepository.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\controller\LicenseController.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\service\LicenseService.java
-C:\Nueva carpeta\restaurante-app2\license-service\src\main\java\com\catasoft\license\LicenseServiceApplication.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\model\LicenseType.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\config\JacksonConfig.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\model\License.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\dto\ValidateRequestDTO.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\LicenseServiceApplication.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\config\SecurityConfig.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\controller\LicenseController.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\dto\LicenseRequestDTO.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\model\Activation.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\repository\LicenseRepository.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\repository\ActivationRepository.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\dto\LicenseResponseDTO.java
+C:\Users\Gabriel\Desktop\catasoft-restaurante\restaurante-app2\license-service\src\main\java\com\catasoft\license\service\LicenseService.java
