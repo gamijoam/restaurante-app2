@@ -52,8 +52,9 @@ public class ComandaService {
     private final ProductAreaRepository productAreaRepository;
     private final ComandaAreaRepository comandaAreaRepository;
     private final ComandaAreaItemRepository comandaAreaItemRepository;
-    private final ComandaAreaService comandaAreaService;
-
+        private final ComandaAreaService comandaAreaService;
+    private final DolarRateService dolarRateService;
+    
     @Autowired
     public ComandaService(
             ComandaRepository comandaRepository,
@@ -69,7 +70,8 @@ public class ComandaService {
             ProductAreaRepository productAreaRepository,
             ComandaAreaRepository comandaAreaRepository,
             ComandaAreaItemRepository comandaAreaItemRepository,
-            ComandaAreaService comandaAreaService) {
+            ComandaAreaService comandaAreaService,
+            DolarRateService dolarRateService) {
         this.comandaRepository = comandaRepository;
         this.mesaRepository = mesaRepository;
         this.productoRepository = productoRepository;
@@ -84,6 +86,7 @@ public class ComandaService {
         this.comandaAreaRepository = comandaAreaRepository;
         this.comandaAreaItemRepository = comandaAreaItemRepository;
         this.comandaAreaService = comandaAreaService;
+        this.dolarRateService = dolarRateService;
     }
 
     // --- MÉTODO MAPPER RESTAURADO A SU FORMA ORIGINAL Y CORRECTA ---
@@ -98,6 +101,15 @@ public class ComandaService {
         dto.setEstado(comanda.getEstado());
         dto.setFechaHoraCreacion(comanda.getFechaHoraCreacion());
         dto.setTotal(comanda.getTotal());
+        
+        // Calcular total en Bs usando el precio del dólar de la fecha de la comanda
+        try {
+            BigDecimal totalBs = dolarRateService.convertirUsdABs(comanda.getTotal(), comanda.getFechaHoraCreacion().toLocalDate());
+            dto.setTotalBs(totalBs);
+        } catch (Exception e) {
+            logger.warn("Error calculando total en Bs para comanda {}: {}", comanda.getId(), e.getMessage());
+            dto.setTotalBs(BigDecimal.ZERO);
+        }
         dto.setItems(comanda.getItems().stream().map(item -> {
             ComandaItemResponseDTO itemDTO = new ComandaItemResponseDTO();
             itemDTO.setProductoId(item.getProducto().getId());

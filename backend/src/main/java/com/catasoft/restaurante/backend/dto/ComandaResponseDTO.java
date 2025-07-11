@@ -12,6 +12,7 @@ public class ComandaResponseDTO {
     private EstadoComanda estado;
     private LocalDateTime fechaHoraCreacion;
     private BigDecimal total;
+    private BigDecimal totalBs;
 
     // Getters y Setters
     public Long getId() { return id; }
@@ -26,6 +27,8 @@ public class ComandaResponseDTO {
     public void setFechaHoraCreacion(LocalDateTime fechaHoraCreacion) { this.fechaHoraCreacion = fechaHoraCreacion; }
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
+    public BigDecimal getTotalBs() { return totalBs; }
+    public void setTotalBs(BigDecimal totalBs) { this.totalBs = totalBs; }
     public void setNombreMesa(String nombre) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'setNombreMesa'");

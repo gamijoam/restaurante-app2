@@ -35,6 +35,7 @@ import TestDivisionPage from './pages/TestDivisionPage';
 import LicenseActivationPage from './pages/LicenseActivationPage';
 import LicenseAdminPage from './pages/LicenseAdminPage';
 import BusinessConfigPage from './pages/BusinessConfigPage';
+import DolarRatePage from './pages/DolarRatePage';
 
 // Componente interno para manejar la verificación de licencias
 const AppContent: React.FC = () => {
@@ -234,6 +235,14 @@ const AppContent: React.FC = () => {
                     element={
                       <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
                         <BusinessConfigPage />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="dolar-rates" 
+                    element={
+                      <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                        <DolarRatePage />
                       </ProtectedRoute>
                     } 
                   />

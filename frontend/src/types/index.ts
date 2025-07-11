@@ -33,6 +33,7 @@ export interface ComandaResponseDTO {
     estado: 'EN_PROCESO' | 'LISTA' | 'ENTREGADA' | 'PAGADA' | 'CANCELADA';
     fechaHoraCreacion: string;
     total: number;
+    totalBs?: number;
 }
 // ... (debajo de las otras interfaces)
 

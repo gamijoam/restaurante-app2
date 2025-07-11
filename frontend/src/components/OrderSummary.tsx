@@ -209,9 +209,16 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ comanda, areaStatuses = [],
         <Typography variant="h6" fontWeight={500}>
           Total:
         </Typography>
-        <Typography variant="h6" fontWeight={500}>
-          ${comanda.total?.toFixed(2) || '0.00'}
-        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <Typography variant="h6" fontWeight={500}>
+            ${comanda.total?.toFixed(2) || '0.00'}
+          </Typography>
+          {comanda.totalBs && comanda.totalBs > 0 && (
+            <Typography variant="body2" color="text.secondary">
+              (Bs {comanda.totalBs.toFixed(2)})
+            </Typography>
+          )}
+        </Box>
       </Box>
       
       {/* Botón de agregar productos si está habilitado */}

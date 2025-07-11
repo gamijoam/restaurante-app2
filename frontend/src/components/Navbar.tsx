@@ -242,6 +242,12 @@ const Navbar: React.FC = () => {
       path: '/business-config',
       permission: '',
     });
+    menuGroups.find(g => g.id === 'sistema')?.items.push({
+      text: 'Configuración del Dólar',
+      icon: <Settings />,
+      path: '/dolar-rates',
+      permission: '',
+    });
   }
 
   const renderMenuItem = (item: any) => {

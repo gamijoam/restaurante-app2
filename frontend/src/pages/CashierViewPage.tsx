@@ -446,6 +446,11 @@ const CashierViewPage: React.FC = () => {
           <Typography variant="h5" color="primary" sx={{ fontWeight: 700 }}>
             ${comanda.total.toFixed(2)}
           </Typography>
+          {comanda.totalBs && comanda.totalBs > 0 && (
+            <Typography variant="body2" color="text.secondary">
+              (Bs {comanda.totalBs.toFixed(2)})
+            </Typography>
+          )}
         </Box>
       </Box>
       <Divider sx={{ my: 2 }} />

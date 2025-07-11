@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="019-create-dolar-rates-table" author="ai">
+        <createTable tableName="dolar_rates">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="fecha" type="DATE">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="precio_dolar" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fecha_creacion" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fecha_actualizacion" type="DATETIME">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        
+        <createIndex tableName="dolar_rates" indexName="idx_dolar_rates_fecha">
+            <column name="fecha"/>
+        </createIndex>
+        
+        <createIndex tableName="dolar_rates" indexName="idx_dolar_rates_activo">
+            <column name="activo"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog> 
