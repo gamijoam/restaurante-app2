@@ -83,27 +83,29 @@ const KitchenViewPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [areas]);
 
-  // Auto-refresh cada 10 segundos para detectar nuevos items
+  // Auto-refresh cada 30 segundos para detectar nuevos items (reducido de 10s para optimizar)
   useEffect(() => {
+    if (areas.length === 0) return; // No hacer nada si no hay áreas
+    
     const interval = setInterval(() => {
-      if (areas.length > 0) {
+      // Solo actualizar si la página está visible y activa
+      if (document.visibilityState === 'visible') {
         loadComandasForAllAreas();
       }
-    }, 10000); // 10 segundos
+    }, 30000); // 30 segundos (optimizado)
 
     return () => clearInterval(interval);
-  }, [areas]);
+  }, [areas.length]); // Solo depender del length, no del array completo
 
   const loadAreas = async () => {
     try {
       setLoading(true);
-      console.log('Cargando áreas de preparación...');
+      console.log('📋 Cargando áreas de preparación...');
       const areasData = await getAreasPreparacion();
-      console.log('Áreas cargadas:', areasData);
-      console.log('Primera área:', areasData[0]);
-      console.log('Estructura de área:', JSON.stringify(areasData[0], null, 2));
+      console.log(`✅ ${areasData.length} áreas cargadas`);
       setAreas(areasData);
-    } catch {
+    } catch (error) {
+      console.error('❌ Error cargando áreas:', error);
       showError('Error al cargar áreas de preparación');
     } finally {
       setLoading(false);
@@ -113,34 +115,31 @@ const KitchenViewPage: React.FC = () => {
   const loadComandasForAllAreas = async () => {
     try {
       setRefreshing(true);
-      console.log('Cargando comandas para todas las áreas...');
+      // Solo hacer log en desarrollo o cuando hay cambios significativos
+      if (import.meta.env.DEV) {
+        console.log('🔄 Actualizando comandas para todas las áreas...');
+      }
+      
       const comandasData: { [areaId: number]: ComandaAreaResponseDTO[] } = {};
       
       for (const area of areas) {
         try {
-          console.log(`Cargando comandas para área ${area.id} (${area.name})`);
           const comandas = await getComandasPorArea(area.id);
-          console.log(`Comandas encontradas para área ${area.id}:`, comandas);
-          
-          // Log detallado de cada comanda y sus items
-          comandas.forEach((comanda: any) => {
-            console.log(`Comanda ${comanda.id} - Mesa ${comanda.mesaId}:`);
-            comanda.items.forEach((item: any) => {
-              console.log(`  - Item: ${item.productoNombre}, esNuevo: ${item.esNuevo}`);
-            });
-          });
-          
           comandasData[area.id] = comandas;
-        } catch{
-          console.error(`Error loading comandas for area ${area.id}:`);
+          
+          // Solo hacer log si hay comandas y estamos en desarrollo
+          if (comandas.length > 0 && import.meta.env.DEV) {
+            console.log(`📋 Área ${area.name}: ${comandas.length} comandas`);
+          }
+        } catch (error) {
+          console.error(`❌ Error cargando comandas para área ${area.id}:`, error);
           comandasData[area.id] = [];
         }
       }
       
-      console.log('Todas las comandas cargadas:', comandasData);
       setComandasPorArea(comandasData);
     } catch (error) {
-      console.error('Error al cargar comandas:', error);
+      console.error('❌ Error al cargar comandas:', error);
       showError('Error al cargar comandas');
     } finally {
       setRefreshing(false);

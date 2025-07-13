@@ -28,9 +28,17 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Map;
 import com.catasoft.restaurante.backend.service.PrinterConfigurationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.math.BigDecimal;
+import com.catasoft.restaurante.backend.dto.TicketTemplateDTO;
+import com.catasoft.restaurante.backend.service.TicketTemplateService;
 
 @Service
 public class ComandaAreaService {
+    private static final Logger log = LoggerFactory.getLogger(ComandaAreaService.class);
+
     @Autowired
     private ComandaAreaRepository comandaAreaRepository;
     @Autowired
@@ -45,6 +53,8 @@ public class ComandaAreaService {
     private WebSocketService webSocketService;
     @Autowired
     private PrinterConfigurationService printerConfigService;
+    @Autowired
+    private TicketTemplateService ticketTemplateService;
 
     public List<ComandaArea> findAll() {
         return comandaAreaRepository.findAll();
@@ -80,29 +90,17 @@ public class ComandaAreaService {
     }
 
     public List<ComandaAreaResponseDTO> getComandasPorArea(Long areaId) {
-        System.out.println("Buscando comandas para área ID: " + areaId);
+        log.debug("Buscando comandas para área ID: {}", areaId);
         
         // Primero, obtener el areaId string correspondiente al ID numérico
         Optional<PreparationArea> area = preparationAreaRepository.findById(areaId);
         if (!area.isPresent()) {
-            System.out.println("Área no encontrada para ID: " + areaId);
+            log.warn("Área no encontrada para ID: {}", areaId);
             return List.of();
         }
         
         String areaIdString = area.get().getAreaId();
-        System.out.println("Buscando comandas para área string: " + areaIdString);
-        
-        // Primero, buscar todas las comandas para ver qué hay
-        List<ComandaArea> todasLasComandas = comandaAreaRepository.findAll();
-        System.out.println("Total comandas en BD: " + todasLasComandas.size());
-        
-        for (ComandaArea ca : todasLasComandas) {
-            System.out.println("ComandaArea ID: " + ca.getId() + 
-                             ", AreaId: " + ca.getAreaId() + 
-                             ", Status: " + ca.getStatus() + 
-                             ", ComandaId: " + ca.getComanda().getId() +
-                             ", MesaId: " + ca.getComanda().getMesa().getId());
-        }
+        log.debug("Buscando comandas para área string: {}", areaIdString);
         
         // Filtrar comandas que no están entregadas, listas, y que no son ventas rápidas (mesa fantasma)
         List<ComandaArea> comandas = comandaAreaRepository.findByAreaIdAndStatusNotIn(areaIdString, List.of(EstadoComandaArea.DELIVERED, EstadoComandaArea.READY))
@@ -277,12 +275,14 @@ public class ComandaAreaService {
         String area = comandaArea.getAreaId();
         String printerType = "COCINA";
         String printerTarget = "default";
+        Long templateId = null;
         if (area != null) {
             Optional<com.catasoft.restaurante.backend.model.PrinterConfiguration> configOpt = printerConfigService.getConfigurationByArea(area);
             if (configOpt.isPresent()) {
                 var config = configOpt.get();
                 printerType = config.getPrinterType();
                 printerTarget = config.getPrinterTarget();
+                templateId = config.getTemplateId();
             }
         }
         String ticketType = "COCINA";
@@ -290,23 +290,50 @@ public class ComandaAreaService {
         ticketData.put("comandaId", comandaArea.getComanda().getId());
         ticketData.put("nombreMesa", comandaArea.getComanda().getMesa().getNumero());
         ticketData.put("fechaHora", comandaArea.getComanda().getFechaHoraCreacion());
+        ticketData.put("area", area); // Agregar el área a los datos del ticket
         
         // Cargar los items explícitamente usando el repositorio
         List<ComandaAreaItem> items = comandaAreaItemRepository.findByComandaAreaId(comandaArea.getId());
         System.out.println("Items encontrados para impresión en área " + area + ": " + items.size());
         
         List<Map<String, Object>> itemsList = new ArrayList<>();
+        BigDecimal total = BigDecimal.ZERO;
+        
         for (ComandaAreaItem item : items) {
             Map<String, Object> itemMap = new HashMap<>();
             itemMap.put("cantidad", item.getQuantity());
             itemMap.put("nombreProducto", item.getProducto().getNombre());
             itemMap.put("notas", item.getNotes());
+            
+            // Calcular precio total del item
+            BigDecimal precioTotal = item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+            itemMap.put("precioTotal", precioTotal);
+            total = total.add(precioTotal);
+            
             itemsList.add(itemMap);
-            System.out.println("Item agregado: " + item.getQuantity() + "x " + item.getProducto().getNombre());
+            System.out.println("Item agregado: " + item.getQuantity() + "x " + item.getProducto().getNombre() + " - $" + precioTotal);
         }
+        
         ticketData.put("items", itemsList);
+        ticketData.put("total", total);
         
         System.out.println("Datos del ticket para impresión: " + ticketData);
-        return new PrintJobDTO(printerType, printerTarget, ticketType, ticketData, area, null);
+        System.out.println("Área: " + area + ", Total: $" + total);
+        
+        // Buscar la plantilla asignada a la impresora, o la por defecto del área
+        TicketTemplateDTO template = null;
+        if (templateId != null) {
+            template = ticketTemplateService.getTemplateById(templateId);
+            if (template != null) {
+                System.out.println("Plantilla personalizada encontrada para impresora: " + template.getName());
+            } else {
+                System.out.println("No se encontró la plantilla personalizada, usando la por defecto del área");
+                template = ticketTemplateService.getTemplateByArea(area);
+            }
+        } else {
+            template = ticketTemplateService.getTemplateByArea(area);
+        }
+        
+        return new PrintJobDTO(printerType, printerTarget, ticketType, ticketData, area, template);
     }
 } 

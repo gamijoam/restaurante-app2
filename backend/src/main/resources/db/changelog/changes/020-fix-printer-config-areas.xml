@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <!-- Corregir la foreign key de area_id para que apunte a preparation_areas en lugar de areas -->
+    <changeSet id="020-01-fix-area-fk" author="ai">
+        <comment>Corregir la foreign key de area_id en printer_configurations para que apunte a preparation_areas</comment>
+        
+        <!-- Eliminar la foreign key existente si existe -->
+        <dropForeignKeyConstraint 
+            baseTableName="printer_configurations"
+            constraintName="fk_printer_config_area"/>
+            
+        <!-- Agregar la foreign key correcta -->
+        <addForeignKeyConstraint 
+            baseTableName="printer_configurations"
+            baseColumnNames="area_id"
+            referencedTableName="preparation_areas"
+            referencedColumnNames="area_id"
+            constraintName="fk_printer_config_preparation_area"
+            onDelete="SET NULL"/>
+    </changeSet>
+
+</databaseChangeLog> 

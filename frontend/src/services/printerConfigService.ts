@@ -7,6 +7,7 @@ export interface PrinterConfig {
     printerType: string;
     printerTarget: string;
     areaId?: string;
+    templateId?: number; // NUEVO: id de la plantilla asignada
 }
 
 // Obtener todas las configuraciones

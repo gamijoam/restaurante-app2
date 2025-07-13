@@ -29,7 +29,7 @@ import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import type { ComandaResponseDTO, ComandaAreaResponseDTO } from '../types';
 import { getComandasPorMultiplesEstados, updateComandaEstado, getComandaAreasStatus } from '../services/comandaService';
-import { useWebSocket } from '../context/WebSocketContext';
+import { useWebSocket } from '../context/WebSocketContextProduction';
 import { useNotification } from '../hooks/useNotification';
 // import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';

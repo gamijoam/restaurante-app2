@@ -29,7 +29,7 @@ import ModernButton from '../components/ModernButton';
 // import LoadingSpinner from '../components/LoadingSpinner';
 // import SkeletonLoader from '../components/SkeletonLoader';
 import { getMesas, type Mesa } from '../services/mesaService';
-import { useWebSocket } from '../context/WebSocketContext';
+import { useWebSocket } from '../context/WebSocketContextProduction';
 
 interface MesaWithComanda extends Mesa {
   comandaActual?: {

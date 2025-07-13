@@ -23,10 +23,12 @@ public class WebSocketService {
 
     public void sendPrintJob(PrintJobDTO printJob) {
         try {
-            // Obtener la plantilla correspondiente al área
-            TicketTemplateDTO template = getTemplateForArea(printJob.area());
-            
-            // Crear un nuevo PrintJobDTO con la plantilla incluida
+            TicketTemplateDTO template = printJob.template();
+            if (template == null) {
+                // Solo si no viene plantilla, buscar por área
+                template = getTemplateForArea(printJob.area());
+            }
+
             PrintJobDTO printJobWithTemplate = new PrintJobDTO(
                 printJob.printerType(),
                 printJob.printerTarget(),
@@ -35,23 +37,35 @@ public class WebSocketService {
                 printJob.area(),
                 template
             );
-            
+
             String destination = "/topic/print-jobs";
             messagingTemplate.convertAndSend(destination, printJobWithTemplate);
-            logger.info("Trabajo de impresión enviado a [{}]. Destino: {}, Área: {}", 
-                printJob.printerType(), printJob.printerTarget(), printJob.area());
+            logger.info("Trabajo de impresión enviado a [{}]. Destino: {}, Área: {}, Plantilla: {}", 
+                printJob.printerType(), printJob.printerTarget(), printJob.area(), 
+                template != null ? "encontrada" : "no encontrada");
         } catch (Exception e) {
             logger.error("Error al enviar el trabajo de impresión por WebSocket", e);
+            throw e;
         }
     }
     
     private TicketTemplateDTO getTemplateForArea(String areaId) {
         try {
             if (areaId != null && !areaId.trim().isEmpty()) {
-                return ticketTemplateService.getTemplateByArea(areaId);
+                logger.info("🔍 Buscando plantilla para área: '{}'", areaId);
+                TicketTemplateDTO template = ticketTemplateService.getTemplateByArea(areaId);
+                if (template != null) {
+                    logger.info("✅ Plantilla encontrada para área '{}': '{}' con {} bloques", 
+                        areaId, template.getName(), template.getBlocks() != null ? template.getBlocks().size() : 0);
+                } else {
+                    logger.warn("❌ No se encontró plantilla para el área: '{}'", areaId);
+                }
+                return template;
+            } else {
+                logger.warn("⚠️ AreaId es null o vacío: '{}'", areaId);
             }
         } catch (Exception e) {
-            logger.warn("No se pudo obtener la plantilla para el área: {}", areaId, e);
+            logger.error("❌ Error obteniendo plantilla para el área '{}': {}", areaId, e.getMessage(), e);
         }
         return null;
     }

@@ -65,6 +65,8 @@ import ModernButton from '../components/ModernButton';
 import ModernModal from '../components/ModernModal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { getAreasPreparacion, type PreparationArea } from '../services/preparationAreaService';
+import { getAllTemplates } from '../services/ticketTemplateService';
+import type { TicketTemplateDTO } from '../services/ticketTemplateService';
 
 const PrinterSettingsPage = () => {
     const { roles } = useAuth();
@@ -89,6 +91,8 @@ const PrinterSettingsPage = () => {
     const [selectedConfig, setSelectedConfig] = useState<PrinterConfig | null>(null);
     const [openDetailModal, setOpenDetailModal] = useState(false);
     const [areas, setAreas] = useState<PreparationArea[]>([]);
+    const [templates, setTemplates] = useState<TicketTemplateDTO[]>([]);
+    const [filteredTemplates, setFilteredTemplates] = useState<TicketTemplateDTO[]>([]);
 
     const fetchConfigs = useCallback(async () => {
         setLoading(true);
@@ -110,6 +114,20 @@ const PrinterSettingsPage = () => {
     useEffect(() => {
       getAreasPreparacion().then(setAreas);
     }, []);
+
+    useEffect(() => {
+      getAllTemplates().then(setTemplates);
+    }, []);
+
+    useEffect(() => {
+      // Filtrar plantillas por área seleccionada
+      if (currentConfig.areaId) {
+        // El backend mapea las áreas, así que filtramos por el áreaId de la configuración
+        setFilteredTemplates(templates.filter(t => t.area === currentConfig.areaId));
+      } else {
+        setFilteredTemplates([]);
+      }
+    }, [currentConfig.areaId, templates]);
 
     // Limpiar errores cuando se abre el diálogo
     useEffect(() => {
@@ -147,7 +165,8 @@ const PrinterSettingsPage = () => {
             // Siempre enviar 'role' igual a 'areaId' para compatibilidad backend
             const configToSave = {
                 ...currentConfig,
-                role: currentConfig.areaId
+                role: currentConfig.areaId,
+                templateId: currentConfig.templateId ? Number(currentConfig.templateId) : undefined
             };
             await savePrinterConfig(configToSave as PrinterConfig);
             setSuccess('Configuración guardada exitosamente.');
@@ -182,7 +201,8 @@ const PrinterSettingsPage = () => {
         setCurrentConfig({
             areaId: '',
             printerType: 'TCP',
-            printerTarget: ''
+            printerTarget: '',
+            templateId: undefined // debe ser number o undefined
         });
         setError(null);
         setSuccess(null);
@@ -809,6 +829,27 @@ const PrinterSettingsPage = () => {
                             fullWidth
                                     helperText="Para TCP: IP:Puerto, Para USB: Nombre del dispositivo, Para WIN: Nombre de la impresora"
                         />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth>
+                            <InputLabel>Plantilla de Ticket</InputLabel>
+                            <Select
+                                name="templateId"
+                                value={currentConfig.templateId?.toString() ?? ''}
+                                onChange={handleInputChange}
+                                label="Plantilla de Ticket"
+                                disabled={!currentConfig.areaId}
+                            >
+                                {filteredTemplates.length === 0 && (
+                                    <MenuItem value="" disabled>
+                                        {currentConfig.areaId ? 'No hay plantillas para esta área' : 'Seleccione un área primero'}
+                                    </MenuItem>
+                                )}
+                                {filteredTemplates.map(template => (
+                                    <MenuItem key={template.id} value={template.id?.toString()}>{template.name}</MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
                     </Grid>
                         </Grid>
                     </form>

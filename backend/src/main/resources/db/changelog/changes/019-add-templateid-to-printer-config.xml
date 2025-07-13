@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.4.xsd">
+
+    <changeSet id="019-01-add-templateid-to-printer-config" author="ai">
+        <addColumn tableName="printer_configurations">
+            <column name="template_id" type="BIGINT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <addForeignKeyConstraint 
+            baseTableName="printer_configurations"
+            baseColumnNames="template_id"
+            referencedTableName="ticket_templates"
+            referencedColumnNames="id"
+            constraintName="fk_printer_config_template"
+            onDelete="SET NULL"/>
+    </changeSet>
+
+</databaseChangeLog> 

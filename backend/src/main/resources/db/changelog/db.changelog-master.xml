@@ -23,5 +23,7 @@
     <include file="db/changelog/changes/010-add-area-id-to-printer-configurations.xml" />
     <include file="db/changelog/changes/017-business-config-table.xml" />
     <include file="db/changelog/changes/019-create-dolar-rates-table.xml" />
+    <include file="db/changelog/changes/019-add-templateid-to-printer-config.xml" />
+    <include file="db/changelog/changes/020-fix-printer-config-areas.xml" />
 
 </databaseChangeLog> 

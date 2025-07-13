@@ -60,6 +60,7 @@ public class PrinterConfigurationService {
             existingConfig.setPrinterType(configuration.getPrinterType());
             existingConfig.setPrinterTarget(configuration.getPrinterTarget());
             existingConfig.setAreaId(configuration.getAreaId()); // NUEVO: actualizar área
+            existingConfig.setTemplateId(configuration.getTemplateId()); // NUEVO: actualizar plantilla
             return repository.save(existingConfig);
 
         } else {
@@ -78,5 +79,28 @@ public class PrinterConfigurationService {
             throw new ResourceNotFoundException("No se encontró una configuración de impresora con el ID: " + id);
         }
         repository.deleteById(id);
+    }
+
+    /**
+     * Crea una configuración por defecto para un rol específico.
+     * @param role El rol para el cual crear la configuración.
+     * @return La configuración creada.
+     */
+    @Transactional
+    public PrinterConfiguration createDefaultConfiguration(String role) {
+        // Verificar si ya existe una configuración para este rol
+        Optional<PrinterConfiguration> existingConfig = repository.findByRole(role.toUpperCase());
+        if (existingConfig.isPresent()) {
+            throw new IllegalStateException("Ya existe una configuración para el rol: " + role);
+        }
+
+        // Crear configuración por defecto
+        PrinterConfiguration defaultConfig = new PrinterConfiguration();
+        defaultConfig.setRole(role.toUpperCase());
+        defaultConfig.setPrinterType("TCP");
+        defaultConfig.setPrinterTarget("\\\\127.0.0.1\\ticketera");
+        defaultConfig.setAreaId(role.toLowerCase());
+
+        return repository.save(defaultConfig);
     }
 }

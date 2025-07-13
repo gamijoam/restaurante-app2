@@ -18,9 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class TicketTemplateService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(TicketTemplateService.class);
     
     @Autowired
     private TicketTemplateRepository ticketTemplateRepository;
@@ -82,22 +86,31 @@ public class TicketTemplateService {
     
     // Obtener plantilla por área
     public TicketTemplateDTO getTemplateByArea(String areaId) {
+        logger.info("🔍 getTemplateByArea llamado con areaId: '{}'", areaId);
+        
         // Mapear IDs de áreas de preparación a IDs de ticket templates
         String templateAreaId = mapPreparationAreaToTemplateArea(areaId);
+        logger.info("🔄 Mapeado '{}' -> '{}'", areaId, templateAreaId);
         
+        // Buscar plantilla por defecto
         Optional<TicketTemplate> template = ticketTemplateRepository.findByAreaIdAndIsDefaultTrue(templateAreaId);
+        logger.info("🔍 Buscando plantilla por defecto para '{}': {}", templateAreaId, template.isPresent());
         
         if (template.isPresent()) {
+            logger.info("✅ Plantilla por defecto encontrada: '{}'", template.get().getName());
             return convertToDTO(template.get());
         }
         
         // Si no hay plantilla por defecto, buscar la más reciente
         template = ticketTemplateRepository.findFirstByAreaIdOrderByCreatedAtDesc(templateAreaId);
+        logger.info("🔍 Buscando plantilla más reciente para '{}': {}", templateAreaId, template.isPresent());
         
         if (template.isPresent()) {
+            logger.info("✅ Plantilla más reciente encontrada: '{}'", template.get().getName());
             return convertToDTO(template.get());
         }
         
+        logger.warn("❌ No se encontró ninguna plantilla para el área: '{}' (mapeado a: '{}')", areaId, templateAreaId);
         return null;
     }
     
@@ -221,6 +234,34 @@ public class TicketTemplateService {
         templateDTO.setBlocks(defaultBlocks);
         
         return saveTemplate(templateDTO);
+    }
+    
+    // Método para asegurar que existan plantillas por defecto para todas las áreas
+    @Transactional
+    public void ensureDefaultTemplates() {
+        logger.info("🔍 Verificando plantillas por defecto...");
+        
+        String[] areas = {"COCINA", "CAJA", "BARRA"};
+        String[] areaNames = {"Cocina", "Caja", "Barra"};
+        
+        for (int i = 0; i < areas.length; i++) {
+            String areaId = areas[i];
+            String areaName = areaNames[i];
+            
+            try {
+                TicketTemplateDTO existingTemplate = getTemplateByArea(areaId);
+                if (existingTemplate == null) {
+                    logger.info("📝 Creando plantilla por defecto para área: {}", areaId);
+                    createDefaultTemplate(areaId, areaName);
+                } else {
+                    logger.info("✅ Plantilla ya existe para área: {} - {}", areaId, existingTemplate.getName());
+                }
+            } catch (Exception e) {
+                logger.error("❌ Error creando plantilla para área {}: {}", areaId, e.getMessage());
+            }
+        }
+        
+        logger.info("✅ Verificación de plantillas completada");
     }
     
     // Métodos privados de conversión

@@ -55,19 +55,10 @@ public class ComandaAreaController {
     @GetMapping("/area/{areaId}")
     public ResponseEntity<List<ComandaAreaResponseDTO>> getComandasPorArea(@PathVariable Long areaId) {
         try {
-            log.info("Solicitando comandas para área: {}", areaId);
-            
-            // Primero, verificar qué hay en la base de datos
-            List<ComandaArea> todasLasComandas = comandaAreaService.findAll();
-            log.info("Total comandas en BD: {}", todasLasComandas.size());
-            
-            for (ComandaArea ca : todasLasComandas) {
-                log.info("ComandaArea ID: {}, AreaId: {}, Status: {}, ComandaId: {}", 
-                    ca.getId(), ca.getAreaId(), ca.getStatus(), ca.getComanda().getId());
-            }
+            log.debug("Solicitando comandas para área: {}", areaId);
             
             List<ComandaAreaResponseDTO> comandas = comandaAreaService.getComandasPorArea(areaId);
-            log.info("Comandas encontradas para área {}: {}", areaId, comandas.size());
+            log.debug("Comandas encontradas para área {}: {}", areaId, comandas.size());
             return ResponseEntity.ok(comandas);
         } catch (Exception e) {
             log.error("Error al obtener comandas por área: {}", e.getMessage());

@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/printer-configurations")
@@ -55,5 +56,28 @@ public class PrinterConfigurationController {
     public ResponseEntity<Void> deleteConfiguration(@PathVariable Long id) {
         service.deleteConfiguration(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Endpoint para verificar si existe una configuración para un rol específico.
+     * @param role El rol a verificar.
+     * @return La configuración si existe, o 404 si no existe.
+     */
+    @GetMapping("/check/{role}")
+    public ResponseEntity<PrinterConfiguration> checkConfigurationByRole(@PathVariable String role) {
+        Optional<PrinterConfiguration> config = service.getConfigurationByRole(role);
+        return config.map(ResponseEntity::ok)
+                   .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Endpoint para crear una configuración por defecto para un rol.
+     * @param role El rol para el cual crear la configuración.
+     * @return La configuración creada.
+     */
+    @PostMapping("/default/{role}")
+    public ResponseEntity<PrinterConfiguration> createDefaultConfiguration(@PathVariable String role) {
+        PrinterConfiguration defaultConfig = service.createDefaultConfiguration(role);
+        return ResponseEntity.ok(defaultConfig);
     }
 }

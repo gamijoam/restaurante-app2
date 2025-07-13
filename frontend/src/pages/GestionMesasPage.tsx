@@ -38,7 +38,7 @@ import ModernCard from '../components/ModernCard';
 import ModernButton from '../components/ModernButton';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ModernModal from '../components/ModernModal';
-import { useWebSocket } from '../context/WebSocketContext';
+import { useWebSocket } from '../context/WebSocketContextProduction';
 
 const GestionMesasPage = () => {
     const { roles } = useAuth();

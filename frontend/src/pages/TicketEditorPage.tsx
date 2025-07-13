@@ -264,19 +264,24 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
       const template = await getTemplateByArea(areaId);
       if (template) {
         setCurrentTemplate(template);
-        setBlocks(template.blocks);
+        // Asegurar que cada bloque tenga un ID único
+        const blocksWithUniqueIds = template.blocks.map((block, index) => ({
+          ...block,
+          id: block.id || `block-${Date.now()}-${index}`
+        }));
+        setBlocks(blocksWithUniqueIds);
       } else {
-        // Crear plantilla por defecto
+        // Crear plantilla por defecto con IDs únicos
         const defaultTemplate = {
           area: areaId,
           name: `Plantilla ${areas.find(a => a.areaId === areaId)?.name || ''}`,
           blocks: [
-            { type: 'text', value: 'Restaurante', align: 'center', bold: true, id: '1' },
-            { type: 'line', id: '2' },
-            { type: 'datetime', format: 'DD/MM/YYYY HH:mm', id: '3' },
-            { type: 'table', columns: ['Producto', 'Cant', 'Precio', 'Total'], id: '4' },
-            { type: 'total', label: 'Total', field: 'total', id: '5' },
-            { type: 'text', value: '¡Gracias!', align: 'center', id: '6' }
+            { type: 'text', value: 'Restaurante', align: 'center', bold: true, id: `block-${Date.now()}-1` },
+            { type: 'line', id: `block-${Date.now()}-2` },
+            { type: 'datetime', format: 'DD/MM/YYYY HH:mm', id: `block-${Date.now()}-3` },
+            { type: 'table', columns: ['Producto', 'Cant', 'Precio', 'Total'], id: `block-${Date.now()}-4` },
+            { type: 'total', label: 'Total', field: 'total', id: `block-${Date.now()}-5` },
+            { type: 'text', value: '¡Gracias!', align: 'center', id: `block-${Date.now()}-6` }
           ] as TicketBlock[]
         };
         setCurrentTemplate(defaultTemplate);
@@ -395,7 +400,8 @@ const TicketEditorPage: React.FC<TicketEditorPageProps> = ({
 
   // Agregar bloque desde la paleta
   const handleAddBlock = (block: TicketBlock) => {
-    setBlocks([...blocks, { ...block, id: Date.now().toString() }]);
+    const uniqueId = `block-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setBlocks([...blocks, { ...block, id: uniqueId }]);
   };
 
   // Editar bloque

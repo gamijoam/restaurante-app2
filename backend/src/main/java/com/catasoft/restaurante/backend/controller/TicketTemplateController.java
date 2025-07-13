@@ -12,10 +12,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/v1/ticket-templates")
-@PreAuthorize("hasRole('ROLE_GERENTE')")
 public class TicketTemplateController {
     
     @Autowired
@@ -110,14 +111,14 @@ public class TicketTemplateController {
     }
     
     // Generar previsualización PDF de una plantilla temporal (sin guardar)
-    @PostMapping("/preview")
-    public ResponseEntity<byte[]> generatePreviewFromTemplate(@RequestBody TicketTemplateDTO templateDTO) {
+    @PostMapping("/preview-temp")
+    public ResponseEntity<byte[]> generateTempPreview(@RequestBody TicketTemplateDTO templateDTO) {
         try {
             byte[] pdfBytes = ticketPreviewService.generatePreviewPdf(templateDTO);
             
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
-            headers.setContentDispositionFormData("attachment", "ticket-preview.pdf");
+            headers.setContentDispositionFormData("attachment", "ticket-preview-temp.pdf");
             
             return ResponseEntity.ok()
                 .headers(headers)
@@ -125,6 +126,77 @@ public class TicketTemplateController {
                 
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    // Endpoint de prueba para verificar plantillas
+    @GetMapping("/debug/templates")
+    public ResponseEntity<Map<String, Object>> debugTemplates() {
+        try {
+            Map<String, Object> result = new HashMap<>();
+            
+            // Obtener todas las plantillas
+            List<TicketTemplateDTO> allTemplates = ticketTemplateService.getAllTemplates();
+            result.put("totalTemplates", allTemplates.size());
+            result.put("templates", allTemplates);
+            
+            // Verificar plantillas por área específica
+            String[] areas = {"COCINA", "CAJA", "BARRA"};
+            Map<String, Object> areaTemplates = new HashMap<>();
+            
+            for (String area : areas) {
+                TicketTemplateDTO template = ticketTemplateService.getTemplateByArea(area);
+                areaTemplates.put(area, template != null ? template.getName() : "NO ENCONTRADA");
+            }
+            result.put("areaTemplates", areaTemplates);
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+    
+    // Endpoint para inicializar plantillas por defecto
+    @PostMapping("/init-defaults")
+    public ResponseEntity<Map<String, Object>> initializeDefaultTemplates() {
+        try {
+            ticketTemplateService.ensureDefaultTemplates();
+            return ResponseEntity.ok(Map.of(
+                "message", "Plantillas por defecto inicializadas correctamente",
+                "status", "success"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of(
+                "error", e.getMessage(),
+                "status", "error"
+            ));
+        }
+    }
+    
+    // Endpoint público para debuggear plantillas (sin autenticación)
+    @GetMapping("/public/debug/templates")
+    public ResponseEntity<Map<String, Object>> publicDebugTemplates() {
+        try {
+            Map<String, Object> result = new HashMap<>();
+            
+            // Obtener todas las plantillas
+            List<TicketTemplateDTO> allTemplates = ticketTemplateService.getAllTemplates();
+            result.put("totalTemplates", allTemplates.size());
+            result.put("templates", allTemplates);
+            
+            // Verificar plantillas por área específica
+            String[] areas = {"COCINA", "CAJA", "BARRA"};
+            Map<String, Object> areaTemplates = new HashMap<>();
+            
+            for (String area : areas) {
+                TicketTemplateDTO template = ticketTemplateService.getTemplateByArea(area);
+                areaTemplates.put(area, template != null ? template.getName() : "NO ENCONTRADA");
+            }
+            result.put("areaTemplates", areaTemplates);
+            
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
         }
     }
 } 

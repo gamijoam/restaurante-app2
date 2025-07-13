@@ -12,7 +12,16 @@ export default defineConfig({
         target: 'http://localhost:8080',
         changeOrigin: true,
         secure: false,
+        timeout: 30000, // Timeout de 30 segundos
       }
+    },
+    // Optimizaciones para desarrollo
+    hmr: {
+      overlay: false, // Deshabilitar overlay de errores para mejor rendimiento
+    },
+    // Configuración para mejorar el rendimiento
+    watch: {
+      usePolling: false, // Usar eventos del sistema en lugar de polling
     }
   },
   // --- AÑADIMOS ESTA NUEVA SECCIÓN ---
@@ -24,5 +33,16 @@ export default defineConfig({
   preview: {
     port: 5173,
     host: true
+  },
+  // Optimizaciones de build
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+        }
+      }
+    }
   }
 })

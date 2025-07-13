@@ -4,6 +4,7 @@ import { Box, Container } from '@mui/material';
 import { OrderProvider } from '../context/OrderContext';
 import Navbar from './Navbar';
 import NotificationManager from './NotificationManager';
+import PrintingHealthMonitor from './PrintingHealthMonitor';
 
 const Layout: React.FC = () => {
   // const theme = useTheme();
@@ -56,6 +57,9 @@ const Layout: React.FC = () => {
         </Box>
         
         <NotificationManager />
+        
+        {/* Monitor de salud del sistema de impresión */}
+        <PrintingHealthMonitor />
       </Box>
     </OrderProvider>
   );

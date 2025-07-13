@@ -26,6 +26,9 @@ public class PrinterConfiguration {
     @Column(name = "area_id", nullable = true, length = 100)
     private String areaId;
 
+    @Column(name = "template_id")
+    private Long templateId;
+
     // --- Getters y Setters (incluyendo el nuevo para version) ---
 
     public Long getId() {
@@ -66,5 +69,13 @@ public class PrinterConfiguration {
 
     public void setAreaId(String areaId) {
         this.areaId = areaId;
+    }
+
+    public Long getTemplateId() {
+        return templateId;
+    }
+
+    public void setTemplateId(Long templateId) {
+        this.templateId = templateId;
     }
 }

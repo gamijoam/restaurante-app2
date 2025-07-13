@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import { WebSocketProvider } from './context/WebSocketContext';
+import { WebSocketProvider } from './context/WebSocketContextProduction';
 import { LicenseProvider } from './context/LicenseContext';
 import LicenseGuard from './components/LicenseGuard';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -35,10 +35,11 @@ import LicenseActivationPage from './pages/LicenseActivationPage';
 import LicenseAdminPage from './pages/LicenseAdminPage';
 import BusinessConfigPage from './pages/BusinessConfigPage';
 import DolarRatePage from './pages/DolarRatePage';
+import PrintTestPage from './pages/PrintTestPage';
 
 const AppContent: React.FC = () => {
   const { showExpiredModal, setShowExpiredModal } = useLicenseValidation({ 
-    checkInterval: 2 * 60 * 60 * 1000, 
+    checkInterval: 30 * 60 * 1000, // 30 minutos para desarrollo
     enabled: true 
   });
 
@@ -236,6 +237,14 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
                 <DolarRatePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="print-test" 
+            element={
+              <ProtectedRoute allowedRoles={['ROLE_GERENTE']}>
+                <PrintTestPage />
               </ProtectedRoute>
             } 
           />

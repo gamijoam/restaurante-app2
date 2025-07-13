@@ -48,7 +48,7 @@ const KitchenDashboardPage: React.FC = () => {
       loadComandasForAllAreas();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [areas]);
+  }, [areas.length]); // Solo depender del length, no del array completo
 
   const loadAreas = async () => {
     try {

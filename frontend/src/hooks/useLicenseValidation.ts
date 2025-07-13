@@ -16,12 +16,31 @@ export const useLicenseValidation = (options: UseLicenseValidationOptions = {}) 
   const intervalRef = useRef<number | null>(null);
   const [showExpiredModal, setShowExpiredModal] = useState(false);
   const location = useLocation();
+  const isInitialValidation = useRef(true);
+  const isValidationRunning = useRef(false);
+  const lastValidationTime = useRef<number>(0);
 
-  const validateLicense = async () => {
+  const validateLicense = async (updateLicense = true, saveToBackend = false) => {
+    // Evitar validaciones simultáneas
+    if (isValidationRunning.current) {
+      console.log('[LicenseValidation] Validación ya en progreso, saltando...');
+      return;
+    }
+
+    // Evitar validaciones muy frecuentes (mínimo 30 segundos entre validaciones)
+    const now = Date.now();
+    if (now - lastValidationTime.current < 30000) {
+      console.log('[LicenseValidation] Validación muy reciente, saltando...');
+      return;
+    }
+
     if (!license?.licenseCode) {
       console.log('[LicenseValidation] No hay licencia para validar');
       return;
     }
+
+    isValidationRunning.current = true;
+    lastValidationTime.current = now;
 
     try {
       console.log('[LicenseValidation] Verificando licencia...');
@@ -51,8 +70,8 @@ export const useLicenseValidation = (options: UseLicenseValidationOptions = {}) 
           'Tu licencia ha expirado. Se mostrará un modal con opciones para renovar.'
         );
         
-        // Limpiar licencia inválida
-        setLicense(null);
+        // Limpiar licencia inválida (guardar en backend)
+        setLicense(null, true);
         
         // Mostrar modal después de un breve delay
         setTimeout(() => {
@@ -70,14 +89,24 @@ export const useLicenseValidation = (options: UseLicenseValidationOptions = {}) 
         );
       }
 
-      // Actualizar la licencia con la información más reciente
-      setLicense(response);
-      console.log('[LicenseValidation] Licencia válida, días restantes:', response.daysRemaining);
+      // Solo actualizar la licencia si es la validación inicial o si hay cambios significativos
+      if (updateLicense || isInitialValidation.current) {
+        setLicense(response, saveToBackend);
+        console.log('[LicenseValidation] Licencia actualizada:', response.daysRemaining);
+      } else {
+        console.log('[LicenseValidation] Licencia válida, días restantes:', response.daysRemaining);
+      }
+      
+      // Marcar que ya no es la validación inicial
+      isInitialValidation.current = false;
+      
       return true;
     } catch (error) {
       console.error('[LicenseValidation] Error verificando licencia:', error);
       showError('Error de validación', 'No se pudo verificar la licencia. Verifica tu conexión.');
       return false;
+    } finally {
+      isValidationRunning.current = false;
     }
   };
 
@@ -86,11 +115,11 @@ export const useLicenseValidation = (options: UseLicenseValidationOptions = {}) 
 
     console.log('[LicenseValidation] Iniciando verificación periódica cada', checkInterval / 1000, 'segundos');
     
-    // Verificar inmediatamente
-    validateLicense();
+    // Verificar inmediatamente (con actualización de licencia y guardado en backend)
+    validateLicense(true, true);
 
-    // Configurar verificación periódica
-    intervalRef.current = window.setInterval(validateLicense, checkInterval);
+    // Configurar verificación periódica (sin actualizar licencia para evitar bucles)
+    intervalRef.current = window.setInterval(() => validateLicense(false, false), checkInterval);
   };
 
   const stopValidation = () => {

@@ -211,23 +211,13 @@ public class ComandaService {
                 .collect(Collectors.groupingBy(item -> {
                     // Buscar la asignación producto-área
                     List<ProductArea> asignaciones = productAreaRepository.findByProductoId(item.getProducto().getId());
-                    logger.info("Producto ID: {}, Nombre: {}, Categoría: {}, Asignaciones encontradas: {}", 
-                            item.getProducto().getId(), 
-                            item.getProducto().getNombre(), 
-                            item.getProducto().getCategoria(),
-                            asignaciones.size());
-                    
-                    // Mostrar todas las asignaciones encontradas
-                    for (ProductArea pa : asignaciones) {
-                        logger.info("  - Asignación: Producto {} -> Área {}", pa.getProducto().getNombre(), pa.getAreaId());
-                    }
                     
                     String areaId = asignaciones.stream()
                             .findFirst()
                             .map(productArea -> productArea.getAreaId())
                             .orElse("sin-asignar");
                     
-                    logger.info("Producto {} asignado a área: {}", item.getProducto().getNombre(), areaId);
+                    logger.debug("Producto {} asignado a área: {}", item.getProducto().getNombre(), areaId);
                     return areaId;
                 }));
 
@@ -321,36 +311,34 @@ public class ComandaService {
     // --- MÉTODO getTicketData (VERSIÓN FINAL Y CORRECTA) ---
     @Transactional(readOnly = true) // <-- 1. AÑADIMOS ESTA ANOTACIÓN CRUCIAL
     public TicketDTO getTicketData(Long comandaId) {
-        logger.info("Iniciando getTicketData para la comanda ID: {}", comandaId);
+        logger.info("=== INICIO GET TICKET DATA ===");
+        logger.info("Comanda ID: {}", comandaId);
 
+        logger.info("Paso 1: Buscando comanda en base de datos...");
         Comanda comanda = comandaRepository.findByIdWithDetails(comandaId)
                 .orElseThrow(() -> new EntityNotFoundException("Comanda no encontrada o sin detalles: " + comandaId));
+        logger.info("Comanda encontrada con ID: {}", comanda.getId());
 
-        logger.info("Comanda encontrada. Verificando datos de la mesa...");
-
+        logger.info("Paso 2: Obteniendo datos de la mesa...");
         Mesa mesa = comanda.getMesa();
         logger.info("Mesa encontrada - ID: {}, Número: {}, Nombre: '{}'", mesa.getId(), mesa.getNumero(), mesa.getNombre());
         
-        // --- LA SOLUCIÓN DEFINITIVA ESTÁ AQUÍ ---
-        // Verificamos si el nombre de la mesa es nulo o está vacío.
+        logger.info("Paso 3: Determinando nombre para el ticket...");
         String nombreParaTicket;
         if (mesa.getNombre() != null && !mesa.getNombre().trim().isEmpty()) {
-            // Si tiene un nombre, lo usamos.
             nombreParaTicket = mesa.getNombre();
-            logger.info("Usando nombre personalizado de la mesa: '{}'", nombreParaTicket);
+            logger.info("Usando nombre personalizado: '{}'", nombreParaTicket);
         } else {
-            // Si no tiene nombre, usamos su número como respaldo.
             nombreParaTicket = "Mesa " + mesa.getNumero();
-            logger.info("Usando número de mesa como nombre: '{}'", nombreParaTicket);
+            logger.info("Usando número de mesa: '{}'", nombreParaTicket);
         }
-        logger.info("Nombre final para el ticket: '{}'", nombreParaTicket);
         
-        logger.info("Procesando {} items de la comanda", comanda.getItems().size());
+        logger.info("Paso 4: Procesando {} items de la comanda", comanda.getItems().size());
         List<TicketItemDTO> itemsDTO = comanda.getItems().stream()
                 .map(comandaItem -> {
                     BigDecimal precioTotalItem = comandaItem.getPrecioUnitario()
                             .multiply(new BigDecimal(comandaItem.getCantidad()));
-                    logger.info("Item: {} x {} = ${}", comandaItem.getCantidad(), 
+                    logger.info("Procesando item: {} x {} = ${}", comandaItem.getCantidad(), 
                               comandaItem.getProducto().getNombre(), precioTotalItem);
                     return new TicketItemDTO(
                             comandaItem.getCantidad(),
@@ -359,7 +347,9 @@ public class ComandaService {
                             precioTotalItem
                     );
                 }).collect(Collectors.toList());
+        logger.info("Items procesados: {}", itemsDTO.size());
 
+        logger.info("Paso 5: Creando TicketDTO...");
         TicketDTO ticketDTO = new TicketDTO(
                 comanda.getId(),
                 nombreParaTicket, // <-- 2. Usamos la variable calculada correctamente
@@ -368,8 +358,8 @@ public class ComandaService {
                 comanda.getTotal()
         );
         
-        logger.info("TicketDTO creado - ComandaID: {}, Mesa: '{}', Total: ${}, Items: {}", 
-                   ticketDTO.comandaId(), ticketDTO.nombreMesa(), ticketDTO.total(), ticketDTO.items().size());
+        logger.info("TicketDTO creado exitosamente");
+        logger.info("=== FIN GET TICKET DATA ===");
         
         return ticketDTO;
     }
@@ -604,7 +594,7 @@ public class ComandaService {
                             .map(productArea -> productArea.getAreaId())
                             .orElse("sin-asignar");
                     
-                    logger.info("Nuevo item {} asignado a área: {}", item.getProducto().getNombre(), areaId);
+                    logger.debug("Nuevo item {} asignado a área: {}", item.getProducto().getNombre(), areaId);
                     return areaId;
                 }));
 

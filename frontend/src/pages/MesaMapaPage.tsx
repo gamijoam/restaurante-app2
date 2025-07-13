@@ -22,7 +22,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import { getMesasMapa, updateMesaPosicion, createMesa, updateMesaEstado, type MesaMapa } from '../services/mesaService';
 import { useAuth } from '../context/AuthContext';
-import { useWebSocket } from '../context/WebSocketContext';
+import { useWebSocket } from '../context/WebSocketContextProduction';
 import { useNavigate } from 'react-router-dom';
 
 interface MesaVisual extends MesaMapa {
