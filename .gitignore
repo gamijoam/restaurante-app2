@@ -4,10 +4,13 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # Ignorar carpetas de dependencias
 node_modules/
 backend/target/
+license-service/target/
 
 # Ignorar archivos de build
 build/
@@ -16,6 +19,63 @@ dist/
 .db
 license-db.mv.db
 license-db.trace.db
+
+# Archivos de Java/Maven
+*.jar
+*.war
+*.ear
+*.class
+*.o
+*.so
+*.dll
+*.dylib
+*.exe
+*.out
+*.pid
+*.seed
+*.pid.lock
+*.swp
+*.swo
+*~
+
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Archivos de entorno
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+config.env
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
 # Archivos de IDEs y editores
 .idea/
 .vscode/
@@ -28,15 +88,63 @@ license-db.trace.db
 # Archivos de sistema operativo
 .DS_Store
 Thumbs.db
-
-# Archivos de entorno
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+desktop.ini
 
 # Archivos de configuración de Java
 .settings/
 .classpath
 .project
+
+# Archivos de Maven
+.mvn/
+mvnw
+mvnw.cmd
+
+# Archivos de Node.js específicos
+.npm
+.eslintcache
+.stylelintcache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Archivos de TypeScript
+*.tsbuildinfo
+
+# Archivos de Vite
+dist-ssr/
+
+# Archivos de PyInstaller
+*.spec
+*.toc
+
+# Archivos de logs específicos del proyecto
+launcher-python/logs/
+backend/logs/
+license-service/logs/
+puente-impresion/logs/
+
+# Archivos de base de datos
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos de configuración local
+config.json
+default
+termica
+
+# Archivos de ejecutables compilados
+puente-impresion.exe
+*.exe
+
+# Archivos de reportes de cobertura
+*.exec
+jacoco.exec
+coverage/
+.nyc_output/
+
+# Archivos de caché
+.cache/
+.parcel-cache/

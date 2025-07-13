@@ -108,7 +108,7 @@ async function imprimirTicket(printJob) {
                 await imprimirTicketCocinaProduccion(printer, ticketData);
             } else {
                 console.log('📋 Imprimiendo ticket de CAJA');
-                await imprimirTicketCajaProduccion(printer, ticketData);
+            await imprimirTicketCajaProduccion(printer, ticketData);
             }
         }
         
